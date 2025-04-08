@@ -222,63 +222,7 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      {/* Quick Links */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/dashboard/buildings/create">
-            <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex flex-col items-center p-4 text-center">
-                <div className="rounded-full p-3 bg-blue-100 mb-3">
-                  <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <h3 className="font-medium">Add Building</h3>
-              </div>
-            </Card>
-          </Link>
-          
-          <Link href="/dashboard/units/create">
-            <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex flex-col items-center p-4 text-center">
-                <div className="rounded-full p-3 bg-green-100 mb-3">
-                  <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </div>
-                <h3 className="font-medium">Add Unit</h3>
-              </div>
-            </Card>
-          </Link>
-          
-          <Link href="/dashboard/reservations/create">
-            <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex flex-col items-center p-4 text-center">
-                <div className="rounded-full p-3 bg-purple-100 mb-3">
-                  <svg className="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="font-medium">Create Reservation</h3>
-              </div>
-            </Card>
-          </Link>
-          
-          <Link href="/dashboard/services">
-            <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex flex-col items-center p-4 text-center">
-                <div className="rounded-full p-3 bg-yellow-100 mb-3">
-                  <svg className="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                  </svg>
-                </div>
-                <h3 className="font-medium">Manage Service Orders</h3>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </div>
+    
     </div>
   );
 }
