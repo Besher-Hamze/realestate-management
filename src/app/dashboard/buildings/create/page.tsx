@@ -6,28 +6,28 @@ import BuildingForm from '@/components/buildings/BuildingForm';
 export default function CreateBuildingPage() {
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs */}
+      {/* العنوان مع مسار التنقل */}
       <div className="flex flex-col space-y-2">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/buildings" className="hover:text-primary-600">Buildings</Link>
+              <Link href="/dashboard/buildings" className="hover:text-primary-600">المباني</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <span className="text-gray-700">Create</span>
+              <span className="text-gray-700">إنشاء</span>
             </li>
           </ol>
         </nav>
-        <h1 className="text-2xl font-bold text-gray-900">Create New Building</h1>
-        <p className="text-gray-600">Add a new building to your property portfolio.</p>
+        <h1 className="text-2xl font-bold text-gray-900">إنشاء مبنى جديد</h1>
+        <p className="text-gray-600">أضف مبنى جديدًا إلى محفظة العقارات الخاصة بك.</p>
       </div>
       
-      {/* Building Form */}
+      {/* نموذج المبنى */}
       <BuildingForm />
     </div>
   );

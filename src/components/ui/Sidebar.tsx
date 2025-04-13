@@ -38,7 +38,7 @@ export default function Sidebar() {
   // Nav items for different roles
   const adminNavItems: NavItem[] = [
     {
-      label: 'Dashboard',
+      label: 'لوحة التحكم',
       href: '/dashboard',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +48,7 @@ export default function Sidebar() {
       roles: ['admin', 'manager'],
     },
     {
-      label: 'Companies',
+      label: 'الشركات',
       href: '/dashboard/companies',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -58,57 +58,57 @@ export default function Sidebar() {
       roles: ['admin'],
     },
     {
-      label: 'Buildings',
+      label: 'المباني',
       href: '/dashboard/buildings',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
         </svg>
       ),
-      roles: [ 'manager'],
+      roles: ['manager'],
     },
     {
-      label: 'Units',
+      label: 'الوحدات',
       href: '/dashboard/units',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       ),
-      roles: [ 'manager'],
+      roles: ['manager'],
     },
     {
-      label: 'Reservations',
+      label: 'الحجوزات',
       href: '/dashboard/reservations',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
-      roles: [ 'manager'],
+      roles: ['manager'],
     },
     {
-      label: 'Service Orders',
+      label: 'طلبات الخدمة',
       href: '/dashboard/services',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
         </svg>
       ),
-      roles: [ 'manager'],
+      roles: ['manager'],
     },
     {
-      label: 'Payments',
+      label: 'المدفوعات',
       href: '/dashboard/payments',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      roles: [ 'manager'],
+      roles: ['manager'],
     },
     {
-      label: 'Users',
+      label: 'المستخدمين',
       href: '/dashboard/users',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -121,7 +121,7 @@ export default function Sidebar() {
 
   const tenantNavItems: NavItem[] = [
     {
-      label: 'Dashboard',
+      label: 'لوحة التحكم',
       href: '/tenant',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -131,7 +131,7 @@ export default function Sidebar() {
       roles: ['tenant'],
     },
     {
-      label: 'My Units',
+      label: 'وحداتي',
       href: '/tenant/units',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -141,7 +141,7 @@ export default function Sidebar() {
       roles: [''],
     },
     {
-      label: 'Service Requests',
+      label: 'طلبات الخدمة',
       href: '/tenant/services',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -154,7 +154,7 @@ export default function Sidebar() {
 
   // Determine which nav items to show based on user role
   const navItems = user?.role === 'tenant' ? tenantNavItems : adminNavItems;
-  
+
   // Filter nav items by user role
   const filteredNavItems = navItems.filter(
     (item) => !item.roles || (user && item.roles.includes(user.role))
@@ -179,7 +179,7 @@ export default function Sidebar() {
           )}
         </button>
       )}
-      
+
       {/* Sidebar */}
       <div
         className={cn(
@@ -190,16 +190,16 @@ export default function Sidebar() {
         {/* Logo */}
         <div className="flex items-center justify-center h-16 border-b border-gray-700">
           <Link href="/" className="text-xl font-bold">
-            Real Estate App
+            تطبيق العقارات
           </Link>
         </div>
-        
+
         {/* Nav Items */}
         <nav className="p-4">
           <ul className="space-y-2">
             {filteredNavItems.map((item) => {
               const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-              
+
               return (
                 <li key={item.href}>
                   <Link
@@ -219,7 +219,7 @@ export default function Sidebar() {
             })}
           </ul>
         </nav>
-        
+
         {/* Profile section */}
         {user && (
           <div className="absolute bottom-0 w-full border-t border-gray-700 p-4">
@@ -238,7 +238,7 @@ export default function Sidebar() {
           </div>
         )}
       </div>
-      
+
       {/* Overlay for mobile */}
       {isMobile && isOpen && (
         <div

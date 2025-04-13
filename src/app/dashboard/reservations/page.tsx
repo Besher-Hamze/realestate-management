@@ -16,26 +16,26 @@ export default function ReservationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // Status filter options
+  // خيارات تصفية الحالة
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'active', label: 'Active' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'expired', label: 'Expired' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'all', label: 'جميع الحالات' },
+    { value: 'active', label: 'نشط' },
+    { value: 'pending', label: 'قيد الانتظار' },
+    { value: 'expired', label: 'منتهي' },
+    { value: 'cancelled', label: 'ملغي' },
   ];
 
-  // Fetch reservations on component mount
+  // جلب الحجوزات عند تحميل المكون
   useEffect(() => {
     fetchReservations();
   }, []);
 
-  // Apply filters when reservations or status filter changes
+  // تطبيق التصفية عند تغيير الحجوزات أو مرشح الحالة
   useEffect(() => {
     applyFilters();
   }, [reservations, statusFilter]);
 
-  // Fetch reservations data
+  // جلب بيانات الحجوزات
   const fetchReservations = async () => {
     try {
       setIsLoading(true);
@@ -44,21 +44,21 @@ export default function ReservationsPage() {
       if (response.success) {
         setReservations(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch reservations');
+        toast.error(response.message || 'فشل في جلب الحجوزات');
       }
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      toast.error('An error occurred while fetching reservations');
+      console.error('خطأ في جلب الحجوزات:', error);
+      toast.error('حدث خطأ أثناء جلب الحجوزات');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters to reservations
+  // تطبيق المرشحات على الحجوزات
   const applyFilters = () => {
     let filtered = [...reservations];
     
-    // Apply status filter
+    // تطبيق مرشح الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((reservation) => reservation.status === statusFilter);
     }
@@ -66,26 +66,26 @@ export default function ReservationsPage() {
     setFilteredReservations(filtered);
   };
 
-  // Handle status filter change
+  // التعامل مع تغيير مرشح الحالة
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value);
   };
 
-  // Handle reservation deletion
+  // التعامل مع حذف الحجز
   const handleDelete = (id: number) => {
     setReservations((prevReservations) => prevReservations.filter((reservation) => reservation.id !== id));
   };
 
-  // Stats cards
+  // بطاقات الإحصائيات
   const getStatusCount = (status: string) => {
     return reservations.filter(reservation => reservation.status === status).length;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Reservations</h1>
+        <h1 className="text-2xl font-bold text-gray-900">الحجوزات</h1>
         <Link href="/dashboard/reservations/create">
           <Button
             variant="primary"
@@ -95,12 +95,12 @@ export default function ReservationsPage() {
               </svg>
             }
           >
-            Create Reservation
+            إنشاء حجز
           </Button>
         </Link>
       </div>
       
-      {/* Status summary cards */}
+      {/* بطاقات ملخص الحالة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
@@ -110,8 +110,8 @@ export default function ReservationsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-green-800">Active</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-green-800">نشط</h3>
                 <p className="text-2xl font-bold text-green-900">{getStatusCount('active')}</p>
               </div>
             </div>
@@ -126,8 +126,8 @@ export default function ReservationsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-yellow-800">Pending</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-yellow-800">قيد الانتظار</h3>
                 <p className="text-2xl font-bold text-yellow-900">{getStatusCount('pending')}</p>
               </div>
             </div>
@@ -142,8 +142,8 @@ export default function ReservationsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-gray-800">Expired</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-gray-800">منتهي</h3>
                 <p className="text-2xl font-bold text-gray-900">{getStatusCount('expired')}</p>
               </div>
             </div>
@@ -158,8 +158,8 @@ export default function ReservationsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-red-800">Cancelled</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-red-800">ملغي</h3>
                 <p className="text-2xl font-bold text-red-900">{getStatusCount('cancelled')}</p>
               </div>
             </div>
@@ -167,12 +167,12 @@ export default function ReservationsPage() {
         </Card>
       </div>
       
-      {/* Filters */}
+      {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Select
-              label="Status"
+              label="الحالة"
               id="statusFilter"
               name="statusFilter"
               value={statusFilter}
@@ -184,7 +184,7 @@ export default function ReservationsPage() {
         </div>
       </div>
       
-      {/* Reservations List */}
+      {/* قائمة الحجوزات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ReservationList
           reservations={filteredReservations}

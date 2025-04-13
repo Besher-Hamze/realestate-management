@@ -30,19 +30,19 @@ export default function PaymentList({
   const [newStatus, setNewStatus] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Handle row click
+  // التعامل مع النقر على الصف
   const handleRowClick = (payment: Payment) => {
     router.push(`/dashboard/payments/${payment.id}`);
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (payment: Payment, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedPayment(payment);
     setDeleteModalOpen(true);
   };
 
-  // Open status update modal
+  // فتح نافذة تحديث الحالة
   const openStatusUpdateModal = (payment: Payment, status: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedPayment(payment);
@@ -50,7 +50,7 @@ export default function PaymentList({
     setStatusUpdateModalOpen(true);
   };
 
-  // Delete payment
+  // حذف المدفوعة
   const handleDelete = async () => {
     if (!selectedPayment) return;
 
@@ -59,27 +59,27 @@ export default function PaymentList({
       const response = await paymentsApi.delete(selectedPayment.id);
 
       if (response.success) {
-        toast.success('Payment deleted successfully');
+        toast.success('تم حذف المدفوعة بنجاح');
         setDeleteModalOpen(false);
         
-        // Call the onDelete callback or refetch data
+        // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedPayment.id);
         } else {
           refetch();
         }
       } else {
-        toast.error(response.message || 'Failed to delete payment');
+        toast.error(response.message || 'فشل في حذف المدفوعة');
       }
     } catch (error) {
-      console.error('Error deleting payment:', error);
-      toast.error('An error occurred while deleting the payment');
+      console.error('خطأ في حذف المدفوعة:', error);
+      toast.error('حدث خطأ أثناء حذف المدفوعة');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Update payment status
+  // تحديث حالة المدفوعة
   const handleStatusUpdate = async () => {
     if (!selectedPayment || !newStatus) return;
 
@@ -91,21 +91,32 @@ export default function PaymentList({
       });
 
       if (response.success) {
-        toast.success(`Payment status updated to ${newStatus}`);
+        toast.success(`تم تحديث حالة المدفوعة إلى ${getStatusName(newStatus)}`);
         setStatusUpdateModalOpen(false);
         refetch();
       } else {
-        toast.error(response.message || 'Failed to update payment status');
+        toast.error(response.message || 'فشل في تحديث حالة المدفوعة');
       }
     } catch (error) {
-      console.error('Error updating payment status:', error);
-      toast.error('An error occurred while updating the payment status');
+      console.error('خطأ في تحديث حالة المدفوعة:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة المدفوعة');
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
-  // Status update button component
+  // الحصول على اسم الحالة بالعربية
+  const getStatusName = (status: string) => {
+    switch (status) {
+      case 'paid': return 'مدفوعة';
+      case 'pending': return 'قيد الانتظار';
+      case 'refunded': return 'مسترجعة';
+      case 'failed': return 'فاشلة';
+      default: return status;
+    }
+  };
+
+  // مكون زر تحديث الحالة
   const StatusButton = ({ payment, status, label, color }: { payment: Payment; status: string; label: string; color: string }) => (
     <Button
       size="xs"
@@ -118,14 +129,14 @@ export default function PaymentList({
     </Button>
   );
 
-  // Define columns for the table
+  // تعريف أعمدة الجدول
   const columns = [
     {
       key: 'property',
-      header: 'Property',
+      header: 'العقار',
       cell: (payment: Payment) => {
-        const unitNumber = payment.reservation?.unit?.unitNumber || 'N/A';
-        const tenantName = payment.reservation?.user?.fullName || 'N/A';
+        const unitNumber = payment.reservation?.unit?.unitNumber || 'غير متوفر';
+        const tenantName = payment.reservation?.user?.fullName || 'غير متوفر';
         return (
           <div className="flex flex-col">
             <span className="font-medium text-gray-900">{unitNumber}</span>
@@ -136,61 +147,86 @@ export default function PaymentList({
     },
     {
       key: 'amount',
-      header: 'Amount',
+      header: 'المبلغ',
       cell: (payment: Payment) => <span className="font-medium text-gray-900">{formatCurrency(payment.amount)}</span>,
     },
     {
       key: 'date',
-      header: 'Date',
+      header: 'التاريخ',
       cell: (payment: Payment) => <span className="text-gray-700">{formatDate(payment.paymentDate)}</span>,
     },
     {
       key: 'method',
-      header: 'Method',
-      cell: (payment: Payment) => (
-        <span className="text-gray-700 capitalize">{payment.paymentMethod.replace('_', ' ')}</span>
-      ),
+      header: 'الطريقة',
+      cell: (payment: Payment) => {
+        let method = payment.paymentMethod.replace('_', ' ');
+        switch (method) {
+          case 'cash': method = 'نقدًا'; break;
+          case 'credit card': method = 'بطاقة ائتمان'; break;
+          case 'bank transfer': method = 'تحويل بنكي'; break;
+          case 'check': method = 'شيك'; break;
+          case 'other': method = 'أخرى'; break;
+        }
+        return <span className="text-gray-700">{method}</span>;
+      },
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (payment: Payment) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            payment.status === 'paid' ? 'bg-green-100 text-green-800' :
-            payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            payment.status === 'refunded' ? 'bg-purple-100 text-purple-800' :
-            'bg-red-100 text-red-800'
-          }`}
-        >
-          {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-        </span>
-      ),
+      header: 'الحالة',
+      cell: (payment: Payment) => {
+        let statusText = '';
+        let statusClass = '';
+        
+        switch (payment.status) {
+          case 'paid':
+            statusText = 'مدفوعة';
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'pending':
+            statusText = 'قيد الانتظار';
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'refunded':
+            statusText = 'مسترجعة';
+            statusClass = 'bg-purple-100 text-purple-800';
+            break;
+          case 'failed':
+            statusText = 'فاشلة';
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+        }
+        
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (payment: Payment) => (
         <div className="flex flex-wrap gap-2">
           <Link href={`/dashboard/payments/${payment.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
           
-          {/* Status update buttons */}
+          {/* أزرار تحديث الحالة */}
           <div className="flex flex-wrap gap-1">
-            <StatusButton payment={payment} status="paid" label="Paid" color="green" />
-            <StatusButton payment={payment} status="pending" label="Pending" color="yellow" />
-            <StatusButton payment={payment} status="refunded" label="Refunded" color="purple" />
-            <StatusButton payment={payment} status="failed" label="Failed" color="red" />
+            <StatusButton payment={payment} status="paid" label="مدفوعة" color="green" />
+            <StatusButton payment={payment} status="pending" label="قيد الانتظار" color="yellow" />
+            <StatusButton payment={payment} status="refunded" label="مسترجعة" color="purple" />
+            <StatusButton payment={payment} status="failed" label="فاشلة" color="red" />
           </div>
           
-          {/* Delete button */}
+          {/* زر الحذف */}
           <Button
             size="xs"
             variant="danger"
             onClick={(e) => openDeleteModal(payment, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
@@ -204,22 +240,22 @@ export default function PaymentList({
         columns={columns}
         keyExtractor={(payment) => payment.id}
         isLoading={isLoading}
-        emptyMessage="No payments found"
+        emptyMessage="لم يتم العثور على مدفوعات"
         onRowClick={handleRowClick}
       />
       
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Payment"
+        title="حذف المدفوعة"
       >
         <div className="p-6">
           <p className="text-gray-600">
-            Are you sure you want to delete this payment? This action cannot be undone.
+            هل أنت متأكد أنك تريد حذف هذه المدفوعة؟ لا يمكن التراجع عن هذا الإجراء.
           </p>
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm">
-            <strong>Note:</strong> Deleting a payment record may affect your financial records and reports.
+            <strong>ملاحظة:</strong> حذف سجل المدفوعات قد يؤثر على سجلاتك المالية والتقارير.
           </div>
           <div className="mt-6 flex justify-end space-x-3">
             <Button
@@ -227,7 +263,7 @@ export default function PaymentList({
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -235,32 +271,32 @@ export default function PaymentList({
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         </div>
       </Modal>
       
-      {/* Status Update Confirmation Modal */}
+      {/* نافذة تأكيد تحديث الحالة */}
       <Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
-        title="Update Payment Status"
+        title="تحديث حالة المدفوعة"
       >
         <div className="p-6">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to change the payment status to <span className="font-medium">{newStatus}</span>?
+            هل أنت متأكد أنك تريد تغيير حالة المدفوعة إلى <span className="font-medium">{getStatusName(newStatus)}</span>؟
           </p>
           
           {newStatus === 'refunded' && (
             <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm mb-4">
-              <strong>Note:</strong> Marking a payment as refunded may trigger additional workflows in your system.
+              <strong>ملاحظة:</strong> تحديد مدفوعة كمسترجعة قد يؤدي إلى تشغيل سير عمل إضافي في نظامك.
             </div>
           )}
           
           {newStatus === 'failed' && (
             <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
-              <strong>Warning:</strong> Marking a payment as failed may affect tenant standing and reporting.
+              <strong>تحذير:</strong> تحديد مدفوعة كفاشلة قد يؤثر على سمعة المستأجر والتقارير.
             </div>
           )}
           
@@ -270,7 +306,7 @@ export default function PaymentList({
               onClick={() => setStatusUpdateModalOpen(false)}
               disabled={isUpdatingStatus}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -278,7 +314,7 @@ export default function PaymentList({
               isLoading={isUpdatingStatus}
               disabled={isUpdatingStatus}
             >
-              Update Status
+              تحديث الحالة
             </Button>
           </div>
         </div>

@@ -19,12 +19,12 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
   const [building, setBuilding] = useState<Building | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch building details on component mount
+  // جلب تفاصيل المبنى عند تحميل المكون
   useEffect(() => {
     fetchBuilding();
   }, [id]);
 
-  // Fetch building data
+  // جلب بيانات المبنى
   const fetchBuilding = async () => {
     try {
       setIsLoading(true);
@@ -33,19 +33,19 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
       if (response.success) {
         setBuilding(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch building details');
+        toast.error(response.message || 'فشل في جلب تفاصيل المبنى');
         router.push('/dashboard/buildings');
       }
     } catch (error) {
-      console.error('Error fetching building:', error);
-      toast.error('An error occurred while fetching building details');
+      console.error('خطأ في جلب المبنى:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل المبنى');
       router.push('/dashboard/buildings');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -70,21 +70,21 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading building details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل المبنى...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور على المبنى
   if (!building) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Building Not Found</h2>
-        <p className="text-gray-600 mb-6">The building you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to edit it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">لم يتم العثور على المبنى</h2>
+        <p className="text-gray-600 mb-6">المبنى الذي تبحث عنه غير موجود أو ليس لديك صلاحية تعديله.</p>
         <Link href="/dashboard/buildings">
           <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-            Back to Buildings
+            العودة إلى المباني
           </button>
         </Link>
       </div>
@@ -93,16 +93,16 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs */}
+      {/* العنوان مع مسار التنقل */}
       <div className="flex flex-col space-y-2">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/buildings" className="hover:text-primary-600">Buildings</Link>
+              <Link href="/dashboard/buildings" className="hover:text-primary-600">المباني</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -110,15 +110,15 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
             </li>
             <li>
               <span className="mx-1">/</span>
-              <span className="text-gray-700">Edit</span>
+              <span className="text-gray-700">تعديل</span>
             </li>
           </ol>
         </nav>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Building</h1>
-        <p className="text-gray-600">Update the details for {building.name}.</p>
+        <h1 className="text-2xl font-bold text-gray-900">تعديل المبنى</h1>
+        <p className="text-gray-600">تحديث تفاصيل {building.name}.</p>
       </div>
       
-      {/* Building Form */}
+      {/* نموذج المبنى */}
       <BuildingForm
         isEdit
         initialData={building}

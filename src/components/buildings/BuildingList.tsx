@@ -27,19 +27,19 @@ export default function BuildingList({
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Handle row click
+  // التعامل مع النقر على الصف
   const handleRowClick = (building: Building) => {
     router.push(`/dashboard/buildings/${building.id}`);
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (building: Building, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedBuilding(building);
     setDeleteModalOpen(true);
   };
 
-  // Delete building
+  // حذف المبنى
   const handleDelete = async () => {
     if (!selectedBuilding) return;
 
@@ -48,31 +48,31 @@ export default function BuildingList({
       const response = await buildingsApi.delete(selectedBuilding.id);
 
       if (response.success) {
-        toast.success('Building deleted successfully');
+        toast.success('تم حذف المبنى بنجاح');
         setDeleteModalOpen(false);
         
-        // Call the onDelete callback or refetch data
+        // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedBuilding.id);
         } else {
           refetch();
         }
       } else {
-        toast.error(response.message || 'Failed to delete building');
+        toast.error(response.message || 'فشل في حذف المبنى');
       }
     } catch (error) {
-      console.error('Error deleting building:', error);
-      toast.error('An error occurred while deleting the building');
+      console.error('خطأ في حذف المبنى:', error);
+      toast.error('حدث خطأ أثناء حذف المبنى');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Define columns for the table
+  // تعريف الأعمدة للجدول
   const columns: TableColumn<Building>[] = [
     {
       key: 'name',
-      header: 'Name',
+      header: 'الاسم',
       cell: (building) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{building.name}</span>
@@ -82,36 +82,36 @@ export default function BuildingList({
     },
     {
       key: 'address',
-      header: 'Address',
+      header: 'العنوان',
       cell: (building) => <span className="text-gray-500">{building.address}</span>,
     },
     {
       key: 'totalUnits',
-      header: 'Units',
+      header: 'الوحدات',
       cell: (building) => <span className="text-gray-900">{building.totalUnits}</span>,
     },
     {
       key: 'createdAt',
-      header: 'Created At',
+      header: 'تاريخ الإنشاء',
       cell: (building) => <span className="text-gray-500">{formatDate(building.createdAt)}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (building) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/buildings/${building.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline">عرض</Button>
           </Link>
           <Link href={`/dashboard/buildings/${building.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">Edit</Button>
+            <Button size="sm" variant="outline">تعديل</Button>
           </Link>
           <Button
             size="sm"
             variant="danger"
             onClick={(e) => openDeleteModal(building, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
@@ -125,15 +125,15 @@ export default function BuildingList({
         columns={columns}
         keyExtractor={(building) => building.id}
         isLoading={isLoading}
-        emptyMessage="No buildings found"
+        emptyMessage="لم يتم العثور على مباني"
         onRowClick={handleRowClick}
       />
       
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Building"
+        title="حذف المبنى"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -141,7 +141,7 @@ export default function BuildingList({
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -149,13 +149,13 @@ export default function BuildingList({
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600">
-          Are you sure you want to delete the building "{selectedBuilding?.name}"? This action cannot be undone.
+          هل أنت متأكد أنك تريد حذف المبنى "{selectedBuilding?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
       </Modal>
     </>

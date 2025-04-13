@@ -20,26 +20,26 @@ export default function DashboardPage() {
       try {
         setIsLoading(true);
         
-        // Fetch general statistics
+        // جلب الإحصائيات العامة
         const statsResponse = await dashboardApi.getStatistics();
         if (statsResponse.success) {
           setGeneralStats(statsResponse.data);
         }
         
-        // Fetch unit status statistics
+        // جلب إحصائيات حالة الوحدات
         const unitStatsResponse = await dashboardApi.getUnitsStatus();
         if (unitStatsResponse.success) {
           setUnitStats(unitStatsResponse.data);
         }
         
-        // Fetch service order status statistics
+        // جلب إحصائيات حالة طلبات الخدمة
         const serviceStatsResponse = await dashboardApi.getServicesStatus();
         if (serviceStatsResponse.success) {
           setServiceStats(serviceStatsResponse.data);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
+        console.error('خطأ في جلب بيانات لوحة التحكم:', error);
+        toast.error('فشل في تحميل بيانات لوحة التحكم');
       } finally {
         setIsLoading(false);
       }
@@ -48,12 +48,12 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, []);
 
-  // Statistics Card Component
+  // مكون بطاقة الإحصائيات
   const StatCard = ({ title, value, icon, bgColor }: { title: string; value: number | string; icon: React.ReactNode; bgColor: string }) => (
     <Card className="h-full">
       <div className="flex items-center">
         <div className={`rounded-lg p-3 ${bgColor}`}>{icon}</div>
-        <div className="ml-4">
+        <div className="mr-4">
           <h3 className="text-sm font-medium text-gray-500">{title}</h3>
           <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
         </div>
@@ -61,7 +61,7 @@ export default function DashboardPage() {
     </Card>
   );
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -86,28 +86,28 @@ export default function DashboardPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading dashboard data...</p>
+          <p className="text-gray-600">جاري تحميل بيانات لوحة التحكم...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome message */}
+    <div dir="rtl" className="space-y-6">
+      {/* رسالة الترحيب */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user?.fullName || 'User'}!</h1>
+        <h1 className="text-2xl font-bold text-gray-800">مرحباً بعودتك، {user?.fullName || 'المستخدم'}!</h1>
         <p className="mt-2 text-gray-600">
-          Here's an overview of your real estate management system.
+          إليك نظرة عامة على نظام إدارة العقارات الخاص بك.
         </p>
       </div>
       
-      {/* General Statistics */}
+      {/* الإحصائيات العامة */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">نظرة عامة</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Total Buildings"
+            title="إجمالي المباني"
             value={generalStats?.totalBuildings || 0}
             icon={
               <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +118,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="Total Units"
+            title="إجمالي الوحدات"
             value={generalStats?.totalUnits || 0}
             icon={
               <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="Active Reservations"
+            title="الحجوزات النشطة"
             value={generalStats?.totalReservations || 0}
             icon={
               <svg className="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -138,17 +138,16 @@ export default function DashboardPage() {
             }
             bgColor="bg-purple-100"
           />
-          
          
         </div>
       </div>
       
-      {/* Unit Status */}
+      {/* حالة الوحدات */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Unit Status</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">حالة الوحدات</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Available Units"
+            title="الوحدات المتاحة"
             value={unitStats?.available || 0}
             icon={
               <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -159,7 +158,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="Rented Units"
+            title="الوحدات المؤجرة"
             value={unitStats?.rented || 0}
             icon={
               <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -172,12 +171,12 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      {/* Service Orders Status */}
+      {/* حالة طلبات الخدمة */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Service Orders</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">طلبات الخدمة</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Pending Orders"
+            title="الطلبات المعلقة"
             value={serviceStats?.pending || 0}
             icon={
               <svg className="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -188,7 +187,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="In Progress"
+            title="قيد التنفيذ"
             value={serviceStats?.inProgress || 0}
             icon={
               <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -199,7 +198,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="Completed"
+            title="المكتملة"
             value={serviceStats?.completed || 0}
             icon={
               <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -210,7 +209,7 @@ export default function DashboardPage() {
           />
           
           <StatCard
-            title="Cancelled"
+            title="الملغاة"
             value={serviceStats?.cancelled || 0}
             icon={
               <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -221,8 +220,6 @@ export default function DashboardPage() {
           />
         </div>
       </div>
-      
-    
     </div>
   );
 }

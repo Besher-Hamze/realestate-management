@@ -18,17 +18,17 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" dir='rtl'>
       <body className={inter.className}>
         <AuthProvider>
           {children}
           <ToastContainer
             position="top-right"
-            autoClose={5000}
+            autoClose={3000}
             hideProgressBar={false}
             newestOnTop
             closeOnClick
-            rtl={false}
+            rtl={true}  
             pauseOnFocusLoss
             draggable
             pauseOnHover

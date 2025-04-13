@@ -15,12 +15,12 @@ export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch companies on component mount
+  // جلب الشركات عند تحميل المكون
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  // Fetch companies data
+  // جلب بيانات الشركات
   const fetchCompanies = async () => {
     try {
       setIsLoading(true);
@@ -29,29 +29,29 @@ export default function CompaniesPage() {
       if (response.success) {
         setCompanies(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch companies');
+        toast.error(response.message || 'فشل في جلب الشركات');
       }
     } catch (error) {
-      console.error('Error fetching companies:', error);
-      toast.error('An error occurred while fetching companies');
+      console.error('خطأ في جلب الشركات:', error);
+      toast.error('حدث خطأ أثناء جلب الشركات');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle company deletion
+  // التعامل مع حذف الشركة
   const handleDelete = (id: number) => {
     setCompanies((prevCompanies) => prevCompanies.filter((company) => company.id !== id));
   };
 
-  // Only admin can create companies
+  // فقط المدير يمكنه إنشاء شركات
   const isAdmin = user?.role === 'admin';
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
+        <h1 className="text-2xl font-bold text-gray-900">الشركات</h1>
         {isAdmin && (
           <Link href="/dashboard/companies/create">
             <Button
@@ -62,13 +62,13 @@ export default function CompaniesPage() {
                 </svg>
               }
             >
-              Add Company
+              إضافة شركة
             </Button>
           </Link>
         )}
       </div>
       
-      {/* Info card for managers */}
+      {/* بطاقة معلومات للمدراء */}
       {!isAdmin && (
         <Card className="bg-blue-50 border-blue-200">
           <div className="p-4">
@@ -79,9 +79,9 @@ export default function CompaniesPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Information</h3>
+                <h3 className="text-sm font-medium text-blue-800">معلومات</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>As a manager, you can view company information but only administrators can create or modify companies.</p>
+                  <p>بصفتك مديرًا، يمكنك عرض معلومات الشركة ولكن يمكن للمسؤولين فقط إنشاء أو تعديل الشركات.</p>
                 </div>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function CompaniesPage() {
         </Card>
       )}
       
-      {/* Companies List */}
+      {/* قائمة الشركات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <CompanyList
           companies={companies}

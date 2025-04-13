@@ -27,18 +27,18 @@ const initialPaymentData: PaymentFormData = {
 };
 
 const paymentMethodOptions = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'credit_card', label: 'Credit Card' },
-  { value: 'bank_transfer', label: 'Bank Transfer' },
-  { value: 'check', label: 'Check' },
-  { value: 'other', label: 'Other' },
+  { value: 'cash', label: 'نقدًا' },
+  { value: 'credit_card', label: 'بطاقة ائتمان' },
+  { value: 'bank_transfer', label: 'تحويل بنكي' },
+  { value: 'check', label: 'شيك' },
+  { value: 'other', label: 'أخرى' },
 ];
 
 const paymentStatusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'refunded', label: 'Refunded' },
-  { value: 'failed', label: 'Failed' },
+  { value: 'pending', label: 'قيد الانتظار' },
+  { value: 'paid', label: 'مدفوعة' },
+  { value: 'refunded', label: 'مسترجعة' },
+  { value: 'failed', label: 'فاشلة' },
 ];
 
 export default function PaymentForm({
@@ -53,22 +53,22 @@ export default function PaymentForm({
   const [isLoadingReservations, setIsLoadingReservations] = useState(true);
   const [checkImage, setCheckImage] = useState<File | undefined>(undefined);
 
-  // Set up initial data for edit mode or with preselected reservation
+  // إعداد البيانات الأولية لوضع التعديل أو مع الحجز المحدد مسبقًا
   const formInitialData: PaymentFormData = isEdit && initialData
     ? {
-        reservationId: initialData.reservationId,
-        amount: initialData.amount,
-        paymentDate: initialData.paymentDate.split('T')[0],
-        paymentMethod: initialData.paymentMethod,
-        status: initialData.status,
-        notes: initialData.notes,
-      }
+      reservationId: initialData.reservationId,
+      amount: initialData.amount,
+      paymentDate: initialData.paymentDate.split('T')[0],
+      paymentMethod: initialData.paymentMethod,
+      status: initialData.status,
+      notes: initialData.notes,
+    }
     : {
-        ...initialPaymentData,
-        reservationId: preSelectedReservationId || 0,
-      };
+      ...initialPaymentData,
+      reservationId: preSelectedReservationId || 0,
+    };
 
-  // Form state using custom hook
+  // حالة النموذج باستخدام الخطاف المخصص
   const {
     formData,
     handleChange,
@@ -88,23 +88,23 @@ export default function PaymentForm({
     {
       onSuccess: (data) => {
         const successMessage = isEdit
-          ? 'Payment updated successfully'
-          : 'Payment created successfully';
+          ? 'تم تحديث المدفوعة بنجاح'
+          : 'تم إنشاء المدفوعة بنجاح';
         toast.success(successMessage);
-        
+
         if (onSuccess) {
           onSuccess(data);
         } else {
-          router.push(`/dashboard/payments/${data.id}`);
+          router.push(`/dashboard/payments`);
         }
       },
       onError: (errorMessage) => {
-        toast.error(errorMessage || 'An error occurred');
+        toast.error(errorMessage || 'حدث خطأ ما');
       },
     }
   );
 
-  // Reset form when initialData changes (for editing)
+  // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل)
   useEffect(() => {
     if (isEdit && initialData) {
       resetForm();
@@ -113,80 +113,80 @@ export default function PaymentForm({
     }
   }, [isEdit, initialData, preSelectedReservationId, resetForm, updateFormData]);
 
-  // Fetch reservations for dropdown
+  // جلب الحجوزات للقائمة المنسدلة
   useEffect(() => {
     const fetchReservations = async () => {
       try {
         setIsLoadingReservations(true);
         const response = await reservationsApi.getAll();
-        
+
         if (response.success) {
-          // Filter to active reservations
+          // تصفية الحجوزات النشطة فقط
           const activeReservations = response.data.filter(res => res.status === 'active');
           setReservations(activeReservations);
-          
-          // If we have a preSelectedReservationId or in edit mode, find the matching reservation
+
+          // إذا كان لدينا preSelectedReservationId أو في وضع التعديل، ابحث عن الحجز المطابق
           if ((preSelectedReservationId || (isEdit && initialData)) && response.data.length > 0) {
             const id = preSelectedReservationId || (initialData?.reservationId || 0);
             const reservation = response.data.find(res => res.id === id);
             if (reservation) {
               setSelectedReservation(reservation);
-              // If it's a new payment, set the default amount to the unit price
+              // إذا كانت مدفوعة جديدة، اضبط المبلغ الافتراضي على سعر الوحدة
               if (!isEdit && reservation.unit && reservation.unit.price) {
                 updateFormData({ amount: reservation.unit.price });
               }
             }
           }
         } else {
-          toast.error(response.message || 'Failed to load reservations');
+          toast.error(response.message || 'فشل في تحميل الحجوزات');
         }
       } catch (error) {
-        console.error('Error fetching reservations:', error);
-        toast.error('An error occurred while loading reservations');
+        console.error('خطأ في جلب الحجوزات:', error);
+        toast.error('حدث خطأ أثناء تحميل الحجوزات');
       } finally {
         setIsLoadingReservations(false);
       }
     };
-    
+
     fetchReservations();
   }, [isEdit, initialData, preSelectedReservationId, updateFormData]);
 
-  // Handle reservation change
+  // التعامل مع تغيير الحجز
   const handleReservationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const reservationId = parseInt(e.target.value);
     updateFormData({ reservationId });
-    
-    // Find the selected reservation
+
+    // البحث عن الحجز المحدد
     const reservation = reservations.find(res => res.id === reservationId);
     setSelectedReservation(reservation || null);
-    
-    // Set the default amount to the unit price if available
+
+    // تعيين المبلغ الافتراضي إلى سعر الوحدة إذا كان متاحًا
     if (reservation?.unit?.price) {
       updateFormData({ amount: reservation.unit.price });
     }
   };
 
-  // Create reservation options for dropdown
+  // إنشاء خيارات الحجز للقائمة المنسدلة
   const reservationOptions = reservations.map((reservation) => {
-    const unitNumber = reservation.unit?.unitNumber || 'Unknown';
-    const tenantName = reservation.user?.fullName || 'Unknown';
+    const unitNumber = reservation.unit?.unitNumber || 'غير معروف';
+    const tenantName = reservation.user?.fullName || 'غير معروف';
     return {
       value: reservation.id,
       label: `${unitNumber} - ${tenantName}`,
     };
   });
 
-  // Handle file input change
+  // التعامل مع تغيير إدخال الملف
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setCheckImage(e.target.files[0]);
     }
   };
 
-  // Format currency input
+  // تنسيق إدخال العملة
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow only numbers and decimal point
+    // السماح فقط بالأرقام والنقطة العشرية
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       updateFormData({ amount: value === '' ? 0 : parseFloat(value) });
     }
@@ -200,11 +200,11 @@ export default function PaymentForm({
             {error}
           </div>
         )}
-        
-        {/* Reservation Selection */}
+
+        {/* اختيار الحجز */}
         <div className="space-y-4">
           <Select
-            label="Reservation"
+            label="الحجز"
             id="reservationId"
             name="reservationId"
             value={formData.reservationId.toString()}
@@ -213,41 +213,41 @@ export default function PaymentForm({
             disabled={isLoadingReservations || isEdit || !!preSelectedReservationId}
             required
             fullWidth
-            helpText={isLoadingReservations ? 'Loading reservations...' : 'Select the reservation for this payment'}
-            emptyOptionLabel="Select a reservation"
+            helpText={isLoadingReservations ? 'جاري تحميل الحجوزات...' : 'اختر الحجز لهذه المدفوعة'}
+            emptyOptionLabel="اختر حجزًا"
           />
-          
+
           {selectedReservation && (
             <div className="p-4 bg-gray-50 rounded-md">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Reservation Details</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">تفاصيل الحجز</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Unit:</span>
-                  <span className="ml-2 font-medium">{selectedReservation.unit?.unitNumber || 'N/A'}</span>
+                  <span className="text-gray-500">الوحدة:</span>
+                  <span className="mr-2 font-medium">{selectedReservation.unit?.unitNumber || 'غير متوفر'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Tenant:</span>
-                  <span className="ml-2 font-medium">{selectedReservation.user?.fullName || 'N/A'}</span>
+                  <span className="text-gray-500">المستأجر:</span>
+                  <span className="mr-2 font-medium">{selectedReservation.user?.fullName || 'غير متوفر'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Period:</span>
-                  <span className="ml-2">{new Date(selectedReservation.startDate).toLocaleDateString()} - {new Date(selectedReservation.endDate).toLocaleDateString()}</span>
+                  <span className="text-gray-500">الفترة:</span>
+                  <span className="mr-2">{new Date(selectedReservation.startDate).toLocaleDateString()} - {new Date(selectedReservation.endDate).toLocaleDateString()}</span>
                 </div>
                 {selectedReservation.unit?.price && (
                   <div>
-                    <span className="text-gray-500">Monthly Rent:</span>
-                    <span className="ml-2 font-medium">{formatCurrency(selectedReservation.unit.price)}</span>
+                    <span className="text-gray-500">الإيجار الشهري:</span>
+                    <span className="mr-2 font-medium">{formatCurrency(selectedReservation.unit.price)}</span>
                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
-        
-        {/* Payment Details */}
+
+        {/* تفاصيل المدفوعة */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Amount"
+            label="المبلغ"
             id="amount"
             name="amount"
             type="number"
@@ -259,9 +259,9 @@ export default function PaymentForm({
             fullWidth
             leftIcon={<span className="text-gray-500">$</span>}
           />
-          
+
           <Input
-            label="Payment Date"
+            label="تاريخ الدفع"
             id="paymentDate"
             name="paymentDate"
             type="date"
@@ -270,9 +270,9 @@ export default function PaymentForm({
             required
             fullWidth
           />
-          
+
           <Select
-            label="Payment Method"
+            label="طريقة الدفع"
             id="paymentMethod"
             name="paymentMethod"
             value={formData.paymentMethod}
@@ -281,9 +281,9 @@ export default function PaymentForm({
             required
             fullWidth
           />
-          
+
           <Select
-            label="Status"
+            label="الحالة"
             id="status"
             name="status"
             value={formData.status}
@@ -293,11 +293,11 @@ export default function PaymentForm({
             fullWidth
           />
         </div>
-        
-        {/* Notes */}
+
+        {/* ملاحظات */}
         <div className="mb-4">
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-            Notes
+            ملاحظات
           </label>
           <textarea
             id="notes"
@@ -306,15 +306,15 @@ export default function PaymentForm({
             value={formData.notes}
             onChange={handleChange}
             className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-            placeholder="Additional information about this payment..."
+            placeholder="معلومات إضافية حول هذه المدفوعة..."
           />
         </div>
-        
-        {/* Check Image (only shown for check payment method) */}
+
+        {/* صورة الشيك (تظهر فقط لطريقة دفع الشيك) */}
         {formData.paymentMethod === 'check' && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Check Image {isEdit ? '(Optional)' : '(Recommended)'}
+              صورة الشيك {isEdit ? '(اختياري)' : '(مُوصى به)'}
             </label>
             <input
               type="file"
@@ -326,20 +326,20 @@ export default function PaymentForm({
             />
             {initialData?.checkUrl && (
               <div className="mt-2">
-                <p className="text-sm text-gray-500">Current check image:</p>
+                <p className="text-sm text-gray-500">صورة الشيك الحالية:</p>
                 <a
                   href={initialData.checkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-600 hover:text-primary-500 text-sm font-medium"
                 >
-                  View current check image
+                  عرض صورة الشيك الحالية
                 </a>
               </div>
             )}
           </div>
         )}
-        
+
         <div className="flex justify-end space-x-3">
           <Button
             type="button"
@@ -347,14 +347,14 @@ export default function PaymentForm({
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Cancel
+            إلغاء
           </Button>
           <Button
             type="submit"
             isLoading={isSubmitting}
             disabled={isSubmitting}
           >
-            {isEdit ? 'Update Payment' : 'Create Payment'}
+            {isEdit ? 'تحديث المدفوعة' : 'إنشاء المدفوعة'}
           </Button>
         </div>
       </form>

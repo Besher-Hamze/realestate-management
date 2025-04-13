@@ -30,19 +30,19 @@ export default function ReservationList({
   const [newStatus, setNewStatus] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Handle row click
+  // التعامل مع النقر على الصف
   const handleRowClick = (reservation: Reservation) => {
     router.push(`/dashboard/reservations/${reservation.id}`);
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (reservation: Reservation, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedReservation(reservation);
     setDeleteModalOpen(true);
   };
 
-  // Open status update modal
+  // فتح نافذة تحديث الحالة
   const openStatusUpdateModal = (reservation: Reservation, status: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedReservation(reservation);
@@ -50,7 +50,7 @@ export default function ReservationList({
     setStatusUpdateModalOpen(true);
   };
 
-  // Delete reservation
+  // حذف الحجز
   const handleDelete = async () => {
     if (!selectedReservation) return;
 
@@ -59,27 +59,27 @@ export default function ReservationList({
       const response = await reservationsApi.delete(selectedReservation.id);
 
       if (response.success) {
-        toast.success('Reservation deleted successfully');
+        toast.success('تم حذف الحجز بنجاح');
         setDeleteModalOpen(false);
         
-        // Call the onDelete callback or refetch data
+        // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedReservation.id);
         } else {
           refetch();
         }
       } else {
-        toast.error(response.message || 'Failed to delete reservation');
+        toast.error(response.message || 'فشل في حذف الحجز');
       }
     } catch (error) {
-      console.error('Error deleting reservation:', error);
-      toast.error('An error occurred while deleting the reservation');
+      console.error('خطأ في حذف الحجز:', error);
+      toast.error('حدث خطأ أثناء حذف الحجز');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Update reservation status
+  // تحديث حالة الحجز
   const handleStatusUpdate = async () => {
     if (!selectedReservation || !newStatus) return;
 
@@ -91,21 +91,32 @@ export default function ReservationList({
       });
 
       if (response.success) {
-        toast.success(`Reservation status updated to ${newStatus}`);
+        toast.success(`تم تحديث حالة الحجز إلى ${getStatusLabel(newStatus)}`);
         setStatusUpdateModalOpen(false);
         refetch();
       } else {
-        toast.error(response.message || 'Failed to update reservation status');
+        toast.error(response.message || 'فشل في تحديث حالة الحجز');
       }
     } catch (error) {
-      console.error('Error updating reservation status:', error);
-      toast.error('An error occurred while updating the reservation status');
+      console.error('خطأ في تحديث حالة الحجز:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة الحجز');
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
-  // Status update button component
+  // الحصول على تسمية الحالة بالعربية
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active': return 'نشط';
+      case 'pending': return 'قيد الانتظار';
+      case 'expired': return 'منتهي';
+      case 'cancelled': return 'ملغي';
+      default: return status;
+    }
+  };
+
+  // مكون زر تحديث الحالة
   const StatusButton = ({ reservation, status, label, color }: { reservation: Reservation; status: string; label: string; color: string }) => (
     <Button
       size="xs"
@@ -118,14 +129,14 @@ export default function ReservationList({
     </Button>
   );
 
-  // Define columns for the table
+  // تعريف أعمدة الجدول
   const columns: TableColumn<Reservation>[] = [
     {
       key: 'unit',
-      header: 'Unit',
+      header: 'الوحدة',
       cell: (reservation) => {
-        const unitNumber = reservation.unit?.unitNumber || 'N/A';
-        const buildingName = reservation.unit?.building?.name || 'N/A';
+        const unitNumber = reservation.unit?.unitNumber || 'غير متوفر';
+        const buildingName = reservation.unit?.building?.name || 'غير متوفر';
         return (
           <div className="flex flex-col">
             <span className="font-medium text-gray-900">{unitNumber}</span>
@@ -136,9 +147,9 @@ export default function ReservationList({
     },
     {
       key: 'tenant',
-      header: 'Tenant',
+      header: 'المستأجر',
       cell: (reservation) => {
-        const tenantName = reservation.user?.fullName || 'N/A';
+        const tenantName = reservation.user?.fullName || 'غير متوفر';
         const tenantEmail = reservation.user?.email || '';
         return (
           <div className="flex flex-col">
@@ -150,55 +161,74 @@ export default function ReservationList({
     },
     {
       key: 'period',
-      header: 'Period',
+      header: 'الفترة',
       cell: (reservation) => (
         <div className="flex flex-col">
           <span className="text-gray-700">{formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}</span>
           <span className="text-xs text-gray-500">
-            {reservation.unit ? `${formatCurrency(reservation.unit.price)}/month` : ''}
+            {reservation.unit ? `${formatCurrency(reservation.unit.price)}/شهر` : ''}
           </span>
         </div>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (reservation) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-            reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-            'bg-red-100 text-red-800'
-          }`}
-        >
-          {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
-        </span>
-      ),
+      header: 'الحالة',
+      cell: (reservation) => {
+        let statusText = '';
+        let statusClass = '';
+        
+        switch (reservation.status) {
+          case 'active':
+            statusText = 'نشط';
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'pending':
+            statusText = 'قيد الانتظار';
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'expired':
+            statusText = 'منتهي';
+            statusClass = 'bg-gray-100 text-gray-800';
+            break;
+          case 'cancelled':
+            statusText = 'ملغي';
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+        }
+        
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (reservation) => (
         <div className="flex flex-wrap gap-2">
           <Link href={`/dashboard/reservations/${reservation.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
           
-          {/* Status update buttons */}
+          {/* أزرار تحديث الحالة */}
           <div className="flex flex-wrap gap-1">
-            <StatusButton reservation={reservation} status="active" label="Activate" color="green" />
-            <StatusButton reservation={reservation} status="expired" label="Expire" color="gray" />
-            <StatusButton reservation={reservation} status="cancelled" label="Cancel" color="red" />
+            <StatusButton reservation={reservation} status="active" label="تنشيط" color="green" />
+            <StatusButton reservation={reservation} status="expired" label="إنهاء" color="gray" />
+            <StatusButton reservation={reservation} status="cancelled" label="إلغاء" color="red" />
           </div>
           
-          {/* Delete button */}
+          {/* زر الحذف */}
           <Button
             size="xs"
             variant="danger"
             onClick={(e) => openDeleteModal(reservation, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
@@ -212,15 +242,15 @@ export default function ReservationList({
         columns={columns}
         keyExtractor={(reservation) => reservation.id}
         isLoading={isLoading}
-        emptyMessage="No reservations found"
+        emptyMessage="لم يتم العثور على حجوزات"
         onRowClick={handleRowClick}
       />
       
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Reservation"
+        title="حذف الحجز"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -228,7 +258,7 @@ export default function ReservationList({
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -236,25 +266,25 @@ export default function ReservationList({
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete this reservation? This action cannot be undone.
+          هل أنت متأكد أنك تريد حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-          <p className="text-sm font-medium">Warning</p>
-          <p className="text-sm">Deleting this reservation will remove the tenant's access to this unit and any associated service orders.</p>
+          <p className="text-sm font-medium">تحذير</p>
+          <p className="text-sm">حذف هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة وأي طلبات خدمة مرتبطة بها.</p>
         </div>
       </Modal>
       
-      {/* Status Update Confirmation Modal */}
+      {/* نافذة تأكيد تحديث الحالة */}
       <Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
-        title="Update Reservation Status"
+        title="تحديث حالة الحجز"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -262,7 +292,7 @@ export default function ReservationList({
               onClick={() => setStatusUpdateModalOpen(false)}
               disabled={isUpdatingStatus}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -270,25 +300,25 @@ export default function ReservationList({
               isLoading={isUpdatingStatus}
               disabled={isUpdatingStatus}
             >
-              Update Status
+              تحديث الحالة
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to change the status to{" "}
-          <span className="font-medium capitalize">{newStatus}</span>?
+          هل أنت متأكد أنك تريد تغيير الحالة إلى{" "}
+          <span className="font-medium">{getStatusLabel(newStatus)}</span>؟
         </p>
         {newStatus === 'cancelled' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Cancelling this reservation will remove the tenant's access to this unit.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">إلغاء هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة.</p>
           </div>
         )}
         {newStatus === 'expired' && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-700">
-            <p className="text-sm font-medium">Note</p>
-            <p className="text-sm">Marking this reservation as expired will change the unit status to available.</p>
+            <p className="text-sm font-medium">ملاحظة</p>
+            <p className="text-sm">تحديد هذا الحجز كمنتهي سيغير حالة الوحدة إلى متاحة.</p>
           </div>
         )}
       </Modal>

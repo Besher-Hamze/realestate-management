@@ -27,19 +27,19 @@ export default function CompanyList({
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Handle row click
+  // التعامل مع النقر على الصف
   const handleRowClick = (company: Company) => {
     router.push(`/dashboard/companies/${company.id}`);
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (company: Company, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedCompany(company);
     setDeleteModalOpen(true);
   };
 
-  // Delete company
+  // حذف الشركة
   const handleDelete = async () => {
     if (!selectedCompany) return;
 
@@ -48,27 +48,27 @@ export default function CompanyList({
       const response = await companiesApi.delete(selectedCompany.id);
 
       if (response.success) {
-        toast.success('Company deleted successfully');
+        toast.success('تم حذف الشركة بنجاح');
         setDeleteModalOpen(false);
         
-        // Call the onDelete callback or refetch data
+        // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedCompany.id);
         } else {
           refetch();
         }
       } else {
-        toast.error(response.message || 'Failed to delete company');
+        toast.error(response.message || 'فشل في حذف الشركة');
       }
     } catch (error) {
-      console.error('Error deleting company:', error);
-      toast.error('An error occurred while deleting the company');
+      console.error('خطأ في حذف الشركة:', error);
+      toast.error('حدث خطأ أثناء حذف الشركة');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Define columns for the table
+  // تعريف أعمدة الجدول
   const columns: TableColumn<Company>[] = [
     {
       key: 'logo',
@@ -78,7 +78,7 @@ export default function CompanyList({
           {company.logoUrl ? (
             <img 
               src={company.logoUrl} 
-              alt={`${company.name} logo`} 
+              alt={`شعار ${company.name}`} 
               className="w-8 h-8 object-contain rounded"
             />
           ) : (
@@ -91,7 +91,7 @@ export default function CompanyList({
     },
     {
       key: 'name',
-      header: 'Company Name',
+      header: 'اسم الشركة',
       cell: (company) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{company.name}</span>
@@ -100,7 +100,7 @@ export default function CompanyList({
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: 'معلومات الاتصال',
       cell: (company) => (
         <div className="flex flex-col">
           <span className="text-gray-700">{company.email}</span>
@@ -110,31 +110,31 @@ export default function CompanyList({
     },
     {
       key: 'address',
-      header: 'Address',
+      header: 'العنوان',
       cell: (company) => <span className="text-gray-700">{company.address}</span>,
     },
     {
       key: 'createdAt',
-      header: 'Created At',
+      header: 'تاريخ الإنشاء',
       cell: (company) => <span className="text-gray-700">{formatDate(company.createdAt)}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (company) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/companies/${company.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline">عرض</Button>
           </Link>
           <Link href={`/dashboard/companies/${company.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">Edit</Button>
+            <Button size="sm" variant="outline">تعديل</Button>
           </Link>
           <Button
             size="sm"
             variant="danger"
             onClick={(e) => openDeleteModal(company, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
@@ -148,15 +148,15 @@ export default function CompanyList({
         columns={columns}
         keyExtractor={(company) => company.id}
         isLoading={isLoading}
-        emptyMessage="No companies found"
+        emptyMessage="لم يتم العثور على شركات"
         onRowClick={handleRowClick}
       />
       
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Company"
+        title="حذف الشركة"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -164,7 +164,7 @@ export default function CompanyList({
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -172,17 +172,17 @@ export default function CompanyList({
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete the company "{selectedCompany?.name}"? This action cannot be undone.
+          هل أنت متأكد أنك تريد حذف الشركة "{selectedCompany?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-          <p className="text-sm font-medium">Warning</p>
-          <p className="text-sm">Deleting this company will also remove all associated buildings, units, managers, and data.</p>
+          <p className="text-sm font-medium">تحذير</p>
+          <p className="text-sm">حذف هذه الشركة سيؤدي أيضًا إلى إزالة جميع المباني والوحدات والمديرين والبيانات المرتبطة بها.</p>
         </div>
       </Modal>
     </>

@@ -18,36 +18,36 @@ export default function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
 
-  // Status filter options
+  // خيارات تصفية الحالة
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'refunded', label: 'Refunded' },
-    { value: 'failed', label: 'Failed' },
+    { value: 'all', label: 'جميع الحالات' },
+    { value: 'paid', label: 'مدفوع' },
+    { value: 'pending', label: 'قيد الانتظار' },
+    { value: 'refunded', label: 'مسترجع' },
+    { value: 'failed', label: 'فاشل' },
   ];
 
-  // Method filter options
+  // خيارات تصفية طريقة الدفع
   const methodOptions = [
-    { value: 'all', label: 'All Methods' },
-    { value: 'cash', label: 'Cash' },
-    { value: 'credit_card', label: 'Credit Card' },
-    { value: 'bank_transfer', label: 'Bank Transfer' },
-    { value: 'check', label: 'Check' },
-    { value: 'other', label: 'Other' },
+    { value: 'all', label: 'جميع الطرق' },
+    { value: 'cash', label: 'نقدًا' },
+    { value: 'credit_card', label: 'بطاقة ائتمان' },
+    { value: 'bank_transfer', label: 'تحويل بنكي' },
+    { value: 'check', label: 'شيك' },
+    { value: 'other', label: 'أخرى' },
   ];
 
-  // Fetch payments on component mount
+  // جلب المدفوعات عند تحميل المكون
   useEffect(() => {
     fetchPayments();
   }, []);
 
-  // Apply filters when payments, status filter, or method filter changes
+  // تطبيق التصفية عند تغيير المدفوعات أو مرشحات الحالة أو طريقة الدفع
   useEffect(() => {
     applyFilters();
   }, [payments, statusFilter, methodFilter]);
 
-  // Fetch payments data
+  // جلب بيانات المدفوعات
   const fetchPayments = async () => {
     try {
       setIsLoading(true);
@@ -56,26 +56,26 @@ export default function PaymentsPage() {
       if (response.success) {
         setPayments(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch payments');
+        toast.error(response.message || 'فشل في جلب المدفوعات');
       }
     } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast.error('An error occurred while fetching payments');
+      console.error('خطأ في جلب المدفوعات:', error);
+      toast.error('حدث خطأ أثناء جلب المدفوعات');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters to payments
+  // تطبيق المرشحات على المدفوعات
   const applyFilters = () => {
     let filtered = [...payments];
     
-    // Apply status filter
+    // تطبيق مرشح الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((payment) => payment.status === statusFilter);
     }
     
-    // Apply method filter
+    // تطبيق مرشح طريقة الدفع
     if (methodFilter !== 'all') {
       filtered = filtered.filter((payment) => payment.paymentMethod === methodFilter);
     }
@@ -83,35 +83,35 @@ export default function PaymentsPage() {
     setFilteredPayments(filtered);
   };
 
-  // Handle status filter change
+  // التعامل مع تغيير مرشح الحالة
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value);
   };
 
-  // Handle method filter change
+  // التعامل مع تغيير مرشح طريقة الدفع
   const handleMethodFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setMethodFilter(e.target.value);
   };
 
-  // Handle payment deletion
+  // التعامل مع حذف المدفوعة
   const handleDelete = (id: number) => {
     setPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== id));
   };
 
-  // Calculate totals
+  // حساب المجاميع
   const calculateTotal = (status: string = 'all') => {
     const filtered = status === 'all' 
       ? payments 
       : payments.filter(payment => payment.status === status);
     
-    return filtered.reduce((sum, payment) => sum + payment.amount, 0);
+    return filtered.reduce((sum, payment) => sum + Number(payment.amount) || 0, 0);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
+        <h1 className="text-2xl font-bold text-gray-900">المدفوعات</h1>
         <Link href="/dashboard/payments/create">
           <Button
             variant="primary"
@@ -121,12 +121,12 @@ export default function PaymentsPage() {
               </svg>
             }
           >
-            Add Payment
+            إضافة مدفوعة
           </Button>
         </Link>
       </div>
       
-      {/* Payment summary cards */}
+      {/* بطاقات ملخص المدفوعات */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-blue-50 border-blue-200">
           <div className="p-4">
@@ -136,8 +136,8 @@ export default function PaymentsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-blue-800">Total Payments</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">إجمالي المدفوعات</h3>
                 <p className="text-2xl font-bold text-blue-900">{formatCurrency(calculateTotal())}</p>
               </div>
             </div>
@@ -152,8 +152,8 @@ export default function PaymentsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-green-800">Paid</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-green-800">مدفوعة</h3>
                 <p className="text-2xl font-bold text-green-900">{formatCurrency(calculateTotal('paid'))}</p>
               </div>
             </div>
@@ -168,8 +168,8 @@ export default function PaymentsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-yellow-800">Pending</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-yellow-800">قيد الانتظار</h3>
                 <p className="text-2xl font-bold text-yellow-900">{formatCurrency(calculateTotal('pending'))}</p>
               </div>
             </div>
@@ -184,8 +184,8 @@ export default function PaymentsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-purple-800">Refunded</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-purple-800">مسترجعة</h3>
                 <p className="text-2xl font-bold text-purple-900">{formatCurrency(calculateTotal('refunded'))}</p>
               </div>
             </div>
@@ -193,12 +193,12 @@ export default function PaymentsPage() {
         </Card>
       </div>
       
-      {/* Filters */}
+      {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Select
-              label="Status"
+              label="الحالة"
               id="statusFilter"
               name="statusFilter"
               value={statusFilter}
@@ -209,7 +209,7 @@ export default function PaymentsPage() {
           </div>
           <div className="w-full sm:w-64">
             <Select
-              label="Payment Method"
+              label="طريقة الدفع"
               id="methodFilter"
               name="methodFilter"
               value={methodFilter}
@@ -221,7 +221,7 @@ export default function PaymentsPage() {
         </div>
       </div>
       
-      {/* Payments List */}
+      {/* قائمة المدفوعات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <PaymentList
           payments={filteredPayments}

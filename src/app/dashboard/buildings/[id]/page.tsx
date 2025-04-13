@@ -29,12 +29,12 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch building details on component mount
+  // جلب تفاصيل المبنى عند تحميل المكون
   useEffect(() => {
     fetchBuilding();
   }, [id]);
 
-  // Fetch building data
+  // جلب بيانات المبنى
   const fetchBuilding = async () => {
     try {
       setIsLoading(true);
@@ -44,17 +44,17 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
         setBuilding(response.data);
         fetchUnits();
       } else {
-        toast.error(response.message || 'Failed to fetch building details');
+        toast.error(response.message || 'فشل في جلب تفاصيل المبنى');
       }
     } catch (error) {
-      console.error('Error fetching building:', error);
-      toast.error('An error occurred while fetching building details');
+      console.error('خطأ في جلب المبنى:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل المبنى');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch units for this building
+  // جلب الوحدات لهذا المبنى
   const fetchUnits = async () => {
     try {
       setIsUnitsLoading(true);
@@ -63,99 +63,99 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
       if (response.success) {
         setUnits(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch building units');
+        toast.error(response.message || 'فشل في جلب وحدات المبنى');
       }
     } catch (error) {
-      console.error('Error fetching units:', error);
-      toast.error('An error occurred while fetching building units');
+      console.error('خطأ في جلب الوحدات:', error);
+      toast.error('حدث خطأ أثناء جلب وحدات المبنى');
     } finally {
       setIsUnitsLoading(false);
     }
   };
 
-  // Delete building
+  // حذف المبنى
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await buildingsApi.delete(id);
 
       if (response.success) {
-        toast.success('Building deleted successfully');
+        toast.success('تم حذف المبنى بنجاح');
         router.push('/dashboard/buildings');
       } else {
-        toast.error(response.message || 'Failed to delete building');
+        toast.error(response.message || 'فشل في حذف المبنى');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting building:', error);
-      toast.error('An error occurred while deleting the building');
+      console.error('خطأ في حذف المبنى:', error);
+      toast.error('حدث خطأ أثناء حذف المبنى');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Define columns for the units table
+  // تعريف أعمدة جدول الوحدات
   const unitColumns: TableColumn<Unit>[] = [
     {
       key: 'unitNumber',
-      header: 'Unit Number',
+      header: 'رقم الوحدة',
       cell: (unit) => <span className="font-medium text-gray-900">{unit.unitNumber}</span>,
     },
     {
       key: 'floor',
-      header: 'Floor',
+      header: 'الطابق',
       cell: (unit) => <span className="text-gray-700">{unit.floor}</span>,
     },
     {
       key: 'area',
-      header: 'Area (m²)',
+      header: 'المساحة (م²)',
       cell: (unit) => <span className="text-gray-700">{unit.area}</span>,
     },
     {
       key: 'bedrooms',
-      header: 'Bedrooms',
+      header: 'غرف النوم',
       cell: (unit) => <span className="text-gray-700">{unit.bedrooms}</span>,
     },
     {
       key: 'bathrooms',
-      header: 'Bathrooms',
+      header: 'الحمامات',
       cell: (unit) => <span className="text-gray-700">{unit.bathrooms}</span>,
     },
     {
       key: 'price',
-      header: 'Price',
+      header: 'السعر',
       cell: (unit) => <span className="text-gray-900 font-medium">${unit.price}</span>,
     },
     {
       key: 'status',
-      header: 'Status',
+      header: 'الحالة',
       cell: (unit) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${unit.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
             }`}
         >
-          {unit.status.charAt(0).toUpperCase() + unit.status.slice(1)}
+          {unit.status === 'available' ? 'متاح' : 'مؤجر'}
         </span>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (unit) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/units/${unit.id}`}>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline">عرض</Button>
           </Link>
           <Link href={`/dashboard/units/${unit.id}/edit`}>
-            <Button size="sm" variant="outline">Edit</Button>
+            <Button size="sm" variant="outline">تعديل</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -180,20 +180,20 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading building details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل المبنى...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور على المبنى
   if (!building) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Building Not Found</h2>
-        <p className="text-gray-600 mb-6">The building you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">لم يتم العثور على المبنى</h2>
+        <p className="text-gray-600 mb-6">المبنى الذي تبحث عنه غير موجود أو ليس لديك صلاحية مشاهدته.</p>
         <Link href="/dashboard/buildings">
-          <Button>Back to Buildings</Button>
+          <Button>العودة إلى المباني</Button>
         </Link>
       </div>
     );
@@ -201,16 +201,16 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
 
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs and actions */}
+      {/* العنوان مع مسار التنقل والإجراءات */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/buildings" className="hover:text-primary-600">Buildings</Link>
+              <Link href="/dashboard/buildings" className="hover:text-primary-600">المباني</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -231,78 +231,78 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
                   </svg>
                 }
               >
-                Add Unit
+                إضافة وحدة
               </Button>
             </Link>
             <Link href={`/dashboard/buildings/${building.id}/edit`}>
-              <Button variant="outline">Edit Building</Button>
+              <Button variant="outline">تعديل المبنى</Button>
             </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>Delete</Button>
+            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
           </div>
         </div>
       </div>
 
-      {/* Building Details */}
+      {/* تفاصيل المبنى */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* المعلومات الرئيسية */}
         <Card className="lg:col-span-2">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Building Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المبنى</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Building Type</h3>
+                <h3 className="text-sm font-medium text-gray-500">نوع المبنى</h3>
                 <p className="mt-1 text-base text-gray-900 capitalize">
-                  {building.buildingType}
+                  {building.buildingType === 'apartment' ? 'مبنى شقق' : 'فيلا'}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Total Units</h3>
+                <h3 className="text-sm font-medium text-gray-500">إجمالي الوحدات</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {building.totalUnits}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Address</h3>
+                <h3 className="text-sm font-medium text-gray-500">العنوان</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {building.address}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Created At</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ الإنشاء</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(building.createdAt)}
                 </p>
               </div>
 
               <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                <h3 className="text-sm font-medium text-gray-500">الوصف</h3>
                 <p className="mt-1 text-base text-gray-900">
-                  {building.description || 'No description provided'}
+                  {building.description || 'لا يوجد وصف مقدم'}
                 </p>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Stats */}
+        {/* الإحصائيات */}
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">الإحصائيات</h2>
 
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Available Units</h3>
+                <h3 className="text-sm font-medium text-gray-500">الوحدات المتاحة</h3>
                 <p className="mt-1 text-2xl font-semibold text-green-600">
                   {units.filter(unit => unit.status === 'available').length}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Rented Units</h3>
+                <h3 className="text-sm font-medium text-gray-500">الوحدات المؤجرة</h3>
                 <p className="mt-1 text-2xl font-semibold text-blue-600">
                   {units.filter(unit => unit.status === 'rented').length}
                 </p>
@@ -312,10 +312,10 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
         </Card>
       </div>
 
-      {/* Units List */}
+      {/* قائمة الوحدات */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Units</h2>
+          <h2 className="text-xl font-semibold text-gray-900">الوحدات</h2>
           <Link href={`/dashboard/units/create?buildingId=${building.id}`}>
             <Button
               variant="primary"
@@ -326,7 +326,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
                 </svg>
               }
             >
-              Add Unit
+              إضافة وحدة
             </Button>
           </Link>
         </div>
@@ -337,17 +337,17 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
             columns={unitColumns}
             keyExtractor={(unit) => unit.id}
             isLoading={isUnitsLoading}
-            emptyMessage="No units found for this building"
+            emptyMessage="لا توجد وحدات لهذا المبنى"
             onRowClick={(unit) => router.push(`/dashboard/units/${unit.id}`)}
           />
         </Card>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Building"
+        title="حذف المبنى"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -355,7 +355,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -363,17 +363,17 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete the building "{building.name}"? This action cannot be undone.
+          هل أنت متأكد أنك تريد حذف المبنى "{building.name}"؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-          <p className="text-sm font-medium">Warning</p>
-          <p className="text-sm">Deleting this building will also delete all associated units and data. Any active reservations will be affected.</p>
+          <p className="text-sm font-medium">تحذير</p>
+          <p className="text-sm">حذف هذا المبنى سيؤدي أيضًا إلى حذف جميع الوحدات والبيانات المرتبطة به. ستتأثر أي حجوزات نشطة.</p>
         </div>
       </Modal>
     </div>

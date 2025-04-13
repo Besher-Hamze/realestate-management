@@ -33,15 +33,15 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Only admins can delete companies
+  // فقط المسؤولون يمكنهم حذف الشركات
   const isAdmin = currentUser?.role === 'admin';
 
-  // Fetch company details on component mount
+  // جلب تفاصيل الشركة عند تحميل المكون
   useEffect(() => {
     fetchCompany();
   }, [id]);
 
-  // Fetch company data
+  // جلب بيانات الشركة
   const fetchCompany = async () => {
     try {
       setIsLoading(true);
@@ -52,89 +52,89 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
         fetchCompanyManagers();
         fetchCompanyBuildings();
       } else {
-        toast.error(response.message || 'Failed to fetch company details');
+        toast.error(response.message || 'فشل في جلب تفاصيل الشركة');
       }
     } catch (error) {
-      console.error('Error fetching company:', error);
-      toast.error('An error occurred while fetching company details');
+      console.error('خطأ في جلب الشركة:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الشركة');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch managers for this company
+  // جلب المديرين لهذه الشركة
   const fetchCompanyManagers = async () => {
     try {
       setIsManagersLoading(true);
       const response = await usersApi.getAll();
       
       if (response.success) {
-        // Filter to only manager users of this company
+        // تصفية لمستخدمي المديرين فقط في هذه الشركة
         const companyManagers = response.data.filter(
-          user => user.role === 'manager' && user.companyId === parseInt(id)
+          (user:User) => user.role === 'manager' && user.companyId === parseInt(id)
         );
         setManagers(companyManagers);
       } else {
-        toast.error(response.message || 'Failed to fetch company managers');
+        toast.error(response.message || 'فشل في جلب مديري الشركة');
       }
     } catch (error) {
-      console.error('Error fetching managers:', error);
-      toast.error('An error occurred while fetching company managers');
+      console.error('خطأ في جلب المديرين:', error);
+      toast.error('حدث خطأ أثناء جلب مديري الشركة');
     } finally {
       setIsManagersLoading(false);
     }
   };
 
-  // Fetch buildings for this company
+  // جلب المباني لهذه الشركة
   const fetchCompanyBuildings = async () => {
     try {
       setIsBuildingsLoading(true);
       const response = await buildingsApi.getAll();
       
       if (response.success) {
-        // Filter to only buildings of this company
+        // تصفية لمباني هذه الشركة فقط
         const companyBuildings = response.data.filter(
-          building => building.companyId === parseInt(id)
+          (building:Building) => building.companyId === parseInt(id)
         );
         setBuildings(companyBuildings);
       } else {
-        toast.error(response.message || 'Failed to fetch company buildings');
+        toast.error(response.message || 'فشل في جلب مباني الشركة');
       }
     } catch (error) {
-      console.error('Error fetching buildings:', error);
-      toast.error('An error occurred while fetching company buildings');
+      console.error('خطأ في جلب المباني:', error);
+      toast.error('حدث خطأ أثناء جلب مباني الشركة');
     } finally {
       setIsBuildingsLoading(false);
     }
   };
 
-  // Delete company
+  // حذف الشركة
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await companiesApi.delete(id);
       
       if (response.success) {
-        toast.success('Company deleted successfully');
+        toast.success('تم حذف الشركة بنجاح');
         router.push('/dashboard/companies');
       } else {
-        toast.error(response.message || 'Failed to delete company');
+        toast.error(response.message || 'فشل في حذف الشركة');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting company:', error);
-      toast.error('An error occurred while deleting the company');
+      console.error('خطأ في حذف الشركة:', error);
+      toast.error('حدث خطأ أثناء حذف الشركة');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Define columns for the managers table
+  // تعريف أعمدة جدول المديرين
   const managerColumns = [
     {
       key: 'name',
-      header: 'Name',
+      header: 'الاسم',
       cell: (user: User) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{user.fullName}</span>
@@ -144,7 +144,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: 'معلومات الاتصال',
       cell: (user: User) => (
         <div className="flex flex-col">
           <span className="text-gray-700">{user.email}</span>
@@ -154,63 +154,65 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     },
     {
       key: 'joined',
-      header: 'Joined',
+      header: 'تاريخ الانضمام',
       cell: (user: User) => <span className="text-gray-700">{formatDate(user.createdAt)}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (user: User) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/users/${user.id}`}>
-            <Button size="xs" variant="outline">View Profile</Button>
+            <Button size="xs" variant="outline">عرض الملف الشخصي</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Define columns for the buildings table
+  // تعريف أعمدة جدول المباني
   const buildingColumns = [
     {
       key: 'name',
-      header: 'Name',
+      header: 'الاسم',
       cell: (building: Building) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{building.name}</span>
-          <span className="text-xs text-gray-500 capitalize">{building.buildingType}</span>
+          <span className="text-xs text-gray-500 capitalize">
+            {building.buildingType === 'apartment' ? 'مبنى شقق' : 'فيلا'}
+          </span>
         </div>
       ),
     },
     {
       key: 'address',
-      header: 'Address',
+      header: 'العنوان',
       cell: (building: Building) => <span className="text-gray-700">{building.address}</span>,
     },
     {
       key: 'units',
-      header: 'Units',
+      header: 'الوحدات',
       cell: (building: Building) => <span className="text-gray-700">{building.totalUnits}</span>,
     },
     {
       key: 'created',
-      header: 'Created',
+      header: 'تاريخ الإنشاء',
       cell: (building: Building) => <span className="text-gray-700">{formatDate(building.createdAt)}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (building: Building) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/buildings/${building.id}`}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -235,7 +237,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading company details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل الشركة...</p>
         </div>
       </div>
     );
@@ -244,10 +246,10 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   if (!company) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Company Not Found</h3>
-        <p className="text-gray-600 mb-4">The requested company could not be found</p>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">لم يتم العثور على الشركة</h3>
+        <p className="text-gray-600 mb-4">تعذر العثور على الشركة المطلوبة</p>
         <Link href="/dashboard/companies">
-          <Button>Back to Companies</Button>
+          <Button>العودة إلى الشركات</Button>
         </Link>
       </div>
     );
@@ -255,16 +257,16 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs */}
+      {/* العنوان مع مسار التنقل */}
       <div className="flex flex-col space-y-2">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/companies" className="hover:text-primary-600">Companies</Link>
+              <Link href="/dashboard/companies" className="hover:text-primary-600">الشركات</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -276,50 +278,50 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
           <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
           <div className="flex space-x-3">
             <Link href={`/dashboard/companies/${id}/edit`}>
-              <Button variant="outline">Edit</Button>
+              <Button variant="outline">تعديل</Button>
             </Link>
             {isAdmin && (
               <Button
                 variant="danger"
                 onClick={() => setDeleteModalOpen(true)}
               >
-                Delete
+                حذف
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Company Info Card */}
+      {/* بطاقة معلومات الشركة */}
       <Card>
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Company Information</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">معلومات الشركة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">Email</p>
-                <p className="text-gray-800">{company.email || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-500">البريد الإلكتروني</p>
+                <p className="text-gray-800">{company.email || 'غير متوفر'}</p>
               </div>
               <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">Phone</p>
-                <p className="text-gray-800">{company.phone || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-500">الهاتف</p>
+                <p className="text-gray-800">{company.phone || 'غير متوفر'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Created On</p>
+                <p className="text-sm font-medium text-gray-500">تاريخ الإنشاء</p>
                 <p className="text-gray-800">{formatDate(company.createdAt)}</p>
               </div>
             </div>
             <div>
               <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">Address</p>
-                <p className="text-gray-800">{company.address || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-500">العنوان</p>
+                <p className="text-gray-800">{company.address || 'غير متوفر'}</p>
               </div>
               {company.logoUrl && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Logo</p>
+                  <p className="text-sm font-medium text-gray-500 mb-2">الشعار</p>
                   <img
                     src={company.logoUrl}
-                    alt={`${company.name} logo`}
+                    alt={`شعار ${company.name}`}
                     className="h-24 w-auto object-contain border rounded p-2"
                   />
                 </div>
@@ -329,13 +331,13 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
         </div>
       </Card>
 
-      {/* Managers Section */}
+      {/* قسم المديرين */}
       <Card>
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Managers</h2>
+            <h2 className="text-xl font-semibold text-gray-800">المديرون</h2>
             <Link href={`/dashboard/users/managers/create?companyId=${id}`}>
-              <Button size="sm">Add Manager</Button>
+              <Button size="sm">إضافة مدير</Button>
             </Link>
           </div>
           
@@ -362,7 +364,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <p className="text-gray-600">Loading managers...</p>
+                <p className="text-gray-600">جاري تحميل المديرين...</p>
               </div>
             </div>
           ) : managers.length > 0 ? (
@@ -375,22 +377,22 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
             />
           ) : (
             <div className="bg-gray-50 p-6 text-center rounded-md">
-              <p className="text-gray-600 mb-4">No managers found for this company</p>
+              <p className="text-gray-600 mb-4">لم يتم العثور على مديرين لهذه الشركة</p>
               <Link href={`/dashboard/users/managers/create?companyId=${id}`}>
-                <Button size="sm">Add Manager</Button>
+                <Button size="sm">إضافة مدير</Button>
               </Link>
             </div>
           )}
         </div>
       </Card>
 
-      {/* Buildings Section */}
+      {/* قسم المباني */}
       <Card>
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Buildings</h2>
+            <h2 className="text-xl font-semibold text-gray-800">المباني</h2>
             <Link href={`/dashboard/buildings/create?companyId=${id}`}>
-              <Button size="sm">Add Building</Button>
+              <Button size="sm">إضافة مبنى</Button>
             </Link>
           </div>
           
@@ -417,7 +419,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <p className="text-gray-600">Loading buildings...</p>
+                <p className="text-gray-600">جاري تحميل المباني...</p>
               </div>
             </div>
           ) : buildings.length > 0 ? (
@@ -430,25 +432,25 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
             />
           ) : (
             <div className="bg-gray-50 p-6 text-center rounded-md">
-              <p className="text-gray-600 mb-4">No buildings found for this company</p>
+              <p className="text-gray-600 mb-4">لم يتم العثور على مباني لهذه الشركة</p>
               <Link href={`/dashboard/buildings/create?companyId=${id}`}>
-                <Button size="sm">Add Building</Button>
+                <Button size="sm">إضافة مبنى</Button>
               </Link>
             </div>
           )}
         </div>
       </Card>
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Company"
+        title="حذف الشركة"
       >
         <div className="p-6">
           <p className="text-gray-700 mb-6">
-            Are you sure you want to delete <span className="font-semibold">{company?.name}</span>? 
-            This action cannot be undone, and all associated buildings and data will be permanently deleted.
+            هل أنت متأكد أنك تريد حذف <span className="font-semibold">{company?.name}</span>؟ 
+            لا يمكن التراجع عن هذا الإجراء، وسيتم حذف جميع المباني والبيانات المرتبطة نهائيًا.
           </p>
           <div className="flex justify-end space-x-3">
             <Button
@@ -456,7 +458,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -464,7 +466,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete Company
+              حذف الشركة
             </Button>
           </div>
         </div>

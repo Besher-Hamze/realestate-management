@@ -34,12 +34,12 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
   const [newStatus, setNewStatus] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Fetch reservation details on component mount
+  // جلب تفاصيل الحجز عند تحميل المكون
   useEffect(() => {
     fetchReservation();
   }, [id]);
 
-  // Fetch reservation data
+  // جلب بيانات الحجز
   const fetchReservation = async () => {
     try {
       setIsLoading(true);
@@ -50,17 +50,17 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         fetchServiceOrders(response.data.id);
         fetchPayments(response.data.id);
       } else {
-        toast.error(response.message || 'Failed to fetch reservation details');
+        toast.error(response.message || 'فشل في جلب تفاصيل الحجز');
       }
     } catch (error) {
-      console.error('Error fetching reservation:', error);
-      toast.error('An error occurred while fetching reservation details');
+      console.error('خطأ في جلب الحجز:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الحجز');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch service orders for this reservation
+  // جلب طلبات الخدمة لهذا الحجز
   const fetchServiceOrders = async (reservationId: number) => {
     try {
       setIsServicesLoading(true);
@@ -69,17 +69,17 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       if (response.success) {
         setServiceOrders(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch service orders');
+        toast.error(response.message || 'فشل في جلب طلبات الخدمة');
       }
     } catch (error) {
-      console.error('Error fetching service orders:', error);
-      toast.error('An error occurred while fetching service orders');
+      console.error('خطأ في جلب طلبات الخدمة:', error);
+      toast.error('حدث خطأ أثناء جلب طلبات الخدمة');
     } finally {
       setIsServicesLoading(false);
     }
   };
 
-  // Fetch payments for this reservation
+  // جلب المدفوعات لهذا الحجز
   const fetchPayments = async (reservationId: number) => {
     try {
       setIsPaymentsLoading(true);
@@ -88,45 +88,45 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       if (response.success) {
         setPayments(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch payments');
+        toast.error(response.message || 'فشل في جلب المدفوعات');
       }
     } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast.error('An error occurred while fetching payments');
+      console.error('خطأ في جلب المدفوعات:', error);
+      toast.error('حدث خطأ أثناء جلب المدفوعات');
     } finally {
       setIsPaymentsLoading(false);
     }
   };
 
-  // Delete reservation
+  // حذف الحجز
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await reservationsApi.delete(id);
 
       if (response.success) {
-        toast.success('Reservation deleted successfully');
+        toast.success('تم حذف الحجز بنجاح');
         router.push('/dashboard/reservations');
       } else {
-        toast.error(response.message || 'Failed to delete reservation');
+        toast.error(response.message || 'فشل في حذف الحجز');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting reservation:', error);
-      toast.error('An error occurred while deleting the reservation');
+      console.error('خطأ في حذف الحجز:', error);
+      toast.error('حدث خطأ أثناء حذف الحجز');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Open status update modal
+  // فتح نافذة تحديث الحالة
   const openStatusUpdateModal = (status: string) => {
     setNewStatus(status);
     setStatusUpdateModalOpen(true);
   };
 
-  // Update reservation status
+  // تحديث حالة الحجز
   const handleStatusUpdate = async () => {
     if (!reservation || !newStatus) return;
 
@@ -138,25 +138,36 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       });
 
       if (response.success) {
-        toast.success(`Reservation status updated to ${newStatus}`);
+        toast.success(`تم تحديث حالة الحجز إلى ${getStatusName(newStatus)}`);
         setStatusUpdateModalOpen(false);
         setReservation(response.data as any);
       } else {
-        toast.error(response.message || 'Failed to update reservation status');
+        toast.error(response.message || 'فشل في تحديث حالة الحجز');
       }
     } catch (error) {
-      console.error('Error updating reservation status:', error);
-      toast.error('An error occurred while updating the reservation status');
+      console.error('خطأ في تحديث حالة الحجز:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة الحجز');
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
-  // Define columns for the service orders table
+  // الحصول على اسم الحالة بالعربية
+  const getStatusName = (status: string) => {
+    switch (status) {
+      case 'active': return 'نشط';
+      case 'pending': return 'قيد الانتظار';
+      case 'expired': return 'منتهي';
+      case 'cancelled': return 'ملغي';
+      default: return status;
+    }
+  };
+
+  // تعريف أعمدة جدول طلبات الخدمة
   const serviceOrderColumns: TableColumn<ServiceOrder>[] = [
     {
       key: 'type',
-      header: 'Type',
+      header: 'النوع',
       cell: (service) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900 capitalize">{service.serviceType}</span>
@@ -166,7 +177,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
     },
     {
       key: 'description',
-      header: 'Description',
+      header: 'الوصف',
       cell: (service) => (
         <div className="max-w-xs">
           <p className="text-gray-700 truncate">{service.description}</p>
@@ -175,83 +186,121 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
     },
     {
       key: 'created',
-      header: 'Submitted On',
+      header: 'تاريخ التقديم',
       cell: (service) => <span className="text-gray-700">{formatDate(service.createdAt)}</span>,
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (service) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+      header: 'الحالة',
+      cell: (service) => {
+        let statusText = '';
+        switch (service.status) {
+          case 'pending': statusText = 'قيد الانتظار'; break;
+          case 'in-progress': statusText = 'قيد التنفيذ'; break;
+          case 'completed': statusText = 'مكتمل'; break;
+          default: statusText = 'ملغي';
+        }
+
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
               service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
                 service.status === 'completed' ? 'bg-green-100 text-green-800' :
                   'bg-red-100 text-red-800'
-            }`}
-        >
-          {service.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-        </span>
-      ),
+              }`}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (service) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/services/${service.id}`}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Define columns for the payments table
+  // تعريف أعمدة جدول المدفوعات
   const paymentColumns: TableColumn<Payment>[] = [
     {
       key: 'date',
-      header: 'Date',
+      header: 'التاريخ',
       cell: (payment) => <span className="text-gray-700">{formatDate(payment.paymentDate)}</span>,
     },
     {
       key: 'amount',
-      header: 'Amount',
+      header: 'المبلغ',
       cell: (payment) => <span className="text-gray-900 font-medium">{formatCurrency(payment.amount)}</span>,
     },
     {
       key: 'method',
-      header: 'Method',
-      cell: (payment) => <span className="text-gray-700 capitalize">{payment.paymentMethod.replace('_', ' ')}</span>,
+      header: 'الطريقة',
+      cell: (payment) => {
+        let method = payment.paymentMethod.replace('_', ' ');
+        switch (method) {
+          case 'cash': method = 'نقدًا'; break;
+          case 'credit card': method = 'بطاقة ائتمان'; break;
+          case 'bank transfer': method = 'تحويل بنكي'; break;
+          case 'check': method = 'شيك'; break;
+          case 'other': method = 'أخرى'; break;
+        }
+        return <span className="text-gray-700">{method}</span>;
+      },
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (payment) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.status === 'paid' ? 'bg-green-100 text-green-800' :
-              payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                payment.status === 'refunded' ? 'bg-purple-100 text-purple-800' :
-                  'bg-red-100 text-red-800'
-            }`}
-        >
-          {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-        </span>
-      ),
+      header: 'الحالة',
+      cell: (payment) => {
+        let statusText = '';
+        let statusClass = '';
+
+        switch (payment.status) {
+          case 'paid':
+            statusText = 'مدفوعة';
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'pending':
+            statusText = 'قيد الانتظار';
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'refunded':
+            statusText = 'مسترجعة';
+            statusClass = 'bg-purple-100 text-purple-800';
+            break;
+          case 'failed':
+            statusText = 'فاشلة';
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+        }
+
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (payment) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/payments/${payment.id}`}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -276,20 +325,20 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading reservation details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل الحجز...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور على الحجز
   if (!reservation) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Reservation Not Found</h2>
-        <p className="text-gray-600 mb-6">The reservation you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">لم يتم العثور على الحجز</h2>
+        <p className="text-gray-600 mb-6">الحجز الذي تبحث عنه غير موجود أو ليس لديك صلاحية مشاهدته.</p>
         <Link href="/dashboard/reservations">
-          <Button>Back to Reservations</Button>
+          <Button>العودة إلى الحجوزات</Button>
         </Link>
       </div>
     );
@@ -297,16 +346,16 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs and actions */}
+      {/* العنوان مع مسار التنقل والإجراءات */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/reservations" className="hover:text-primary-600">Reservations</Link>
+              <Link href="/dashboard/reservations" className="hover:text-primary-600">الحجوزات</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -317,96 +366,96 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">
-            Reservation #{reservation.id}
+            الحجز #{reservation.id}
           </h1>
           <div className="flex space-x-3">
             <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
-              <Button variant="outline">Edit</Button>
+              <Button variant="outline">تعديل</Button>
             </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>Delete</Button>
+            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
           </div>
         </div>
       </div>
 
-      {/* Reservation Details */}
+      {/* تفاصيل الحجز */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* المعلومات الرئيسية */}
         <Card className="lg:col-span-2">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Reservation Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900">تفاصيل الحجز</h2>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-                    reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                        'bg-red-100 text-red-800'
+                  reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
                   }`}
               >
-                {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+                {getStatusName(reservation.status)}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Start Date</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ البدء</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.startDate)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">End Date</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ الانتهاء</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.endDate)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                <p className="mt-1 text-base text-gray-900 capitalize">
-                  {reservation.status}
+                <h3 className="text-sm font-medium text-gray-500">الحالة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {getStatusName(reservation.status)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Created On</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ الإنشاء</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.createdAt)}
                 </p>
               </div>
             </div>
 
-            {/* Notes */}
+            {/* الملاحظات */}
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Notes</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">ملاحظات</h3>
               <div className="bg-gray-50 p-3 rounded border border-gray-200">
                 <p className="text-gray-700 whitespace-pre-line">
-                  {reservation.notes || 'No notes provided'}
+                  {reservation.notes || 'لا توجد ملاحظات مقدمة'}
                 </p>
               </div>
             </div>
 
-            {/* Contract */}
+            {/* العقد */}
             {reservation.contractUrl && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Contract Document</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">وثيقة العقد</h3>
                 <a
                   href={reservation.contractUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  <svg className="mr-2 -ml-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  View Contract
+                  عرض العقد
                 </a>
               </div>
             )}
 
-            {/* Status Action Buttons */}
+            {/* أزرار تحديث الحالة */}
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Reservation Actions</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">إجراءات الحجز</h3>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -415,7 +464,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   disabled={reservation.status === 'active'}
                   className="border-green-500 text-green-700 hover:bg-green-50 disabled:opacity-50"
                 >
-                  Mark as Active
+                  تحديد كنشط
                 </Button>
                 <Button
                   size="sm"
@@ -424,7 +473,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   disabled={reservation.status === 'pending'}
                   className="border-yellow-500 text-yellow-700 hover:bg-yellow-50 disabled:opacity-50"
                 >
-                  Mark as Pending
+                  تحديد كقيد الانتظار
                 </Button>
                 <Button
                   size="sm"
@@ -433,7 +482,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   disabled={reservation.status === 'expired'}
                   className="border-gray-500 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Mark as Expired
+                  تحديد كمنتهي
                 </Button>
                 <Button
                   size="sm"
@@ -442,66 +491,66 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   disabled={reservation.status === 'cancelled'}
                   className="border-red-500 text-red-700 hover:bg-red-50 disabled:opacity-50"
                 >
-                  Mark as Cancelled
+                  تحديد كملغي
                 </Button>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Tenant Info */}
+        {/* معلومات المستأجر */}
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tenant Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المستأجر</h2>
 
             {reservation.user ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Name</h3>
+                  <h3 className="text-sm font-medium text-gray-500">الاسم</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.fullName}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                  <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.email}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Phone</h3>
+                  <h3 className="text-sm font-medium text-gray-500">الهاتف</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.phone}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Username</h3>
+                  <h3 className="text-sm font-medium text-gray-500">اسم المستخدم</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.username}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Joined</h3>
+                  <h3 className="text-sm font-medium text-gray-500">تاريخ الانضمام</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {formatDate(reservation.user.createdAt)}
                   </p>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500">Tenant information not available</p>
+              <p className="text-gray-500">معلومات المستأجر غير متاحة</p>
             )}
           </div>
         </Card>
       </div>
 
-      {/* Payments */}
+      {/* المدفوعات */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
+          <h2 className="text-xl font-semibold text-gray-900">سجل المدفوعات</h2>
           <Link href={`/dashboard/payments/create?reservationId=${reservation.id}`}>
             <Button
               variant="primary"
@@ -512,7 +561,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </svg>
               }
             >
-              Add Payment
+              إضافة مدفوعة
             </Button>
           </Link>
         </div>
@@ -523,16 +572,16 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             columns={paymentColumns}
             keyExtractor={(payment) => payment.id}
             isLoading={isPaymentsLoading}
-            emptyMessage="No payment history found for this reservation"
+            emptyMessage="لم يتم العثور على سجل مدفوعات لهذا الحجز"
             onRowClick={(payment) => router.push(`/dashboard/payments/${payment.id}`)}
           />
         </Card>
       </div>
 
-      {/* Service Orders */}
+      {/* طلبات الخدمة */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Service Requests</h2>
+          <h2 className="text-xl font-semibold text-gray-900">طلبات الخدمة</h2>
           <Link href={`/dashboard/services/create?reservationId=${reservation.id}`}>
             <Button
               variant="primary"
@@ -543,7 +592,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </svg>
               }
             >
-              Create Service Request
+              إنشاء طلب خدمة
             </Button>
           </Link>
         </div>
@@ -554,25 +603,25 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             columns={serviceOrderColumns}
             keyExtractor={(service) => service.id}
             isLoading={isServicesLoading}
-            emptyMessage="No service requests found for this reservation"
+            emptyMessage="لم يتم العثور على طلبات خدمة لهذا الحجز"
             onRowClick={(service) => router.push(`/dashboard/services/${service.id}`)}
           />
         </Card>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Reservation"
+        title="حذف الحجز"
       >
         <div className="p-6">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to delete this reservation? This action cannot be undone.
+            هل أنت متأكد أنك تريد حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Deleting this reservation will remove the tenant's access to this unit and any associated service orders.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">حذف هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة وأي طلبات خدمة مرتبطة بها.</p>
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <Button
@@ -580,7 +629,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -588,33 +637,32 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         </div>
       </Modal>
 
-      {/* Status Update Confirmation Modal */}
       <Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
-        title="Update Reservation Status"
+        title="تحديث حالة الحجز"
       >
         <div className="p-6">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to change the status to{" "}
-            <span className="font-medium capitalize">{newStatus}</span>?
+            هل أنت متأكد أنك تريد تغيير الحالة إلى{" "}
+            <span className="font-medium">{getStatusName(newStatus)}</span>؟
           </p>
           {newStatus === 'cancelled' && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-              <p className="text-sm font-medium">Warning</p>
-              <p className="text-sm">Cancelling this reservation will remove the tenant's access to this unit.</p>
+              <p className="text-sm font-medium">تحذير</p>
+              <p className="text-sm">إلغاء هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة.</p>
             </div>
           )}
           {newStatus === 'expired' && (
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-700">
-              <p className="text-sm font-medium">Note</p>
-              <p className="text-sm">Marking this reservation as expired will change the unit status to available.</p>
+              <p className="text-sm font-medium">ملاحظة</p>
+              <p className="text-sm">تحديد هذا الحجز كمنتهي سيغير حالة الوحدة إلى متاحة.</p>
             </div>
           )}
           <div className="flex justify-end space-x-3 mt-6">
@@ -623,7 +671,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               onClick={() => setStatusUpdateModalOpen(false)}
               disabled={isUpdatingStatus}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -631,7 +679,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               isLoading={isUpdatingStatus}
               disabled={isUpdatingStatus}
             >
-              Update Status
+              تحديث الحالة
             </Button>
           </div>
         </div>

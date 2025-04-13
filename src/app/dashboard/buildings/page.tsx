@@ -24,26 +24,26 @@ export default function BuildingsPage() {
       if (response.data) {
         setBuildings(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch buildings');
+        toast.error(response.message || 'فشل في جلب المباني');
       }
     } catch (error) {
-      console.error('Error fetching buildings:', error);
-      toast.error('An error occurred while fetching buildings');
+      console.error('خطأ في جلب المباني:', error);
+      toast.error('حدث خطأ أثناء جلب المباني');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle building deletion
+  // التعامل مع حذف المبنى
   const handleDelete = (id: number) => {
     setBuildings((prevBuildings) => prevBuildings.filter((building) => building.id !== id));
   };
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Buildings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">المباني</h1>
         <Link href="/dashboard/buildings/create">
           <Button
             variant="primary"
@@ -53,12 +53,12 @@ export default function BuildingsPage() {
               </svg>
             }
           >
-            Add Building
+            إضافة مبنى
           </Button>
         </Link>
       </div>
       
-      {/* Buildings List */}
+      {/* قائمة المباني */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <BuildingList
           buildings={buildings}

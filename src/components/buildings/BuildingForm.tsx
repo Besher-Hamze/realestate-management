@@ -24,8 +24,8 @@ const initialBuildingData: BuildingFormData = {
 };
 
 const buildingTypeOptions = [
-  { value: 'apartment', label: 'Apartment Building' },
-  { value: 'villa', label: 'Villa' },
+  { value: 'apartment', label: 'مبنى شقق' },
+  { value: 'villa', label: 'فيلا' },
 ];
 
 export default function BuildingForm({
@@ -35,7 +35,7 @@ export default function BuildingForm({
 }: BuildingFormProps) {
   const router = useRouter();
 
-  // Set up initial data for edit mode
+  // إعداد البيانات الأولية لوضع التعديل
   const formInitialData = isEdit && initialData
     ? {
         name: initialData.name,
@@ -46,7 +46,7 @@ export default function BuildingForm({
       }
     : initialBuildingData;
 
-  // Form state using custom hook
+  // حالة النموذج باستخدام الخطاف المخصص
   const {
     formData,
     handleChange,
@@ -59,14 +59,14 @@ export default function BuildingForm({
       if (isEdit && initialData) {
         return await buildingsApi.update(initialData.id, data);
       }
-      return  await buildingsApi.create(data);
+      return await buildingsApi.create(data);
     },
     formInitialData,
     {
       onSuccess: (data) => {
         const successMessage = isEdit
-          ? 'Building updated successfully'
-          : 'Building created successfully';
+          ? 'تم تحديث المبنى بنجاح'
+          : 'تم إنشاء المبنى بنجاح';
         toast.success(successMessage);
         
         if (onSuccess) {
@@ -76,12 +76,12 @@ export default function BuildingForm({
         }
       },
       onError: (errorMessage) => {
-        toast.error(errorMessage || 'An error occurred');
+        toast.error(errorMessage || 'حدث خطأ ما');
       },
     }
   );
 
-  // Reset form when initialData changes (for editing)
+  // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل)
   useEffect(() => {
     if (isEdit && initialData) {
       resetForm();
@@ -98,7 +98,7 @@ export default function BuildingForm({
         )}
         
         <Input
-          label="Building Name"
+          label="اسم المبنى"
           id="name"
           name="name"
           value={formData.name}
@@ -108,7 +108,7 @@ export default function BuildingForm({
         />
         
         <Input
-          label="Address"
+          label="العنوان"
           id="address"
           name="address"
           value={formData.address}
@@ -118,7 +118,7 @@ export default function BuildingForm({
         />
         
         <Select
-          label="Building Type"
+          label="نوع المبنى"
           id="buildingType"
           name="buildingType"
           value={formData.buildingType}
@@ -129,7 +129,7 @@ export default function BuildingForm({
         />
         
         <Input
-          label="Total Units"
+          label="إجمالي الوحدات"
           id="totalUnits"
           name="totalUnits"
           type="number"
@@ -142,7 +142,7 @@ export default function BuildingForm({
         
         <div className="mb-4">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
+            الوصف
           </label>
           <textarea
             id="description"
@@ -161,14 +161,14 @@ export default function BuildingForm({
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Cancel
+            إلغاء
           </Button>
           <Button
             type="submit"
             isLoading={isSubmitting}
             disabled={isSubmitting}
           >
-            {isEdit ? 'Update Building' : 'Create Building'}
+            {isEdit ? 'تحديث المبنى' : 'إنشاء المبنى'}
           </Button>
         </div>
       </form>

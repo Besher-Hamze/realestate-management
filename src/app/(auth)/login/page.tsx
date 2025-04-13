@@ -34,17 +34,17 @@ export default function LoginPage() {
     try {
       const success = await login(username, password);
       if (success) {
-        toast.success('Login successful!');
+        toast.success('تم تسجيل الدخول بنجاح!');
         if (user?.role === 'tenant') {
           router.push('/tenant');
         } else {
           router.push('/dashboard');
         }
       } else {
-        toast.error('Invalid username or password');
+        toast.error('اسم المستخدم أو كلمة المرور غير صحيحة');
       }
     } catch (error) {
-      toast.error('An error occurred during login');
+      toast.error('حدث خطأ أثناء تسجيل الدخول');
       console.error('Login error:', error);
     } finally {
       setIsSubmitting(false);
@@ -64,13 +64,14 @@ export default function LoginPage() {
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
             </div>
-            <h1 className="text-3xl font-extrabold text-primary-600">Real Estate Manager</h1>
+            <h1 className="text-3xl font-extrabold text-primary-600">نظام إدارة العقارات</h1>
           </Link>
           <h2 className="mt-4 text-xl font-semibold text-gray-800">
-            Sign in to your account
+          تسجيل الدخول إلى حسابك
+
           </h2>
           <p className="mt-2 text-gray-600">
-            Enter your credentials to access your dashboard
+          أدخل بيانات الاعتماد للوصول إلى لوحة التحكم الخاصة بك
           </p>
         </div>
         
@@ -81,7 +82,7 @@ export default function LoginPage() {
                 id="username"
                 name="username"
                 type="text"
-                label="Username"
+                label="اسم المستخدم"
                 autoComplete="username"
                 required
                 value={username}
@@ -100,7 +101,7 @@ export default function LoginPage() {
                 id="password"
                 name="password"
                 type="password"
-                label="Password"
+                label="كلمة المرور"
                 autoComplete="current-password"
                 required
                 value={password}
@@ -124,14 +125,8 @@ export default function LoginPage() {
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
+                  تذكرني
                   </label>
-                </div>
-
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                    Forgot your password?
-                  </a>
                 </div>
               </div>
               
@@ -143,7 +138,7 @@ export default function LoginPage() {
                   disabled={isSubmitting}
                   className="py-2.5"
                 >
-                  Sign in
+  تسجيل الدخول
                 </Button>
               </div>
             </form>
@@ -152,13 +147,13 @@ export default function LoginPage() {
         
         <div className="mt-8 text-center">
           <div className="text-sm text-gray-600 mb-4">
-            Need help? Contact your property manager
+          هل تحتاج إلى مساعدة؟ اتصل بمدير العقار الخاص بك
           </div>
           <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-500 font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to home
+            العودة إلى الصفحة الرئيسية
           </Link>
         </div>
       </div>

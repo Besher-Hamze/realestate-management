@@ -44,29 +44,28 @@ export default function ReservationForm({
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUnits, setIsLoadingUnits] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [isCreatingNewTenant, setIsCreatingNewTenant] = useState(false);
   const [contractFile, setContractFile] = useState<File | undefined>(undefined);
   const [identityFile, setIdentityFile] = useState<File | undefined>(undefined);
   const [commercialRegisterFile, setCommercialRegisterFile] = useState<File | undefined>(undefined);
   const [newUserCredentials, setNewUserCredentials] = useState<NewUserCredentials | null>(null);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
 
-  // Set up initial data
+  // إعداد البيانات الأولية
   const formInitialData: ReservationFormData = isEdit && initialData
     ? {
-        unitId: initialData.unitId,
-        userId: initialData.userId,
-        startDate: initialData.startDate.split('T')[0],
-        endDate: initialData.endDate.split('T')[0],
-        notes: initialData.notes,
-      }
+      unitId: initialData.unitId,
+      userId: initialData.userId,
+      startDate: initialData.startDate.split('T')[0],
+      endDate: initialData.endDate.split('T')[0],
+      notes: initialData.notes,
+    }
     : {
-        ...initialReservationData,
-        unitId: preSelectedUnitId || 0,
-        userId: preSelectedUserId || undefined,
-      };
+      ...initialReservationData,
+      unitId: preSelectedUnitId || 0,
+      userId: preSelectedUserId || undefined,
+    };
 
-  // Form state using custom hook
+  // حالة النموذج باستخدام الخطاف المخصص
   const {
     formData,
     handleChange,
@@ -80,12 +79,11 @@ export default function ReservationForm({
       const files: Record<string, File | undefined> = {
         contractImage: contractFile,
       };
-      
-      if (isCreatingNewTenant) {
-        files.identityImage = identityFile;
-        files.commercialRegisterImage = commercialRegisterFile;
-      }
-      
+
+      files.identityImage = identityFile;
+      files.commercialRegisterImage = commercialRegisterFile;
+
+
       if (isEdit && initialData) {
         return reservationsApi.update(initialData.id, data, contractFile);
       }
@@ -95,14 +93,14 @@ export default function ReservationForm({
     {
       onSuccess: (response) => {
         const successMessage = isEdit
-          ? 'Reservation updated successfully'
-          : 'Reservation created successfully';
+          ? 'تم تحديث الحجز بنجاح'
+          : 'تم إنشاء الحجز بنجاح';
         toast.success(successMessage);
         console.log(response);
         console.log(response.newUser);
         setNewUserCredentials(response.newUser);
 
-        if (!isEdit && isCreatingNewTenant && response.newUser) {
+        if (!isEdit && response.newUser) {
           setNewUserCredentials(response.newUser);
           setShowCredentialsModal(true);
         } else if (onSuccess && response.reservation) {
@@ -114,114 +112,71 @@ export default function ReservationForm({
         }
       },
       onError: (errorMessage) => {
-        toast.error(errorMessage || 'An error occurred');
+        toast.error(errorMessage || 'حدث خطأ ما');
       },
     }
   );
 
-  // Reset form when initialData changes (for editing)
+  // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل)
   useEffect(() => {
     if (isEdit && initialData) {
       resetForm();
     } else if (preSelectedUnitId) {
       updateFormData({ unitId: preSelectedUnitId });
     }
-    
-    if (preSelectedUserId) {
-      updateFormData({ userId: preSelectedUserId });
-      setIsCreatingNewTenant(false);
-    }
+
+
   }, [isEdit, initialData, preSelectedUnitId, preSelectedUserId, resetForm, updateFormData]);
 
-  // Fetch available units
+  // جلب الوحدات المتاحة
   useEffect(() => {
     const fetchUnits = async () => {
       try {
         setIsLoadingUnits(true);
-        
-        // For edit, get all units. For create, get only available ones
+
+        // للتعديل، احصل على جميع الوحدات. للإنشاء، احصل فقط على المتاحة
         const response = isEdit
           ? await unitsApi.getAll()
           : await unitsApi.getAvailable();
-        
+
         if (response.success) {
           setUnits(response.data);
         } else {
-          toast.error(response.message || 'Failed to load units');
+          toast.error(response.message || 'فشل في تحميل الوحدات');
         }
       } catch (error) {
-        console.error('Error fetching units:', error);
-        toast.error('An error occurred while loading units');
+        console.error('خطأ في جلب الوحدات:', error);
+        toast.error('حدث خطأ أثناء تحميل الوحدات');
       } finally {
         setIsLoadingUnits(false);
       }
     };
-    
+
     fetchUnits();
   }, [isEdit]);
 
-  // Fetch users for dropdown (for existing tenants)
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoadingUsers(true);
-        const response = await usersApi.getAll();
-        
-        if (response.success) {
-          const tenantUsers = response.data.filter(user => user.role === 'tenant');
-          setUsers(tenantUsers);
-        } else {
-          toast.error(response.message || 'Failed to load tenants');
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('An error occurred while loading tenants');
-      } finally {
-        setIsLoadingUsers(false);
-      }
-    };
-    
-    fetchUsers();
-  }, []);
-
-  // Create unit options for dropdown
+  // إنشاء خيارات الوحدات للقائمة المنسدلة
   const unitOptions = units.map((unit) => {
-    const buildingName = unit.building?.name || 'Unknown Building';
+    const buildingName = unit.building?.name || 'مبنى غير معروف';
     return {
       value: unit.id,
-      label: `${unit.unitNumber} - ${buildingName} (${unit.status})`,
+      label: `${unit.unitNumber} - ${buildingName} (${unit.status === 'available' ? 'متاح' : unit.status})`,
     };
   });
 
-  // Create user options for dropdown
-  const userOptions = users.map((user) => ({
-    value: user.id,
-    label: `${user.fullName} (${user.email})`,
-  }));
 
-  // Toggle between existing tenant and new tenant
-  const toggleTenantCreation = () => {
-    setIsCreatingNewTenant(!isCreatingNewTenant);
-    
-    // Clear user ID when switching to new tenant
-    if (!isCreatingNewTenant) {
-      updateFormData({ userId: undefined });
-    }
-  };
-
-  // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File | undefined>>) => {
     if (e.target.files && e.target.files.length > 0) {
       setter(e.target.files[0]);
     }
   };
 
-  // Handle modal close and navigation
+  // التعامل مع إغلاق النافذة المنبثقة والتنقل
   const handleCredentialsModalClose = () => {
     setShowCredentialsModal(false);
-    
+
     if (newUserCredentials) {
-      // Navigate to the reservation page if it exists
+      // انتقل إلى صفحة الحجز إذا كانت موجودة
       if (onSuccess && formData) {
         onSuccess(formData as any);
       } else {
@@ -230,19 +185,19 @@ export default function ReservationForm({
     }
   };
 
-  // Copy credentials to clipboard
+  // نسخ بيانات الاعتماد إلى الحافظة
   const copyCredentials = () => {
     if (!newUserCredentials) return;
-    
+
     const credentials = `
-      Username: ${newUserCredentials.username}
-      Password: ${newUserCredentials.password}
-      Full Name: ${newUserCredentials.fullName}
+      اسم المستخدم: ${newUserCredentials.username}
+      كلمة المرور: ${newUserCredentials.password}
+      الاسم الكامل: ${newUserCredentials.fullName}
     `;
-    
+
     navigator.clipboard.writeText(credentials.trim())
-      .then(() => toast.success('Credentials copied to clipboard!'))
-      .catch(() => toast.error('Failed to copy credentials'));
+      .then(() => toast.success('تم نسخ بيانات الاعتماد إلى الحافظة!'))
+      .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
   };
 
   return (
@@ -254,10 +209,10 @@ export default function ReservationForm({
               {error}
             </div>
           )}
-          
-          {/* Unit Selection */}
+
+          {/* اختيار الوحدة */}
           <Select
-            label="Property Unit"
+            label="وحدة العقار"
             id="unitId"
             name="unitId"
             value={formData.unitId.toString()}
@@ -266,65 +221,19 @@ export default function ReservationForm({
             disabled={isLoadingUnits || isEdit}
             required
             fullWidth
-            helpText={isLoadingUnits ? 'Loading units...' : 'Select the unit for this reservation'}
-            emptyOptionLabel="Select a unit"
+            helpText={isLoadingUnits ? 'جاري تحميل الوحدات...' : 'اختر الوحدة لهذا الحجز'}
+            emptyOptionLabel="اختر وحدة"
           />
-          
-          {/* Tenant Selection Type Toggle (only for new reservations) */}
+
+
+
+          {/* نموذج المستأجر الجديد */}
           {!isEdit && (
-            <div className="mb-4">
-              <label className="text-sm font-medium text-gray-700">Tenant</label>
-              <div className="mt-2 flex items-center space-x-4">
-                <button
-                  type="button"
-                  onClick={toggleTenantCreation}
-                  className={`px-4 py-2 text-sm font-medium rounded-md ${
-                    !isCreatingNewTenant
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  Existing Tenant
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleTenantCreation}
-                  className={`px-4 py-2 text-sm font-medium rounded-md ${
-                    isCreatingNewTenant
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  New Tenant
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Existing Tenant Selection */}
-          {!isCreatingNewTenant && !isEdit && (
-            <Select
-              label="Select Tenant"
-              id="userId"
-              name="userId"
-              value={formData.userId?.toString() || ''}
-              onChange={handleChange}
-              options={userOptions}
-              disabled={isLoadingUsers}
-              required
-              fullWidth
-              helpText={isLoadingUsers ? 'Loading tenants...' : 'Select an existing tenant'}
-              emptyOptionLabel="Select a tenant"
-            />
-          )}
-          
-          {/* New Tenant Form */}
-          {isCreatingNewTenant && !isEdit && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-md">
-              <h3 className="text-md font-medium text-gray-900">New Tenant Information</h3>
-              
+              <h3 className="text-md font-medium text-gray-900">معلومات المستأجر الجديد</h3>
+
               <Input
-                label="Full Name"
+                label="الاسم الكامل"
                 id="fullName"
                 name="fullName"
                 value={formData.fullName || ''}
@@ -332,9 +241,9 @@ export default function ReservationForm({
                 required
                 fullWidth
               />
-              
+
               <Input
-                label="Email"
+                label="البريد الإلكتروني"
                 id="email"
                 name="email"
                 type="email"
@@ -343,9 +252,9 @@ export default function ReservationForm({
                 required
                 fullWidth
               />
-              
+
               <Input
-                label="Phone"
+                label="الهاتف"
                 id="phone"
                 name="phone"
                 value={formData.phone || ''}
@@ -353,10 +262,10 @@ export default function ReservationForm({
                 required
                 fullWidth
               />
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Identity Document (Optional)
+                  وثيقة الهوية (اختياري)
                 </label>
                 <input
                   type="file"
@@ -366,10 +275,10 @@ export default function ReservationForm({
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Commercial Register (Optional)
+                  السجل التجاري (اختياري)
                 </label>
                 <input
                   type="file"
@@ -381,11 +290,11 @@ export default function ReservationForm({
               </div>
             </div>
           )}
-          
-          {/* Reservation Period */}
+
+          {/* فترة الحجز */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Start Date"
+              label="تاريخ البدء"
               id="startDate"
               name="startDate"
               type="date"
@@ -394,9 +303,9 @@ export default function ReservationForm({
               required
               fullWidth
             />
-            
+
             <Input
-              label="End Date"
+              label="تاريخ الانتهاء"
               id="endDate"
               name="endDate"
               type="date"
@@ -406,11 +315,11 @@ export default function ReservationForm({
               fullWidth
             />
           </div>
-          
-          {/* Notes */}
+
+          {/* الملاحظات */}
           <div className="mb-4">
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
+              ملاحظات
             </label>
             <textarea
               id="notes"
@@ -419,14 +328,14 @@ export default function ReservationForm({
               value={formData.notes}
               onChange={handleChange}
               className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-              placeholder="Additional information about this reservation..."
+              placeholder="معلومات إضافية حول هذا الحجز..."
             />
           </div>
-          
-          {/* Contract Document */}
+
+          {/* وثيقة العقد */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Contract Document {isEdit ? '(Optional)' : '(Required)'}
+              وثيقة العقد {isEdit ? '(اختياري)' : '(مطلوب)'}
             </label>
             <input
               type="file"
@@ -438,19 +347,19 @@ export default function ReservationForm({
             />
             {initialData?.contractUrl && (
               <div className="mt-2">
-                <p className="text-sm text-gray-500">Current document:</p>
+                <p className="text-sm text-gray-500">الوثيقة الحالية:</p>
                 <a
                   href={initialData.contractUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-600 hover:text-primary-500 text-sm font-medium"
                 >
-                  View current contract
+                  عرض العقد الحالي
                 </a>
               </div>
             )}
           </div>
-          
+
           <div className="flex justify-end space-x-3">
             <Button
               type="button"
@@ -458,24 +367,24 @@ export default function ReservationForm({
               onClick={() => router.back()}
               disabled={isSubmitting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               type="submit"
               isLoading={isSubmitting}
               disabled={isSubmitting}
             >
-              {isEdit ? 'Update Reservation' : 'Create Reservation'}
+              {isEdit ? 'تحديث الحجز' : 'إنشاء الحجز'}
             </Button>
           </div>
         </form>
       </Card>
 
-      {/* New User Credentials Modal */}
+      {/* نافذة بيانات اعتماد المستخدم الجديد */}
       <Modal
         isOpen={showCredentialsModal}
         onClose={handleCredentialsModalClose}
-        title="New Tenant Account Created"
+        title="تم إنشاء حساب مستأجر جديد"
         size="md"
       >
         <div className="p-6">
@@ -483,46 +392,46 @@ export default function ReservationForm({
             <>
               <div className="mb-4">
                 <p className="text-gray-700 mb-4">
-                  A new tenant account has been created. Please share these credentials with the tenant:
+                  تم إنشاء حساب مستأجر جديد. يرجى مشاركة بيانات الاعتماد هذه مع المستأجر:
                 </p>
-                
+
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md font-mono">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-500">Username:</span>
+                    <span className="text-sm font-medium text-gray-500">اسم المستخدم:</span>
                     <span className="text-base text-blue-800">{newUserCredentials.username}</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-500">Password:</span>
+                    <span className="text-sm font-medium text-gray-500">كلمة المرور:</span>
                     <span className="text-base text-blue-800">{newUserCredentials.password}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-500">Full Name:</span>
+                    <span className="text-sm font-medium text-gray-500">الاسم الكامل:</span>
                     <span className="text-base text-blue-800">{newUserCredentials.fullName}</span>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 text-sm text-gray-500">
                   <p className="mb-2">
-                    <span className="text-red-500">Important:</span> Please make sure to securely share these credentials 
-                    with the tenant. They will need these details to log in to their account.
+                    <span className="text-red-500">مهم:</span> يرجى التأكد من مشاركة بيانات الاعتماد هذه بشكل آمن
+                    مع المستأجر. سيحتاجون إلى هذه التفاصيل لتسجيل الدخول إلى حسابهم.
                   </p>
                   <p>
-                    You may want to advise the tenant to change their password after their first login.
+                    قد ترغب في نصح المستأجر بتغيير كلمة المرور الخاصة به بعد تسجيل الدخول الأول.
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex justify-between mt-6">
                 <Button
                   variant="outline"
                   onClick={copyCredentials}
                 >
-                  Copy Credentials
+                  نسخ بيانات الاعتماد
                 </Button>
                 <Button
                   onClick={handleCredentialsModalClose}
                 >
-                  Continue
+                  متابعة
                 </Button>
               </div>
             </>
