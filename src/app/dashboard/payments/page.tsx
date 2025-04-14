@@ -52,7 +52,7 @@ export default function PaymentsPage() {
     try {
       setIsLoading(true);
       const response = await paymentsApi.getAll();
-      
+
       if (response.success) {
         setPayments(response.data);
       } else {
@@ -69,17 +69,17 @@ export default function PaymentsPage() {
   // تطبيق المرشحات على المدفوعات
   const applyFilters = () => {
     let filtered = [...payments];
-    
+
     // تطبيق مرشح الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((payment) => payment.status === statusFilter);
     }
-    
+
     // تطبيق مرشح طريقة الدفع
     if (methodFilter !== 'all') {
       filtered = filtered.filter((payment) => payment.paymentMethod === methodFilter);
     }
-    
+
     setFilteredPayments(filtered);
   };
 
@@ -100,10 +100,10 @@ export default function PaymentsPage() {
 
   // حساب المجاميع
   const calculateTotal = (status: string = 'all') => {
-    const filtered = status === 'all' 
-      ? payments 
+    const filtered = status === 'all'
+      ? payments
       : payments.filter(payment => payment.status === status);
-    
+
     return filtered.reduce((sum, payment) => sum + Number(payment.amount) || 0, 0);
   };
 
@@ -125,7 +125,7 @@ export default function PaymentsPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* بطاقات ملخص المدفوعات */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-blue-50 border-blue-200">
@@ -143,7 +143,7 @@ export default function PaymentsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -159,7 +159,7 @@ export default function PaymentsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-yellow-50 border-yellow-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -175,7 +175,7 @@ export default function PaymentsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-purple-50 border-purple-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -185,14 +185,14 @@ export default function PaymentsPage() {
                 </svg>
               </div>
               <div className="mr-4">
-                <h3 className="font-medium text-purple-800">مسترجعة</h3>
-                <p className="text-2xl font-bold text-purple-900">{formatCurrency(calculateTotal('refunded'))}</p>
+                <h3 className="font-medium text-purple-800">متأخرة</h3>
+                <p className="text-2xl font-bold text-purple-900">{formatCurrency(calculateTotal('delayed'))}</p>
               </div>
             </div>
           </div>
         </Card>
       </div>
-      
+
       {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -220,7 +220,7 @@ export default function PaymentsPage() {
           </div>
         </div>
       </div>
-      
+
       {/* قائمة المدفوعات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <PaymentList

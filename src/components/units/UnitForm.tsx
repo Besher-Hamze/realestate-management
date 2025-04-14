@@ -31,6 +31,7 @@ const initialUnitData: UnitFormData = {
 const statusOptions = [
     { value: 'available', label: 'Available' },
     { value: 'rented', label: 'Rented' },
+    { value: 'maintenance', label: 'Maintenance' },
 ];
 
 export default function UnitForm({
@@ -103,7 +104,8 @@ export default function UnitForm({
         } else if (preSelectedBuildingId) {
             updateFormData({ buildingId: preSelectedBuildingId });
         }
-    }, [isEdit, initialData, preSelectedBuildingId, resetForm, updateFormData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEdit, initialData?.id, preSelectedBuildingId]);
 
     // Fetch buildings for dropdown
     useEffect(() => {

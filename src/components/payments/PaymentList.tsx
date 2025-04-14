@@ -61,7 +61,7 @@ export default function PaymentList({
       if (response.success) {
         toast.success('تم حذف المدفوعة بنجاح');
         setDeleteModalOpen(false);
-        
+
         // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedPayment.id);
@@ -110,8 +110,8 @@ export default function PaymentList({
     switch (status) {
       case 'paid': return 'مدفوعة';
       case 'pending': return 'قيد الانتظار';
-      case 'refunded': return 'مسترجعة';
-      case 'failed': return 'فاشلة';
+      case 'delayed': return 'متأخرة';
+      case 'cancelled': return 'ملغية';
       default: return status;
     }
   };
@@ -176,7 +176,7 @@ export default function PaymentList({
       cell: (payment: Payment) => {
         let statusText = '';
         let statusClass = '';
-        
+
         switch (payment.status) {
           case 'paid':
             statusText = 'مدفوعة';
@@ -186,16 +186,16 @@ export default function PaymentList({
             statusText = 'قيد الانتظار';
             statusClass = 'bg-yellow-100 text-yellow-800';
             break;
-          case 'refunded':
-            statusText = 'مسترجعة';
+          case 'delayed':
+            statusText = 'متأخرة';
             statusClass = 'bg-purple-100 text-purple-800';
             break;
-          case 'failed':
-            statusText = 'فاشلة';
+          case 'cancelled':
+            statusText = 'ملغية';
             statusClass = 'bg-red-100 text-red-800';
             break;
         }
-        
+
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
             {statusText}
@@ -211,15 +211,15 @@ export default function PaymentList({
           <Link href={`/dashboard/payments/${payment.id}`} onClick={(e) => e.stopPropagation()}>
             <Button size="xs" variant="outline">عرض</Button>
           </Link>
-          
+
           {/* أزرار تحديث الحالة */}
           <div className="flex flex-wrap gap-1">
             <StatusButton payment={payment} status="paid" label="مدفوعة" color="green" />
             <StatusButton payment={payment} status="pending" label="قيد الانتظار" color="yellow" />
-            <StatusButton payment={payment} status="refunded" label="مسترجعة" color="purple" />
-            <StatusButton payment={payment} status="failed" label="فاشلة" color="red" />
+            <StatusButton payment={payment} status="delayed" label="متأخرة" color="purple" />
+            <StatusButton payment={payment} status="cancelled" label="ملغية" color="red" />
           </div>
-          
+
           {/* زر الحذف */}
           <Button
             size="xs"
@@ -243,7 +243,7 @@ export default function PaymentList({
         emptyMessage="لم يتم العثور على مدفوعات"
         onRowClick={handleRowClick}
       />
-      
+
       {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
@@ -276,7 +276,7 @@ export default function PaymentList({
           </div>
         </div>
       </Modal>
-      
+
       {/* نافذة تأكيد تحديث الحالة */}
       <Modal
         isOpen={statusUpdateModalOpen}
@@ -287,19 +287,19 @@ export default function PaymentList({
           <p className="text-gray-600 mb-4">
             هل أنت متأكد أنك تريد تغيير حالة المدفوعة إلى <span className="font-medium">{getStatusName(newStatus)}</span>؟
           </p>
-          
+
           {newStatus === 'refunded' && (
             <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm mb-4">
               <strong>ملاحظة:</strong> تحديد مدفوعة كمسترجعة قد يؤدي إلى تشغيل سير عمل إضافي في نظامك.
             </div>
           )}
-          
+
           {newStatus === 'failed' && (
             <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
               <strong>تحذير:</strong> تحديد مدفوعة كفاشلة قد يؤثر على سمعة المستأجر والتقارير.
             </div>
           )}
-          
+
           <div className="flex justify-end space-x-3">
             <Button
               variant="outline"

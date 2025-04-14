@@ -15,7 +15,7 @@ interface EditBuildingProps {
 
 export default function EditBuildingPageContent({ id }: EditBuildingProps) {
   const router = useRouter();
-  
+
   const [building, setBuilding] = useState<Building | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
     try {
       setIsLoading(true);
       const response = await buildingsApi.getById(id);
-      
+
       if (response.success) {
         setBuilding(response.data);
       } else {
@@ -117,7 +117,7 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
         <h1 className="text-2xl font-bold text-gray-900">تعديل المبنى</h1>
         <p className="text-gray-600">تحديث تفاصيل {building.name}.</p>
       </div>
-      
+
       {/* نموذج المبنى */}
       <BuildingForm
         isEdit

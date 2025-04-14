@@ -34,44 +34,44 @@ export default function useForm<T, R = any>(
       if (e && 'preventDefault' in e) {
         e.preventDefault();
       }
-      
+
       try {
         setIsSubmitting(true);
         setError(null);
-        
+
         const response = await submitFn(data);
-        
+
         if (response.success && response.data) {
           setIsSuccess(true);
           setResponseData(response.data);
-          
+
           if (resetAfterSubmit) {
             setFormData(initialData);
           }
-          
+
           if (onSuccess) {
             onSuccess(response.data);
           }
-          
+
           return response;
         } else {
           const errorMessage = response.message || 'An error occurred';
           setError(errorMessage);
-          
+
           if (onError) {
             onError(errorMessage);
           }
-          
+
           return response;
         }
       } catch (err) {
         const errorMessage = getErrorMessage(err);
         setError(errorMessage);
-        
+
         if (onError) {
           onError(errorMessage);
         }
-        
+
         return {
           success: false,
           message: errorMessage,
@@ -94,19 +94,17 @@ export default function useForm<T, R = any>(
       return hasChanges ? updated : prevData;
     });
   }, []);
-  
+
 
   // Handle form field change
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
-      
-      // Handle different input types
+
       if (type === 'checkbox') {
         const checked = (e.target as HTMLInputElement).checked;
         updateFormData({ [name]: checked } as unknown as Partial<T>);
-      } 
-      // Only convert specific fields to numbers, not any field with "id" in the name
+      }
       else if (type === 'number' || name === 'buildingId') {
         const numericValue = value === '' ? 0 : Number(value);
         updateFormData({ [name]: numericValue } as unknown as Partial<T>);
@@ -116,7 +114,7 @@ export default function useForm<T, R = any>(
     },
     [updateFormData]
   );
-  
+
 
   // Handle file input change
   const handleFileChange = useCallback(

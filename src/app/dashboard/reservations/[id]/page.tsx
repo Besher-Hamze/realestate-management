@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -13,13 +13,14 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface ReservationDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+
 }
 
 export default function ReservationDetailPage({ params }: ReservationDetailPageProps) {
-  const id = params.id;
+  const { id } = use(params);
   const router = useRouter();
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
@@ -270,12 +271,12 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             statusText = 'قيد الانتظار';
             statusClass = 'bg-yellow-100 text-yellow-800';
             break;
-          case 'refunded':
-            statusText = 'مسترجعة';
+          case 'delayed':
+            statusText = 'متاخرة';
             statusClass = 'bg-purple-100 text-purple-800';
             break;
-          case 'failed':
-            statusText = 'فاشلة';
+          case 'cancelled':
+            statusText = 'ملغية';
             statusClass = 'bg-red-100 text-red-800';
             break;
         }
@@ -582,19 +583,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">طلبات الخدمة</h2>
-          <Link href={`/dashboard/services/create?reservationId=${reservation.id}`}>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={
-                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              }
-            >
-              إنشاء طلب خدمة
-            </Button>
-          </Link>
+
         </div>
 
         <Card>

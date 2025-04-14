@@ -20,7 +20,7 @@ interface ServiceDetailPageProps {
 export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
   const id = params.id;
   const router = useRouter();
-  
+
   const [service, setService] = useState<ServiceOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
     try {
       setIsLoading(true);
       const response = await servicesApi.getById(id);
-      
+
       if (response.success) {
         setService(response.data);
       } else {
@@ -58,7 +58,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
     try {
       setIsDeleting(true);
       const response = await servicesApi.delete(id);
-      
+
       if (response.success) {
         toast.success('Service request deleted successfully');
         router.push('/dashboard/services');
@@ -170,7 +170,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             </li>
           </ol>
         </nav>
-        
+
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">
             Service Request #{service.id}
@@ -183,7 +183,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           </div>
         </div>
       </div>
-      
+
       {/* Service Details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info */}
@@ -192,17 +192,16 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Request Details</h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                  service.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
-                }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                      service.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                  }`}
               >
                 {service.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </span>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Service Type</h3>
@@ -210,21 +209,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   {service.serviceType}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Service Subtype</h3>
                 <p className="mt-1 text-base text-gray-900 capitalize">
                   {service.serviceSubtype}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Submitted On</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.createdAt)}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
                 <p className="mt-1 text-base text-gray-900">
@@ -232,20 +231,20 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                 </p>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
               <div className="p-4 bg-gray-50 rounded-md text-gray-900">
                 {service.description}
               </div>
             </div>
-            
+
             {service.attachmentUrl && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Attachment</h3>
-                <a 
-                  href={service.attachmentUrl} 
-                  target="_blank" 
+                <a
+                  href={service.attachmentUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
@@ -258,14 +257,14 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             )}
           </div>
         </Card>
-        
+
         {/* Property & Tenant Info */}
         <div className="space-y-6">
           {/* Status Actions */}
           <Card>
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Update Status</h2>
-              
+
               <div className="space-y-4">
                 <Button
                   variant="outline"
@@ -276,7 +275,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                 >
                   Mark as Pending
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="border-blue-500 text-blue-700 hover:bg-blue-50"
@@ -286,7 +285,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                 >
                   Mark as In Progress
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="border-green-500 text-green-700 hover:bg-green-50"
@@ -296,12 +295,12 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                 >
                   Mark as Completed
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="border-red-500 text-red-700 hover:bg-red-50"
                   fullWidth
-                  disabled={service.status === 'cancelled'}
+                  disabled={service.status === 'rejected'}
                   onClick={() => openStatusUpdateModal('cancelled')}
                 >
                   Mark as Cancelled
@@ -309,12 +308,12 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               </div>
             </div>
           </Card>
-          
+
           {/* Property Info */}
           <Card>
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Information</h2>
-              
+
               <div className="space-y-4">
                 {service.reservation?.unit ? (
                   <>
@@ -324,21 +323,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                         {service.reservation.unit.unitNumber}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Building</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.building?.name || 'N/A'}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Floor</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.floor}
                       </p>
                     </div>
-                    
+
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/dashboard/units/${service.reservation.unit.id}`}>
                         <Button variant="outline" fullWidth>
@@ -353,12 +352,12 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               </div>
             </div>
           </Card>
-          
+
           {/* Tenant Info */}
           <Card>
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Tenant Information</h2>
-              
+
               <div className="space-y-4">
                 {service.reservation?.user ? (
                   <>
@@ -368,21 +367,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                         {service.reservation.user.fullName}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Email</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.user.email}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Phone</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.user.phone}
                       </p>
                     </div>
-                    
+
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/dashboard/users/${service.reservation.user.id}`}>
                         <Button variant="outline" fullWidth>
@@ -399,7 +398,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           </Card>
         </div>
       </div>
-      
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}
@@ -429,7 +428,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           Are you sure you want to delete this service request? This action cannot be undone.
         </p>
       </Modal>
-      
+
       {/* Status Update Confirmation Modal */}
       <Modal
         isOpen={statusUpdateModalOpen}

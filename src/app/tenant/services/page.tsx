@@ -24,36 +24,32 @@ export default function TenantServicesPage() {
     { value: 'pending', label: 'Pending' },
     { value: 'in-progress', label: 'In Progress' },
     { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'rejected', label: 'Rejected' },
   ];
 
   // Service type filter options
   const typeOptions = [
     { value: 'all', label: 'All Types' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'security', label: 'Security' },
-    { value: 'other', label: 'Other' },
+    { value: 'maintenance', label: 'maintenance' },
+    { value: 'financial', label: 'financial' },
+    { value: 'administrative', label: 'administrative' },
   ];
 
-  // Fetch services on component mount
   useEffect(() => {
     checkReservations();
   }, []);
 
-  // Apply filters when services, status filter, or type filter changes
   useEffect(() => {
     applyFilters();
   }, [services, statusFilter, typeFilter]);
 
-  // Check if tenant has any active reservations
   const checkReservations = async () => {
     try {
       const response = await reservationsApi.getMy();
-      
+
       if (response.success) {
         const activeReservations = response.data.filter(res => res.status === 'active');
-        
+
         if (activeReservations.length > 0) {
           setHasReservations(true);
           fetchServices();
@@ -76,24 +72,24 @@ export default function TenantServicesPage() {
   const fetchServices = async () => {
     try {
       setIsLoading(true);
-      
+
       // Get my reservations first
       const reservationsResponse = await reservationsApi.getMy();
-      
+
       if (reservationsResponse.success) {
         const reservationIds = reservationsResponse.data.map(res => res.id);
-        
+
         // Fetch service orders for each reservation
         if (reservationIds.length > 0) {
-          const servicePromises = reservationIds.map(id => 
+          const servicePromises = reservationIds.map(id =>
             servicesApi.getByReservationId(id)
           );
-          
+
           const serviceResponses = await Promise.all(servicePromises);
-          const allServices = serviceResponses.flatMap(res => 
+          const allServices = serviceResponses.flatMap(res =>
             res.success ? res.data : []
           );
-          
+
           setServices(allServices);
         } else {
           setServices([]);
@@ -112,17 +108,17 @@ export default function TenantServicesPage() {
   // Apply filters to services
   const applyFilters = () => {
     let filtered = [...services];
-    
+
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter((service) => service.status === statusFilter);
     }
-    
+
     // Apply type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter((service) => service.serviceType === typeFilter);
     }
-    
+
     setFilteredServices(filtered);
   };
 
@@ -148,7 +144,7 @@ export default function TenantServicesPage() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold text-gray-900">Service Requests</h1>
         </div>
-        
+
         <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
           <svg className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -181,7 +177,7 @@ export default function TenantServicesPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* Status summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-yellow-50 border-yellow-200">
@@ -199,7 +195,7 @@ export default function TenantServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-blue-50 border-blue-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -215,7 +211,7 @@ export default function TenantServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -231,7 +227,7 @@ export default function TenantServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-red-50 border-red-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -248,7 +244,7 @@ export default function TenantServicesPage() {
           </div>
         </Card>
       </div>
-      
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -276,7 +272,7 @@ export default function TenantServicesPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Services List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ServiceList

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -9,15 +9,16 @@ import { unitsApi } from '@/lib/api';
 import UnitForm from '@/components/units/UnitForm';
 
 interface EditUnitPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+
 }
 
 export default function EditUnitPage({ params }: EditUnitPageProps) {
-  const id = params.id;
+  const { id } = use(params);
   const router = useRouter();
-  
+
   const [unit, setUnit] = useState<Unit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,7 +32,7 @@ export default function EditUnitPage({ params }: EditUnitPageProps) {
     try {
       setIsLoading(true);
       const response = await unitsApi.getById(id);
-      
+
       if (response.success) {
         setUnit(response.data);
       } else {
@@ -119,7 +120,7 @@ export default function EditUnitPage({ params }: EditUnitPageProps) {
         <h1 className="text-2xl font-bold text-gray-900">Edit Unit</h1>
         <p className="text-gray-600">Update the details for unit {unit.unitNumber}.</p>
       </div>
-      
+
       {/* Unit Form */}
       <UnitForm
         isEdit

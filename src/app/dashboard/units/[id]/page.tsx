@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -13,15 +13,15 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface UnitDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function UnitDetailPage({ params }: UnitDetailPageProps) {
-  const id = params.id;
+  const { id } = use(params);
   const router = useRouter();
-  
+
   const [unit, setUnit] = useState<Unit | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     try {
       setIsLoading(true);
       const response = await unitsApi.getById(id);
-      
+
       if (response.success) {
         setUnit(response.data);
         fetchReservations();
@@ -59,7 +59,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     try {
       setIsReservationsLoading(true);
       const response = await reservationsApi.getByUnitId(id);
-      
+
       if (response.success) {
         setReservations(response.data);
       } else {
@@ -78,7 +78,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     try {
       setIsDeleting(true);
       const response = await unitsApi.delete(id);
-      
+
       if (response.success) {
         toast.success('Unit deleted successfully');
         router.push('/dashboard/units');
@@ -98,10 +98,10 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   // Change unit status
   const handleStatusChange = async (newStatus: string) => {
     if (!unit) return;
-    
+
     try {
       const response = await unitsApi.update(id, { ...unit, status: newStatus });
-      
+
       if (response.success) {
         toast.success(`Unit status updated to ${newStatus}`);
         setUnit(response.data);
@@ -140,12 +140,11 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       header: 'Status',
       cell: (reservation) => (
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-            reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-            'bg-red-100 text-red-800'
-          }`}
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
+              reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                  'bg-red-100 text-red-800'
+            }`}
         >
           {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
         </span>
@@ -227,7 +226,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             </li>
           </ol>
         </nav>
-        
+
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Unit {unit.unitNumber}</h1>
           <div className="flex space-x-3">
@@ -250,7 +249,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
           </div>
         </div>
       </div>
-      
+
       {/* Unit Details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info */}
@@ -259,15 +258,14 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Unit Information</h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  unit.status === 'available' ? 'bg-green-100 text-green-800' :
-                  'bg-blue-100 text-blue-800' 
-                }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}
               >
                 {unit.status.charAt(0).toUpperCase() + unit.status.slice(1)}
               </span>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Building</h3>
@@ -275,42 +273,42 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                   {unit.building?.name || 'N/A'}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Floor</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.floor}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Area</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.area} m²
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Price</h3>
                 <p className="mt-1 text-base text-gray-900 font-medium">
                   {formatCurrency(unit.price)}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Bedrooms</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.bedrooms}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Bathrooms</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.bathrooms}
                 </p>
               </div>
-              
+
               <div className="md:col-span-2">
                 <h3 className="text-sm font-medium text-gray-500">Description</h3>
                 <p className="mt-1 text-base text-gray-900">
@@ -320,12 +318,12 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             </div>
           </div>
         </Card>
-        
+
         {/* Status Actions */}
         <Card>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Status</h2>
-            
+
             <div className="space-y-4">
               <Button
                 variant="success"
@@ -335,7 +333,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               >
                 Mark as Available
               </Button>
-              
+
               <Button
                 variant="info"
                 fullWidth
@@ -345,7 +343,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 Mark as Rented
               </Button>
             </div>
-            
+
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-md font-medium text-gray-900 mb-3">Quick Links</h3>
               <div className="space-y-3">
@@ -366,7 +364,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
           </div>
         </Card>
       </div>
-      
+
       {/* Reservations History */}
       <div>
         <div className="flex justify-between items-center mb-4">
@@ -385,7 +383,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             </Button>
           </Link>
         </div>
-        
+
         <Card>
           <Table
             data={reservations}
@@ -397,7 +395,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
           />
         </Card>
       </div>
-      
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}

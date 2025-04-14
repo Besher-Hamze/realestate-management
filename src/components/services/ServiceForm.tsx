@@ -26,10 +26,9 @@ const initialServiceData: ServiceOrderFormData = {
 };
 
 const serviceTypeOptions = [
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'cleaning', label: 'Cleaning' },
-  { value: 'security', label: 'Security' },
-  { value: 'other', label: 'Other' },
+  { value: 'maintenance', label: 'maintenance' },
+  { value: 'financial', label: 'financial' },
+  { value: 'administrative', label: 'administrative' },
 ];
 
 // Mapping of service types to their subtypes
@@ -42,20 +41,17 @@ const serviceSubtypeOptions: Record<ServiceType, { value: string; label: string 
     { value: 'structural', label: 'Structural' },
     { value: 'general', label: 'General' },
   ],
-  cleaning: [
+  financial: [
     { value: 'general', label: 'General Cleaning' },
     { value: 'deep', label: 'Deep Cleaning' },
     { value: 'windows', label: 'Window Cleaning' },
     { value: 'carpets', label: 'Carpet Cleaning' },
   ],
-  security: [
+  administrative: [
     { value: 'locksmith', label: 'Locksmith' },
     { value: 'camera', label: 'Security Camera' },
     { value: 'alarm', label: 'Alarm System' },
     { value: 'general', label: 'General Security' },
-  ],
-  other: [
-    { value: 'general', label: 'General Request' },
   ],
 };
 
@@ -77,11 +73,11 @@ export default function ServiceForm({
   // Set up initial data for edit mode or with preselected reservation
   const formInitialData: ServiceOrderFormData = isEdit && initialData
     ? {
-        reservationId: initialData.reservationId,
-        serviceType: initialData.serviceType,
-        serviceSubtype: initialData.serviceSubtype,
-        description: initialData.description,
-      }
+      reservationId: initialData.reservationId,
+      serviceType: initialData.serviceType,
+      serviceSubtype: initialData.serviceSubtype,
+      description: initialData.description,
+    }
     : preSelectedReservationId
       ? { ...initialServiceData, reservationId: preSelectedReservationId }
       : initialServiceData;
@@ -109,7 +105,7 @@ export default function ServiceForm({
           ? 'Service request updated successfully'
           : 'Service request submitted successfully';
         toast.success(successMessage);
-        
+
         if (onSuccess) {
           onSuccess(data);
         } else {
@@ -130,7 +126,7 @@ export default function ServiceForm({
   useEffect(() => {
     if (formData.serviceType !== selectedServiceType) {
       setSelectedServiceType(formData.serviceType as ServiceType);
-      
+
       // Set first subtype option for the selected service type
       const firstSubtype = serviceSubtypeOptions[formData.serviceType as ServiceType][0].value;
       updateFormData({ serviceSubtype: firstSubtype as ServiceSubtype });
@@ -152,7 +148,7 @@ export default function ServiceForm({
     const fetchReservationsData = async () => {
       try {
         setIsLoadingReservations(true);
-        
+
         let response;
         if (isTenant) {
           // Tenant can only see their own reservations
@@ -161,25 +157,25 @@ export default function ServiceForm({
           // Admins/Managers can see all reservations
           response = await reservationsApi.getAll();
         }
-        
+
         if (response.success) {
           // Filter active reservations
           const activeReservations = response.data.filter(res => res.status === 'active');
-          
+
           // If preSelectedUnitId is provided, filter by that unit
           const filteredReservations = preSelectedUnitId
             ? activeReservations.filter(res => res.unitId === preSelectedUnitId)
             : activeReservations;
-          
+
           setReservations(filteredReservations);
-          
+
           // Extract units from reservations for dropdown
           const extractedUnits = filteredReservations
             .filter(res => res.unit) // Filter out reservations without unit data
             .map(res => res.unit as Unit); // Extract unit data
-          
+
           setUnits(extractedUnits);
-          
+
           // If preSelectedReservationId is provided but not found in active reservations, show a warning
           if (
             preSelectedReservationId &&
@@ -197,7 +193,7 @@ export default function ServiceForm({
         setIsLoadingReservations(false);
       }
     };
-    
+
     fetchReservationsData();
   }, [isTenant, preSelectedUnitId, preSelectedReservationId]);
 
@@ -226,7 +222,7 @@ export default function ServiceForm({
             {error}
           </div>
         )}
-        
+
         {/* Reservation Selection (only shown if not preselected) */}
         {!preSelectedReservationId && (
           <Select
@@ -243,7 +239,7 @@ export default function ServiceForm({
             emptyOptionLabel="Select a property"
           />
         )}
-        
+
         {/* Service Type */}
         <Select
           label="Service Type"
@@ -255,7 +251,7 @@ export default function ServiceForm({
           required
           fullWidth
         />
-        
+
         {/* Service Subtype (dependent on selected service type) */}
         <Select
           label="Service Subtype"
@@ -267,7 +263,7 @@ export default function ServiceForm({
           required
           fullWidth
         />
-        
+
         {/* Description */}
         <div className="mb-4">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
@@ -285,7 +281,7 @@ export default function ServiceForm({
             placeholder="Please describe the issue in detail..."
           />
         </div>
-        
+
         {/* Attachment File */}
         <div className="mb-4">
           <label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-700 mb-1">
@@ -302,7 +298,7 @@ export default function ServiceForm({
             You can attach images, documents, or other files related to your service request.
           </p>
         </div>
-        
+
         <div className="flex justify-end space-x-3">
           <Button
             type="button"

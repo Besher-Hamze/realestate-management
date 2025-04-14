@@ -26,6 +26,7 @@ const initialBuildingData: BuildingFormData = {
 const buildingTypeOptions = [
   { value: 'apartment', label: 'مبنى شقق' },
   { value: 'villa', label: 'فيلا' },
+  { value: 'commercial', label: 'تجاري' },
 ];
 
 export default function BuildingForm({
@@ -38,15 +39,14 @@ export default function BuildingForm({
   // إعداد البيانات الأولية لوضع التعديل
   const formInitialData = isEdit && initialData
     ? {
-        name: initialData.name,
-        address: initialData.address,
-        buildingType: initialData.buildingType,
-        totalUnits: initialData.totalUnits,
-        description: initialData.description,
-      }
+      name: initialData.name,
+      address: initialData.address,
+      buildingType: initialData.buildingType,
+      totalUnits: initialData.totalUnits,
+      description: initialData.description,
+    }
     : initialBuildingData;
 
-  // حالة النموذج باستخدام الخطاف المخصص
   const {
     formData,
     handleChange,
@@ -68,7 +68,7 @@ export default function BuildingForm({
           ? 'تم تحديث المبنى بنجاح'
           : 'تم إنشاء المبنى بنجاح';
         toast.success(successMessage);
-        
+
         if (onSuccess) {
           onSuccess(data);
         } else {
@@ -86,7 +86,7 @@ export default function BuildingForm({
     if (isEdit && initialData) {
       resetForm();
     }
-  }, [isEdit, initialData, resetForm]);
+  }, [isEdit, initialData]);
 
   return (
     <Card>
@@ -96,7 +96,7 @@ export default function BuildingForm({
             {error}
           </div>
         )}
-        
+
         <Input
           label="اسم المبنى"
           id="name"
@@ -106,7 +106,7 @@ export default function BuildingForm({
           required
           fullWidth
         />
-        
+
         <Input
           label="العنوان"
           id="address"
@@ -116,7 +116,7 @@ export default function BuildingForm({
           required
           fullWidth
         />
-        
+
         <Select
           label="نوع المبنى"
           id="buildingType"
@@ -127,7 +127,7 @@ export default function BuildingForm({
           required
           fullWidth
         />
-        
+
         <Input
           label="إجمالي الوحدات"
           id="totalUnits"
@@ -139,7 +139,7 @@ export default function BuildingForm({
           required
           fullWidth
         />
-        
+
         <div className="mb-4">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             الوصف
@@ -153,7 +153,7 @@ export default function BuildingForm({
             className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
           />
         </div>
-        
+
         <div className="flex justify-end space-x-3">
           <Button
             type="button"

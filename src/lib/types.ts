@@ -133,15 +133,15 @@ export interface ReservationFormData {
 }
 
 // Service Order Types
-export type ServiceType = 'maintenance' | 'cleaning' | 'security' | 'other';
-export type ServiceSubtype = 
-  | 'electrical' 
-  | 'plumbing' 
-  | 'hvac' 
-  | 'appliance' 
-  | 'structural' 
+export type ServiceType = 'maintenance' | 'financial' | 'administrative';
+export type ServiceSubtype =
+  | 'electrical'
+  | 'plumbing'
+  | 'hvac'
+  | 'appliance'
+  | 'structural'
   | 'general';
-export type ServiceStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+export type ServiceStatus = 'pending' | 'in-progress' | 'completed' | 'rejected';
 
 export interface ServiceOrder {
   id: number;
@@ -166,7 +166,7 @@ export interface ServiceOrderFormData {
 
 // Payment Types
 export type PaymentMethod = 'cash' | 'credit_card' | 'bank_transfer' | 'check' | 'other';
-export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+export type PaymentStatus = 'pending' | 'paid' | 'delayed' | 'cancelled';
 
 export interface Payment {
   id: number;

@@ -19,7 +19,7 @@ interface TenantServiceDetailPageProps {
 export default function TenantServiceDetailPage({ params }: TenantServiceDetailPageProps) {
   const id = params.id;
   const router = useRouter();
-  
+
   const [service, setService] = useState<ServiceOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,7 +33,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
     try {
       setIsLoading(true);
       const response = await servicesApi.getById(id);
-      
+
       if (response.success) {
         setService(response.data);
       } else {
@@ -142,12 +142,12 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
             </li>
           </ol>
         </nav>
-        
+
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">
             Service Request #{service.id}
           </h1>
-          
+
           <div className="flex space-x-3">
             <Link href="/tenant/services/create">
               <Button variant="primary">New Request</Button>
@@ -155,7 +155,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
           </div>
         </div>
       </div>
-      
+
       {/* Status Banner */}
       <div className={`rounded-lg p-4 ${getStatusBadgeClass(service.status)} bg-opacity-50`}>
         <div className="flex items-start">
@@ -175,7 +175,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
-            {service.status === 'cancelled' && (
+            {service.status === 'rejected' && (
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -191,14 +191,14 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
           </div>
         </div>
       </div>
-      
+
       {/* Service Details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info */}
         <Card className="lg:col-span-2">
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Service Type</h3>
@@ -206,21 +206,21 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
                   {service.serviceType}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Service Subtype</h3>
                 <p className="mt-1 text-base text-gray-900 capitalize">
                   {service.serviceSubtype}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Submitted On</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.createdAt)}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
                 <p className="mt-1 text-base text-gray-900">
@@ -228,20 +228,20 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
                 </p>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
               <div className="p-4 bg-gray-50 rounded-md text-gray-900">
                 {service.description}
               </div>
             </div>
-            
+
             {service.attachmentUrl && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Attachment</h3>
-                <a 
-                  href={service.attachmentUrl} 
-                  target="_blank" 
+                <a
+                  href={service.attachmentUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
@@ -254,13 +254,13 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
             )}
           </div>
         </Card>
-        
+
         {/* Property Info */}
         <div className="space-y-6">
           <Card>
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Information</h2>
-              
+
               <div className="space-y-4">
                 {service.reservation?.unit ? (
                   <>
@@ -270,21 +270,21 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
                         {service.reservation.unit.unitNumber}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Building</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.building?.name || 'N/A'}
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Address</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.building?.address || 'N/A'}
                       </p>
                     </div>
-                    
+
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/tenant/units/${service.reservation.unit.id}`}>
                         <Button variant="outline" fullWidth>
@@ -299,7 +299,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
               </div>
             </div>
           </Card>
-          
+
           <Card>
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Need More Help?</h2>

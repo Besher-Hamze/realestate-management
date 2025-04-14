@@ -119,14 +119,14 @@ export default function ReservationForm({
 
   // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل)
   useEffect(() => {
-    if (isEdit && initialData) {
+    if (initialData) {
       resetForm();
     } else if (preSelectedUnitId) {
       updateFormData({ unitId: preSelectedUnitId });
     }
 
 
-  }, [isEdit, initialData, preSelectedUnitId, preSelectedUserId, resetForm, updateFormData]);
+  }, [isEdit, initialData, preSelectedUnitId, preSelectedUserId]);
 
   // جلب الوحدات المتاحة
   useEffect(() => {

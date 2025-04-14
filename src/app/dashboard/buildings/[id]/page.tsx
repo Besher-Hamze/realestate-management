@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -13,13 +13,14 @@ import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate } from '@/lib/utils';
 
 interface BuildingDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+
 }
 
 export default function BuildingDetailPage({ params }: BuildingDetailPageProps) {
-  const id = params.id;
+  const { id } = use(params);
   const router = useRouter();
 
   const [building, setBuilding] = useState<Building | null>(null);

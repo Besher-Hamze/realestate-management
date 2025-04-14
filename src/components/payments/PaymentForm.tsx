@@ -33,12 +33,11 @@ const paymentMethodOptions = [
   { value: 'check', label: 'شيك' },
   { value: 'other', label: 'أخرى' },
 ];
-
 const paymentStatusOptions = [
   { value: 'pending', label: 'قيد الانتظار' },
   { value: 'paid', label: 'مدفوعة' },
-  { value: 'refunded', label: 'مسترجعة' },
-  { value: 'failed', label: 'فاشلة' },
+  { value: 'cancelled', label: 'ملغية' },
+  { value: 'delayed', label: 'متأخرة' },
 ];
 
 export default function PaymentForm({

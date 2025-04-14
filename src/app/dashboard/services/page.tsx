@@ -23,16 +23,15 @@ export default function ServicesPage() {
     { value: 'pending', label: 'Pending' },
     { value: 'in-progress', label: 'In Progress' },
     { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'rejected', label: 'Rejected' },
   ];
 
   // Service type filter options
   const typeOptions = [
     { value: 'all', label: 'All Types' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'security', label: 'Security' },
-    { value: 'other', label: 'Other' },
+    { value: 'maintenance', label: 'maintenance' },
+    { value: 'financial', label: 'financial' },
+    { value: 'administrative', label: 'administrative' },
   ];
 
   // Fetch services on component mount
@@ -50,7 +49,7 @@ export default function ServicesPage() {
     try {
       setIsLoading(true);
       const response = await servicesApi.getAll();
-      
+
       if (response.success) {
         setServices(response.data);
       } else {
@@ -67,17 +66,17 @@ export default function ServicesPage() {
   // Apply filters to services
   const applyFilters = () => {
     let filtered = [...services];
-    
+
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter((service) => service.status === statusFilter);
     }
-    
+
     // Apply type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter((service) => service.serviceType === typeFilter);
     }
-    
+
     setFilteredServices(filtered);
   };
 
@@ -107,7 +106,7 @@ export default function ServicesPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">Service Orders</h1>
       </div>
-      
+
       {/* Status summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-yellow-50 border-yellow-200">
@@ -125,7 +124,7 @@ export default function ServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-blue-50 border-blue-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -141,7 +140,7 @@ export default function ServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -157,7 +156,7 @@ export default function ServicesPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-red-50 border-red-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -174,7 +173,7 @@ export default function ServicesPage() {
           </div>
         </Card>
       </div>
-      
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -202,7 +201,7 @@ export default function ServicesPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Services List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ServiceList

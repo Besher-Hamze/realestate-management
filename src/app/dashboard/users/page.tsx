@@ -64,7 +64,7 @@ export default function UsersPage() {
     try {
       setIsLoading(true);
       const response = await usersApi.getAll();
-      
+
       if (response.success) {
         setUsers(response.data);
       } else {
@@ -81,12 +81,12 @@ export default function UsersPage() {
   // Apply filters to users
   const applyFilters = () => {
     let filtered = [...users];
-    
+
     // Apply role filter
     if (roleFilter !== 'all') {
       filtered = filtered.filter((user) => user.role === roleFilter);
     }
-    
+
     setFilteredUsers(filtered);
   };
 
@@ -141,7 +141,7 @@ export default function UsersPage() {
 
     try {
       setIsResettingPassword(true);
-      
+
       // Only admins can reset manager passwords
       if (currentUser?.role === 'admin' && selectedUser.role === 'manager') {
         const response = await authApi.resetManagerPassword(selectedUser.id, newPassword);
@@ -163,22 +163,21 @@ export default function UsersPage() {
     }
   };
 
-  // Create new user (admin or manager)
   const handleCreateUser = async () => {
     try {
       let response;
-      
+
       if (createRole === 'admin') {
         response = await authApi.registerAdmin(formData);
       } else {
         response = await authApi.registerManager(formData);
       }
-      
+
       if (response.success) {
         toast.success(`${createRole.charAt(0).toUpperCase() + createRole.slice(1)} created successfully`);
         setCreateModalOpen(false);
         fetchUsers(); // Refetch users after creation
-        
+
         // Reset form data
         setFormData({
           username: '',
@@ -229,11 +228,10 @@ export default function UsersPage() {
       header: 'Role',
       cell: (user) => (
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            user.role === 'admin' ? 'bg-red-100 text-red-800' :
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
             user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-            'bg-green-100 text-green-800'
-          }`}
+              'bg-green-100 text-green-800'
+            }`}
         >
           {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
         </span>
@@ -252,7 +250,7 @@ export default function UsersPage() {
           <Link href={`/dashboard/users/${user.id}`} onClick={(e) => e.stopPropagation()}>
             <Button size="xs" variant="outline">View</Button>
           </Link>
-          
+
           {/* Reset password button (only for managers when admin is logged in) */}
           {currentUser?.role === 'admin' && user.role === 'manager' && (
             <Button
@@ -263,7 +261,7 @@ export default function UsersPage() {
               Reset Password
             </Button>
           )}
-          
+
           {/* Delete button */}
           <Button
             size="xs"
@@ -282,11 +280,11 @@ export default function UsersPage() {
       {/* Header with action buttons */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        
+
         {/* Only admins can create new admin/manager users */}
         {currentUser?.role === 'admin' && (
-          <div className="space-x-3">
-            <Button 
+          <div className=" flex  gap-4">
+            <Button
               variant="outline"
               onClick={() => {
                 setCreateRole('manager');
@@ -295,7 +293,7 @@ export default function UsersPage() {
             >
               Add Manager
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={() => {
                 setCreateRole('admin');
@@ -307,7 +305,7 @@ export default function UsersPage() {
           </div>
         )}
       </div>
-      
+
       {/* User stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="bg-red-50 border-red-200">
@@ -318,9 +316,43 @@ export default function UsersPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <div className="ml-4">
+              <div className="mr-4">
                 <h3 className="font-medium text-red-800">Admins</h3>
                 <p className="text-2xl font-bold text-red-900">
+                  {users.filter(user => user.role === 'admin').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-blue-50 border-blue-200">
+          <div className="p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">Managers</h3>
+                <p className="text-2xl font-bold text-blue-900">
+                  {users.filter(user => user.role === 'manager').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-green-50 border-green-200">
+          <div className="p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div className="mr-4">
+                <h3 className="font-medium text-green-800">Tenants</h3>
+                <p className="text-2xl font-bold text-green-900">
                   {users.filter(user => user.role === 'tenant').length}
                 </p>
               </div>
@@ -328,7 +360,7 @@ export default function UsersPage() {
           </div>
         </Card>
       </div>
-      
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -345,7 +377,7 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Users List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <Table
@@ -357,7 +389,7 @@ export default function UsersPage() {
           onRowClick={(user) => router.push(`/dashboard/users/${user.id}`)}
         />
       </div>
-      
+
       {/* Create User Modal */}
       <Modal
         isOpen={createModalOpen}
@@ -393,7 +425,7 @@ export default function UsersPage() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
             <input
@@ -406,7 +438,7 @@ export default function UsersPage() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
             <input
@@ -419,7 +451,7 @@ export default function UsersPage() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -432,7 +464,7 @@ export default function UsersPage() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
             <input
@@ -447,7 +479,7 @@ export default function UsersPage() {
           </div>
         </div>
       </Modal>
-      
+
       {/* Delete User Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}
@@ -476,14 +508,14 @@ export default function UsersPage() {
         <p className="text-gray-600 mb-4">
           Are you sure you want to delete {selectedUser?.fullName}? This action cannot be undone.
         </p>
-        
+
         {selectedUser?.role === 'tenant' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
             <p className="text-sm font-medium">Warning</p>
             <p className="text-sm">Deleting this tenant will also remove their access to all associated units and service requests.</p>
           </div>
         )}
-        
+
         {selectedUser?.role === 'manager' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
             <p className="text-sm font-medium">Warning</p>
@@ -491,7 +523,7 @@ export default function UsersPage() {
           </div>
         )}
       </Modal>
-      
+
       {/* Reset Password Modal */}
       <Modal
         isOpen={resetPasswordModalOpen}
@@ -520,7 +552,7 @@ export default function UsersPage() {
         <p className="text-gray-600 mb-4">
           Are you sure you want to reset the password for {selectedUser?.fullName}?
         </p>
-        
+
         <div className="mb-4">
           <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
           <div className="mt-1 flex items-center">
