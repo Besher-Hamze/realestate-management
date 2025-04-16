@@ -25,22 +25,22 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Modal states for creating users
+  // حالات النافذة المنبثقة لإنشاء المستخدمين
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createRole, setCreateRole] = useState<'admin' | 'manager'>('manager');
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // Role filter options
+  // خيارات تصفية الأدوار
   const roleOptions = [
-    { value: 'all', label: 'All Roles' },
-    { value: 'admin', label: 'Admin' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'tenant', label: 'Tenant' },
+    { value: 'all', label: 'جميع الأدوار' },
+    { value: 'admin', label: 'المشرف' },
+    { value: 'manager', label: 'المدير' },
+    { value: 'tenant', label: 'المستأجر' },
   ];
 
-  // Form data for creating new users
+  // بيانات النموذج لإنشاء مستخدمين جدد
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -49,17 +49,17 @@ export default function UsersPage() {
     phone: '',
   });
 
-  // Fetch users on component mount
+  // جلب المستخدمين عند تحميل المكون
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Apply filters when users or role filter changes
+  // تطبيق التصفية عند تغيير المستخدمين أو تصفية الدور
   useEffect(() => {
     applyFilters();
   }, [users, roleFilter]);
 
-  // Fetch users data
+  // جلب بيانات المستخدمين
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -68,21 +68,21 @@ export default function UsersPage() {
       if (response.success) {
         setUsers(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch users');
+        toast.error(response.message || 'فشل في جلب المستخدمين');
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('An error occurred while fetching users');
+      console.error('خطأ في جلب المستخدمين:', error);
+      toast.error('حدث خطأ أثناء جلب المستخدمين');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters to users
+  // تطبيق التصفية على المستخدمين
   const applyFilters = () => {
     let filtered = [...users];
 
-    // Apply role filter
+    // تطبيق تصفية الدور
     if (roleFilter !== 'all') {
       filtered = filtered.filter((user) => user.role === roleFilter);
     }
@@ -90,12 +90,12 @@ export default function UsersPage() {
     setFilteredUsers(filtered);
   };
 
-  // Handle role filter change
+  // التعامل مع تغيير تصفية الدور
   const handleRoleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setRoleFilter(e.target.value);
   };
 
-  // Handle user deletion
+  // التعامل مع حذف المستخدم
   const handleDelete = async () => {
     if (!selectedUser) return;
 
@@ -104,60 +104,60 @@ export default function UsersPage() {
       const response = await usersApi.delete(selectedUser.id);
 
       if (response.success) {
-        toast.success('User deleted successfully');
+        toast.success('تم حذف المستخدم بنجاح');
         setDeleteModalOpen(false);
-        fetchUsers(); // Refetch users after deletion
+        fetchUsers(); // إعادة جلب المستخدمين بعد الحذف
       } else {
-        toast.error(response.message || 'Failed to delete user');
+        toast.error(response.message || 'فشل في حذف المستخدم');
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('An error occurred while deleting the user');
+      console.error('خطأ في حذف المستخدم:', error);
+      toast.error('حدث خطأ أثناء حذف المستخدم');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (user: User, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedUser(user);
     setDeleteModalOpen(true);
   };
 
-  // Open reset password modal
+  // فتح نافذة إعادة تعيين كلمة المرور
   const openResetPasswordModal = (user: User, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedUser(user);
     setResetPasswordModalOpen(true);
-    // Generate a random password
+    // إنشاء كلمة مرور عشوائية
     const randomPassword = Math.random().toString(36).slice(-8);
     setNewPassword(randomPassword);
   };
 
-  // Reset manager password
+  // إعادة تعيين كلمة مرور المدير
   const handleResetPassword = async () => {
     if (!selectedUser) return;
 
     try {
       setIsResettingPassword(true);
 
-      // Only admins can reset manager passwords
+      // يمكن للمشرفين فقط إعادة تعيين كلمات مرور المديرين
       if (currentUser?.role === 'admin' && selectedUser.role === 'manager') {
         const response = await authApi.resetManagerPassword(selectedUser.id, newPassword);
 
         if (response.success) {
-          toast.success('Password reset successfully');
+          toast.success('تم إعادة تعيين كلمة المرور بنجاح');
           setResetPasswordModalOpen(false);
         } else {
-          toast.error(response.message || 'Failed to reset password');
+          toast.error(response.message || 'فشل في إعادة تعيين كلمة المرور');
         }
       } else {
-        toast.error('You do not have permission to reset this password');
+        toast.error('ليس لديك صلاحية لإعادة تعيين كلمة المرور هذه');
       }
     } catch (error) {
-      console.error('Error resetting password:', error);
-      toast.error('An error occurred while resetting the password');
+      console.error('خطأ في إعادة تعيين كلمة المرور:', error);
+      toast.error('حدث خطأ أثناء إعادة تعيين كلمة المرور');
     } finally {
       setIsResettingPassword(false);
     }
@@ -174,11 +174,11 @@ export default function UsersPage() {
       }
 
       if (response.success) {
-        toast.success(`${createRole.charAt(0).toUpperCase() + createRole.slice(1)} created successfully`);
+        toast.success(`تم إنشاء ${createRole === 'admin' ? 'المشرف' : 'المدير'} بنجاح`);
         setCreateModalOpen(false);
-        fetchUsers(); // Refetch users after creation
+        fetchUsers(); // إعادة جلب المستخدمين بعد الإنشاء
 
-        // Reset form data
+        // إعادة تعيين بيانات النموذج
         setFormData({
           username: '',
           password: '',
@@ -187,25 +187,25 @@ export default function UsersPage() {
           phone: '',
         });
       } else {
-        toast.error(response.message || `Failed to create ${createRole}`);
+        toast.error(response.message || `فشل في إنشاء ${createRole === 'admin' ? 'المشرف' : 'المدير'}`);
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      toast.error('An error occurred while creating the user');
+      console.error('خطأ في إنشاء المستخدم:', error);
+      toast.error('حدث خطأ أثناء إنشاء المستخدم');
     }
   };
 
-  // Handle form input change
+  // التعامل مع تغيير إدخال النموذج
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Define columns for the table
+  // تحديد الأعمدة للجدول
   const columns: TableColumn<User>[] = [
     {
       key: 'name',
-      header: 'Name',
+      header: 'الاسم',
       cell: (user) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{user.fullName}</span>
@@ -215,7 +215,7 @@ export default function UsersPage() {
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: 'معلومات الاتصال',
       cell: (user) => (
         <div className="flex flex-col">
           <span className="text-gray-700">{user.email}</span>
@@ -225,7 +225,7 @@ export default function UsersPage() {
     },
     {
       key: 'role',
-      header: 'Role',
+      header: 'الدور',
       cell: (user) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
@@ -233,42 +233,42 @@ export default function UsersPage() {
               'bg-green-100 text-green-800'
             }`}
         >
-          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+          {user.role === 'admin' ? 'مشرف' : user.role === 'manager' ? 'مدير' : 'مستأجر'}
         </span>
       ),
     },
     {
       key: 'joinedDate',
-      header: 'Joined',
+      header: 'تاريخ الانضمام',
       cell: (user) => <span className="text-gray-700">{formatDate(user.createdAt)}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (user) => (
         <div className="flex flex-wrap gap-2">
           <Link href={`/dashboard/users/${user.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
 
-          {/* Reset password button (only for managers when admin is logged in) */}
+          {/* زر إعادة تعيين كلمة المرور (فقط للمديرين عندما يكون المشرف مسجل الدخول) */}
           {currentUser?.role === 'admin' && user.role === 'manager' && (
             <Button
               size="xs"
               variant="outline"
               onClick={(e) => openResetPasswordModal(user, e)}
             >
-              Reset Password
+              إعادة تعيين كلمة المرور
             </Button>
           )}
 
-          {/* Delete button */}
+          {/* زر الحذف */}
           <Button
             size="xs"
             variant="danger"
             onClick={(e) => openDeleteModal(user, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
@@ -277,11 +277,11 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* الترويسة مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+        <h1 className="text-2xl font-bold text-gray-900">المستخدمون</h1>
 
-        {/* Only admins can create new admin/manager users */}
+        {/* يمكن للمشرفين فقط إنشاء مستخدمين جدد مشرفين/مديرين */}
         {currentUser?.role === 'admin' && (
           <div className=" flex  gap-4">
             <Button
@@ -291,7 +291,7 @@ export default function UsersPage() {
                 setCreateModalOpen(true);
               }}
             >
-              Add Manager
+              إضافة مدير
             </Button>
             <Button
               variant="primary"
@@ -300,13 +300,13 @@ export default function UsersPage() {
                 setCreateModalOpen(true);
               }}
             >
-              Add Admin
+              إضافة مشرف
             </Button>
           </div>
         )}
       </div>
 
-      {/* User stats cards */}
+      {/* بطاقات إحصائيات المستخدمين */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="bg-red-50 border-red-200">
           <div className="p-4">
@@ -317,7 +317,7 @@ export default function UsersPage() {
                 </svg>
               </div>
               <div className="mr-4">
-                <h3 className="font-medium text-red-800">Admins</h3>
+                <h3 className="font-medium text-red-800">المشرفون</h3>
                 <p className="text-2xl font-bold text-red-900">
                   {users.filter(user => user.role === 'admin').length}
                 </p>
@@ -334,7 +334,7 @@ export default function UsersPage() {
                 </svg>
               </div>
               <div className="mr-4">
-                <h3 className="font-medium text-blue-800">Managers</h3>
+                <h3 className="font-medium text-blue-800">المديرون</h3>
                 <p className="text-2xl font-bold text-blue-900">
                   {users.filter(user => user.role === 'manager').length}
                 </p>
@@ -351,7 +351,7 @@ export default function UsersPage() {
                 </svg>
               </div>
               <div className="mr-4">
-                <h3 className="font-medium text-green-800">Tenants</h3>
+                <h3 className="font-medium text-green-800">المستأجرون</h3>
                 <p className="text-2xl font-bold text-green-900">
                   {users.filter(user => user.role === 'tenant').length}
                 </p>
@@ -361,12 +361,12 @@ export default function UsersPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Select
-              label="Role"
+              label="الدور"
               id="roleFilter"
               name="roleFilter"
               value={roleFilter}
@@ -378,43 +378,43 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Users List */}
+      {/* قائمة المستخدمين */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <Table
           data={filteredUsers}
           columns={columns}
           keyExtractor={(user) => user.id}
           isLoading={isLoading}
-          emptyMessage="No users found"
+          emptyMessage="لا يوجد مستخدمين"
           onRowClick={(user) => router.push(`/dashboard/users/${user.id}`)}
         />
       </div>
 
-      {/* Create User Modal */}
+      {/* نافذة إنشاء مستخدم */}
       <Modal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title={`Create New ${createRole.charAt(0).toUpperCase() + createRole.slice(1)}`}
+        title={`إنشاء ${createRole === 'admin' ? 'مشرف' : 'مدير'} جديد`}
         footer={
           <div className="flex justify-end space-x-3">
             <Button
               variant="outline"
               onClick={() => setCreateModalOpen(false)}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
               onClick={handleCreateUser}
             >
-              Create User
+              إنشاء مستخدم
             </Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">اسم المستخدم</label>
             <input
               type="text"
               id="username"
@@ -427,7 +427,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">كلمة المرور</label>
             <input
               type="password"
               id="password"
@@ -440,7 +440,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">الاسم الكامل</label>
             <input
               type="text"
               id="fullName"
@@ -453,7 +453,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">البريد الإلكتروني</label>
             <input
               type="email"
               id="email"
@@ -466,7 +466,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">الهاتف</label>
             <input
               type="text"
               id="phone"
@@ -480,11 +480,11 @@ export default function UsersPage() {
         </div>
       </Modal>
 
-      {/* Delete User Confirmation Modal */}
+      {/* نافذة تأكيد حذف المستخدم */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete User"
+        title="حذف المستخدم"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -492,7 +492,7 @@ export default function UsersPage() {
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -500,35 +500,35 @@ export default function UsersPage() {
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete {selectedUser?.fullName}? This action cannot be undone.
+          هل أنت متأكد من أنك تريد حذف {selectedUser?.fullName}؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
 
         {selectedUser?.role === 'tenant' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Deleting this tenant will also remove their access to all associated units and service requests.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">حذف هذا المستأجر سيؤدي أيضًا إلى إزالة وصوله إلى جميع الوحدات وطلبات الخدمة المرتبطة به.</p>
           </div>
         )}
 
         {selectedUser?.role === 'manager' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Deleting this manager will remove their access to the system. Consider reassigning their properties first.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">حذف هذا المدير سيؤدي إلى إزالة وصوله إلى النظام. ضع في اعتبارك إعادة تعيين ممتلكاته أولاً.</p>
           </div>
         )}
       </Modal>
 
-      {/* Reset Password Modal */}
+      {/* نافذة إعادة تعيين كلمة المرور */}
       <Modal
         isOpen={resetPasswordModalOpen}
         onClose={() => setResetPasswordModalOpen(false)}
-        title="Reset Manager Password"
+        title="إعادة تعيين كلمة مرور المدير"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -536,7 +536,7 @@ export default function UsersPage() {
               onClick={() => setResetPasswordModalOpen(false)}
               disabled={isResettingPassword}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -544,17 +544,17 @@ export default function UsersPage() {
               isLoading={isResettingPassword}
               disabled={isResettingPassword}
             >
-              Reset Password
+              إعادة تعيين كلمة المرور
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to reset the password for {selectedUser?.fullName}?
+          هل أنت متأكد من أنك تريد إعادة تعيين كلمة المرور لـ {selectedUser?.fullName}؟
         </p>
 
         <div className="mb-4">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">كلمة المرور الجديدة</label>
           <div className="mt-1 flex items-center">
             <input
               type="text"
@@ -569,16 +569,16 @@ export default function UsersPage() {
               variant="outline"
               className="ml-2"
               onClick={() => {
-                // Generate a random password
+                // إنشاء كلمة مرور عشوائية
                 const randomPassword = Math.random().toString(36).slice(-8);
                 setNewPassword(randomPassword);
               }}
             >
-              Generate
+              توليد
             </Button>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            The manager will need to use this password for their next login.
+            سيحتاج المدير إلى استخدام كلمة المرور هذه لتسجيل الدخول التالي.
           </p>
         </div>
       </Modal>

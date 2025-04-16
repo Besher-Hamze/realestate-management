@@ -29,9 +29,9 @@ const initialUnitData: UnitFormData = {
 };
 
 const statusOptions = [
-    { value: 'available', label: 'Available' },
-    { value: 'rented', label: 'Rented' },
-    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'available', label: 'متاحة' },
+    { value: 'rented', label: 'مؤجرة' },
+    { value: 'maintenance', label: 'تحت الصيانة' },
 ];
 
 export default function UnitForm({
@@ -44,7 +44,7 @@ export default function UnitForm({
     const [buildings, setBuildings] = useState<Building[]>([]);
     const [isLoadingBuildings, setIsLoadingBuildings] = useState(true);
 
-    // Set up initial data for edit mode or with preselected building
+    // إعداد البيانات الأولية لوضع التعديل أو مع مبنى محدد مسبقًا
     const formInitialData: UnitFormData = isEdit && initialData
         ? {
             buildingId: initialData.buildingId,
@@ -61,7 +61,7 @@ export default function UnitForm({
             ? { ...initialUnitData, buildingId: preSelectedBuildingId }
             : initialUnitData;
 
-    // Form state using custom hook
+    // حالة النموذج باستخدام الخطاف المخصص
     const {
         formData,
         handleChange,
@@ -81,8 +81,8 @@ export default function UnitForm({
         {
             onSuccess: (data) => {
                 const successMessage = isEdit
-                    ? 'Unit updated successfully'
-                    : 'Unit created successfully';
+                    ? 'تم تحديث الوحدة بنجاح'
+                    : 'تم إنشاء الوحدة بنجاح';
                 toast.success(successMessage);
 
                 if (onSuccess) {
@@ -92,12 +92,12 @@ export default function UnitForm({
                 }
             },
             onError: (errorMessage) => {
-                toast.error(errorMessage || 'An error occurred');
+                toast.error(errorMessage || 'حدث خطأ');
             },
         }
     );
 
-    // Reset form when initialData changes (for editing) or when preSelectedBuildingId changes
+    // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل) أو عند تغيير معرف المبنى المحدد مسبقًا
     useEffect(() => {
         if (isEdit && initialData) {
             resetForm();
@@ -107,7 +107,7 @@ export default function UnitForm({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEdit, initialData?.id, preSelectedBuildingId]);
 
-    // Fetch buildings for dropdown
+    // جلب المباني للقائمة المنسدلة
     useEffect(() => {
         const fetchBuildings = async () => {
             try {
@@ -117,11 +117,11 @@ export default function UnitForm({
                 if (response.success) {
                     setBuildings(response.data);
                 } else {
-                    toast.error(response.message || 'Failed to load buildings');
+                    toast.error(response.message || 'فشل في تحميل المباني');
                 }
             } catch (error) {
-                console.error('Error fetching buildings:', error);
-                toast.error('An error occurred while loading buildings');
+                console.error('خطأ في جلب المباني:', error);
+                toast.error('حدث خطأ أثناء تحميل المباني');
             } finally {
                 setIsLoadingBuildings(false);
             }
@@ -130,13 +130,13 @@ export default function UnitForm({
         fetchBuildings();
     }, []);
 
-    // Create building options for dropdown
+    // إنشاء خيارات المباني للقائمة المنسدلة
     const buildingOptions = buildings.map((building) => ({
         value: building.id,
         label: building.name,
     }));
 
-    // Handle number inputs to ensure they are numeric
+    // التعامل مع إدخال الأرقام للتأكد من أنها رقمية
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         const numericValue = value === '' ? 0 : parseFloat(value);
@@ -153,7 +153,7 @@ export default function UnitForm({
                 )}
 
                 <Select
-                    label="Building"
+                    label="المبنى"
                     id="buildingId"
                     name="buildingId"
                     value={formData.buildingId}
@@ -162,23 +162,23 @@ export default function UnitForm({
                     disabled={isLoadingBuildings || isEdit}
                     required
                     fullWidth
-                    helpText={isLoadingBuildings ? 'Loading buildings...' : undefined}
+                    helpText={isLoadingBuildings ? 'جاري تحميل المباني...' : undefined}
                 />
 
                 <Input
-                    label="Unit Number"
+                    label="رقم الوحدة"
                     id="unitNumber"
                     name="unitNumber"
                     value={formData.unitNumber}
                     onChange={handleChange}
                     required
                     fullWidth
-                    helpText="Unique identifier for this unit (e.g., A101, 2B, etc.)"
+                    helpText="معرف فريد لهذه الوحدة (مثال: A101، 2B، إلخ.)"
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                        label="Floor"
+                        label="الطابق"
                         id="floor"
                         name="floor"
                         type="number"
@@ -190,7 +190,7 @@ export default function UnitForm({
                     />
 
                     <Input
-                        label="Area (m²)"
+                        label="المساحة (م²)"
                         id="area"
                         name="area"
                         type="number"
@@ -205,7 +205,7 @@ export default function UnitForm({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                        label="Bedrooms"
+                        label="عدد غرف النوم"
                         id="bedrooms"
                         name="bedrooms"
                         type="number"
@@ -217,7 +217,7 @@ export default function UnitForm({
                     />
 
                     <Input
-                        label="Bathrooms"
+                        label="عدد الحمامات"
                         id="bathrooms"
                         name="bathrooms"
                         type="number"
@@ -232,7 +232,7 @@ export default function UnitForm({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                        label="Price"
+                        label="السعر"
                         id="price"
                         name="price"
                         type="number"
@@ -248,7 +248,7 @@ export default function UnitForm({
                     />
 
                     <Select
-                        label="Status"
+                        label="الحالة"
                         id="status"
                         name="status"
                         value={formData.status}
@@ -261,7 +261,7 @@ export default function UnitForm({
 
                 <div className="mb-4">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
+                        الوصف
                     </label>
                     <textarea
                         id="description"
@@ -280,14 +280,14 @@ export default function UnitForm({
                         onClick={() => router.back()}
                         disabled={isSubmitting}
                     >
-                        Cancel
+                        إلغاء
                     </Button>
                     <Button
                         type="submit"
                         isLoading={isSubmitting}
                         disabled={isSubmitting}
                     >
-                        {isEdit ? 'Update Unit' : 'Create Unit'}
+                        {isEdit ? 'تحديث الوحدة' : 'إنشاء الوحدة'}
                     </Button>
                 </div>
             </form>

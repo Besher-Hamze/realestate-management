@@ -24,20 +24,20 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   const id = params.id;
   const router = useRouter();
   const { user: currentUser } = useAuth();
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReservationsLoading, setIsReservationsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // For password reset
+
+  // لإعادة تعيين كلمة المرور
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // For user update form
+  // لنموذج تحديث المستخدم
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -46,17 +46,17 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   });
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Fetch user details on component mount
+  // جلب تفاصيل المستخدم عند تحميل المكون
   useEffect(() => {
     fetchUser();
   }, [id]);
 
-  // Fetch user data
+  // جلب بيانات المستخدم
   const fetchUser = async () => {
     try {
       setIsLoading(true);
       const response = await usersApi.getById(id);
-      
+
       if (response.success) {
         setUser(response.data);
         setFormData({
@@ -64,127 +64,127 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           email: response.data.email,
           phone: response.data.phone,
         });
-        
+
         if (response.data.role === 'tenant') {
           fetchUserReservations(response.data.id);
         } else {
           setIsReservationsLoading(false);
         }
       } else {
-        toast.error(response.message || 'Failed to fetch user details');
+        toast.error(response.message || 'فشل في جلب تفاصيل المستخدم');
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
-      toast.error('An error occurred while fetching user details');
+      console.error('خطأ في جلب المستخدم:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل المستخدم');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch reservations for tenant
+  // جلب الحجوزات للمستأجر
   const fetchUserReservations = async (userId: number) => {
     try {
       setIsReservationsLoading(true);
       const response = await reservationsApi.getByUserId(userId);
-      
+
       if (response.success) {
         setReservations(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch user reservations');
+        toast.error(response.message || 'فشل في جلب حجوزات المستخدم');
       }
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      toast.error('An error occurred while fetching user reservations');
+      console.error('خطأ في جلب الحجوزات:', error);
+      toast.error('حدث خطأ أثناء جلب حجوزات المستخدم');
     } finally {
       setIsReservationsLoading(false);
     }
   };
 
-  // Delete user
+  // حذف المستخدم
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await usersApi.delete(id);
-      
+
       if (response.success) {
-        toast.success('User deleted successfully');
+        toast.success('تم حذف المستخدم بنجاح');
         router.push('/dashboard/users');
       } else {
-        toast.error(response.message || 'Failed to delete user');
+        toast.error(response.message || 'فشل في حذف المستخدم');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('An error occurred while deleting the user');
+      console.error('خطأ في حذف المستخدم:', error);
+      toast.error('حدث خطأ أثناء حذف المستخدم');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Update user
+  // تحديث المستخدم
   const handleUpdateUser = async () => {
     try {
       setIsUpdating(true);
       const response = await usersApi.update(id, formData);
-      
+
       if (response.success) {
-        toast.success('User updated successfully');
+        toast.success('تم تحديث المستخدم بنجاح');
         setEditModalOpen(false);
         setUser(response.data);
       } else {
-        toast.error(response.message || 'Failed to update user');
+        toast.error(response.message || 'فشل في تحديث المستخدم');
       }
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error('An error occurred while updating the user');
+      console.error('خطأ في تحديث المستخدم:', error);
+      toast.error('حدث خطأ أثناء تحديث المستخدم');
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Reset manager password
+  // إعادة تعيين كلمة مرور المدير
   const handleResetPassword = async () => {
     if (!user || user.role !== 'manager') return;
 
     try {
       setIsResettingPassword(true);
-      
-      // Only admins can reset manager passwords
+
+      // فقط المشرفين يمكنهم إعادة تعيين كلمات مرور المديرين
       if (currentUser?.role === 'admin') {
         const response = await authApi.resetManagerPassword(user.id, newPassword);
 
         if (response.success) {
-          toast.success('Password reset successfully');
+          toast.success('تم إعادة تعيين كلمة المرور بنجاح');
           setResetPasswordModalOpen(false);
         } else {
-          toast.error(response.message || 'Failed to reset password');
+          toast.error(response.message || 'فشل في إعادة تعيين كلمة المرور');
         }
       } else {
-        toast.error('You do not have permission to reset this password');
+        toast.error('ليس لديك صلاحية لإعادة تعيين كلمة المرور هذه');
       }
     } catch (error) {
-      console.error('Error resetting password:', error);
-      toast.error('An error occurred while resetting the password');
+      console.error('خطأ في إعادة تعيين كلمة المرور:', error);
+      toast.error('حدث خطأ أثناء إعادة تعيين كلمة المرور');
     } finally {
       setIsResettingPassword(false);
     }
   };
 
-  // Handle form input change
+  // التعامل مع تغيير إدخال النموذج
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Define columns for the reservations table
+  // تحديد الأعمدة لجدول الحجوزات
   const reservationColumns: TableColumn<Reservation>[] = [
     {
       key: 'unit',
-      header: 'Unit',
+      header: 'الوحدة',
       cell: (reservation) => {
-        const unitNumber = reservation.unit?.unitNumber || 'N/A';
-        const buildingName = reservation.unit?.building?.name || 'N/A';
+        const unitNumber = reservation.unit?.unitNumber || 'غير متوفر';
+        const buildingName = reservation.unit?.building?.name || 'غير متوفر';
         return (
           <div className="flex flex-col">
             <span className="font-medium text-gray-900">{unitNumber}</span>
@@ -195,7 +195,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     },
     {
       key: 'period',
-      header: 'Period',
+      header: 'الفترة',
       cell: (reservation) => (
         <div className="flex flex-col">
           <span className="text-gray-700">{formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}</span>
@@ -204,34 +204,50 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (reservation) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-            reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-            'bg-red-100 text-red-800'
-          }`}
-        >
-          {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
-        </span>
-      ),
+      header: 'الحالة',
+      cell: (reservation) => {
+        let statusText = '';
+        switch (reservation.status) {
+          case 'active':
+            statusText = 'نشط';
+            break;
+          case 'pending':
+            statusText = 'قيد الانتظار';
+            break;
+          case 'expired':
+            statusText = 'منتهي';
+            break;
+          default:
+            statusText = 'ملغي';
+        }
+
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
+                reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                    'bg-red-100 text-red-800'
+              }`}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (reservation) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/reservations/${reservation.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="xs" variant="outline">View</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -256,26 +272,26 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading user details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل المستخدم...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور
   if (!user) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">User Not Found</h2>
-        <p className="text-gray-600 mb-6">The user you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">المستخدم غير موجود</h2>
+        <p className="text-gray-600 mb-6">المستخدم الذي تبحث عنه غير موجود أو ليس لديك صلاحية لعرضه.</p>
         <Link href="/dashboard/users">
-          <Button>Back to Users</Button>
+          <Button>العودة إلى المستخدمين</Button>
         </Link>
       </div>
     );
   }
 
-  // Define role badge color
+  // تحديد لون شارة الدور
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
       case 'admin':
@@ -289,18 +305,32 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     }
   };
 
+  // تحويل الدور إلى النص العربي
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'مشرف';
+      case 'manager':
+        return 'مدير';
+      case 'tenant':
+        return 'مستأجر';
+      default:
+        return role;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs and actions */}
+      {/* الترويسة مع مسار التنقل والإجراءات */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/users" className="hover:text-primary-600">Users</Link>
+              <Link href="/dashboard/users" className="hover:text-primary-600">المستخدمون</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -308,90 +338,90 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             </li>
           </ol>
         </nav>
-        
+
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-gray-900 mr-3">
+            <h1 className="text-2xl font-bold text-gray-900 ml-3">
               {user.fullName}
             </h1>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
             >
-              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              {getRoleText(user.role)}
             </span>
           </div>
           <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setEditModalOpen(true)}
             >
-              Edit
+              تعديل
             </Button>
-            
-            {/* Only show reset password for managers when an admin is logged in */}
+
+            {/* إظهار إعادة تعيين كلمة المرور للمديرين فقط عندما يكون المشرف مسجل الدخول */}
             {currentUser?.role === 'admin' && user.role === 'manager' && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setResetPasswordModalOpen(true);
-                  // Generate a random password
+                  // إنشاء كلمة مرور عشوائية
                   const randomPassword = Math.random().toString(36).slice(-8);
                   setNewPassword(randomPassword);
                 }}
               >
-                Reset Password
+                إعادة تعيين كلمة المرور
               </Button>
             )}
-            
+
             <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>
-              Delete
+              حذف
             </Button>
           </div>
         </div>
       </div>
-      
-      {/* User Details */}
+
+      {/* تفاصيل المستخدم */}
       <Card>
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">User Information</h2>
-          
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المستخدم</h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
+              <h3 className="text-sm font-medium text-gray-500">الاسم الكامل</h3>
               <p className="mt-1 text-base text-gray-900">{user.fullName}</p>
             </div>
-            
+
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Username</h3>
+              <h3 className="text-sm font-medium text-gray-500">اسم المستخدم</h3>
               <p className="mt-1 text-base text-gray-900">{user.username}</p>
             </div>
-            
+
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Email</h3>
+              <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
               <p className="mt-1 text-base text-gray-900">{user.email}</p>
             </div>
-            
+
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Phone</h3>
+              <h3 className="text-sm font-medium text-gray-500">الهاتف</h3>
               <p className="mt-1 text-base text-gray-900">{user.phone}</p>
             </div>
-            
+
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Role</h3>
-              <p className="mt-1 text-base text-gray-900 capitalize">{user.role}</p>
+              <h3 className="text-sm font-medium text-gray-500">الدور</h3>
+              <p className="mt-1 text-base text-gray-900">{getRoleText(user.role)}</p>
             </div>
-            
+
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Joined</h3>
+              <h3 className="text-sm font-medium text-gray-500">تاريخ الانضمام</h3>
               <p className="mt-1 text-base text-gray-900">{formatDate(user.createdAt)}</p>
             </div>
-            
+
             {user.companyId && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Company</h3>
+                <h3 className="text-sm font-medium text-gray-500">الشركة</h3>
                 <p className="mt-1 text-base text-gray-900">
                   <Link href={`/dashboard/companies/${user.companyId}`} className="text-primary-600 hover:text-primary-700">
-                    View Company
+                    عرض الشركة
                   </Link>
                 </p>
               </div>
@@ -399,12 +429,12 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           </div>
         </div>
       </Card>
-      
-      {/* Reservations (only for tenants) */}
+
+      {/* الحجوزات (للمستأجرين فقط) */}
       {user.role === 'tenant' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Reservations</h2>
+            <h2 className="text-xl font-semibold text-gray-900">الحجوزات</h2>
             <Link href={`/dashboard/reservations/create?userId=${user.id}`}>
               <Button
                 variant="primary"
@@ -415,29 +445,29 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </svg>
                 }
               >
-                Create Reservation
+                إنشاء حجز
               </Button>
             </Link>
           </div>
-          
+
           <Card>
             <Table
               data={reservations}
               columns={reservationColumns}
               keyExtractor={(reservation) => reservation.id}
               isLoading={isReservationsLoading}
-              emptyMessage="No reservations found for this user"
+              emptyMessage="لا توجد حجوزات لهذا المستخدم"
               onRowClick={(reservation) => router.push(`/dashboard/reservations/${reservation.id}`)}
             />
           </Card>
         </div>
       )}
-      
-      {/* Edit User Modal */}
+
+      {/* نافذة تعديل المستخدم */}
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Edit User"
+        title="تعديل المستخدم"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -445,7 +475,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               onClick={() => setEditModalOpen(false)}
               disabled={isUpdating}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -453,14 +483,14 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               isLoading={isUpdating}
               disabled={isUpdating}
             >
-              Update User
+              تحديث المستخدم
             </Button>
           </div>
         }
       >
         <div className="space-y-4">
           <Input
-            label="Full Name"
+            label="الاسم الكامل"
             id="fullName"
             name="fullName"
             value={formData.fullName}
@@ -468,9 +498,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             required
             fullWidth
           />
-          
+
           <Input
-            label="Email"
+            label="البريد الإلكتروني"
             id="email"
             name="email"
             type="email"
@@ -479,9 +509,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             required
             fullWidth
           />
-          
+
           <Input
-            label="Phone"
+            label="الهاتف"
             id="phone"
             name="phone"
             value={formData.phone}
@@ -491,12 +521,12 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           />
         </div>
       </Modal>
-      
-      {/* Delete User Confirmation Modal */}
+
+      {/* نافذة تأكيد حذف المستخدم */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete User"
+        title="حذف المستخدم"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -504,7 +534,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -512,35 +542,35 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete {user.fullName}? This action cannot be undone.
+          هل أنت متأكد من أنك تريد حذف {user.fullName}؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
-        
+
         {user.role === 'tenant' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Deleting this tenant will also remove their access to all associated units and service requests.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">حذف هذا المستأجر سيؤدي أيضًا إلى إزالة وصوله إلى جميع الوحدات وطلبات الخدمة المرتبطة به.</p>
           </div>
         )}
-        
+
         {user.role === 'manager' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">Warning</p>
-            <p className="text-sm">Deleting this manager will remove their access to the system. Consider reassigning their properties first.</p>
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">حذف هذا المدير سيؤدي إلى إزالة وصوله إلى النظام. ضع في اعتبارك إعادة تعيين ممتلكاته أولاً.</p>
           </div>
         )}
       </Modal>
-      
-      {/* Reset Password Modal */}
+
+      {/* نافذة إعادة تعيين كلمة المرور */}
       <Modal
         isOpen={resetPasswordModalOpen}
         onClose={() => setResetPasswordModalOpen(false)}
-        title="Reset Manager Password"
+        title="إعادة تعيين كلمة مرور المدير"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -548,7 +578,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               onClick={() => setResetPasswordModalOpen(false)}
               disabled={isResettingPassword}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -556,17 +586,17 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               isLoading={isResettingPassword}
               disabled={isResettingPassword}
             >
-              Reset Password
+              إعادة تعيين كلمة المرور
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to reset the password for {user.fullName}?
+          هل أنت متأكد من أنك تريد إعادة تعيين كلمة المرور لـ {user.fullName}؟
         </p>
-        
+
         <div className="mb-4">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">كلمة المرور الجديدة</label>
           <div className="mt-1 flex items-center">
             <input
               type="text"
@@ -581,16 +611,16 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               variant="outline"
               className="ml-2"
               onClick={() => {
-                // Generate a random password
+                // إنشاء كلمة مرور عشوائية
                 const randomPassword = Math.random().toString(36).slice(-8);
                 setNewPassword(randomPassword);
               }}
             >
-              Generate
+              توليد
             </Button>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            The manager will need to use this password for their next login.
+            سيحتاج المدير إلى استخدام كلمة المرور هذه لتسجيل الدخول التالي.
           </p>
         </div>
       </Modal>

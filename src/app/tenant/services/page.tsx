@@ -18,21 +18,21 @@ export default function TenantServicesPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [hasReservations, setHasReservations] = useState(true);
 
-  // Status filter options
+  // خيارات تصفية الحالة
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'in-progress', label: 'In Progress' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'rejected', label: 'Rejected' },
+    { value: 'all', label: 'جميع الحالات' },
+    { value: 'pending', label: 'قيد الانتظار' },
+    { value: 'in-progress', label: 'قيد التنفيذ' },
+    { value: 'completed', label: 'مكتمل' },
+    { value: 'rejected', label: 'مرفوض' },
   ];
 
-  // Service type filter options
+  // خيارات تصفية نوع الخدمة
   const typeOptions = [
-    { value: 'all', label: 'All Types' },
-    { value: 'maintenance', label: 'maintenance' },
-    { value: 'financial', label: 'financial' },
-    { value: 'administrative', label: 'administrative' },
+    { value: 'all', label: 'جميع الأنواع' },
+    { value: 'maintenance', label: 'صيانة' },
+    { value: 'financial', label: 'مالي' },
+    { value: 'administrative', label: 'إداري' },
   ];
 
   useEffect(() => {
@@ -58,28 +58,28 @@ export default function TenantServicesPage() {
           setIsLoading(false);
         }
       } else {
-        toast.error(response.message || 'Failed to check reservations');
+        toast.error(response.message || 'فشل في التحقق من الحجوزات');
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Error checking reservations:', error);
-      toast.error('An error occurred while checking your reservations');
+      console.error('خطأ في التحقق من الحجوزات:', error);
+      toast.error('حدث خطأ أثناء التحقق من حجوزاتك');
       setIsLoading(false);
     }
   };
 
-  // Fetch services data
+  // جلب بيانات الخدمات
   const fetchServices = async () => {
     try {
       setIsLoading(true);
 
-      // Get my reservations first
+      // الحصول على حجوزاتي أولاً
       const reservationsResponse = await reservationsApi.getMy();
 
       if (reservationsResponse.success) {
         const reservationIds = reservationsResponse.data.map(res => res.id);
 
-        // Fetch service orders for each reservation
+        // جلب طلبات الخدمة لكل حجز
         if (reservationIds.length > 0) {
           const servicePromises = reservationIds.map(id =>
             servicesApi.getByReservationId(id)
@@ -95,26 +95,26 @@ export default function TenantServicesPage() {
           setServices([]);
         }
       } else {
-        toast.error(reservationsResponse.message || 'Failed to fetch reservations');
+        toast.error(reservationsResponse.message || 'فشل في جلب الحجوزات');
       }
     } catch (error) {
-      console.error('Error fetching services:', error);
-      toast.error('An error occurred while fetching service requests');
+      console.error('خطأ في جلب الخدمات:', error);
+      toast.error('حدث خطأ أثناء جلب طلبات الخدمة');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters to services
+  // تطبيق التصفية على الخدمات
   const applyFilters = () => {
     let filtered = [...services];
 
-    // Apply status filter
+    // تطبيق تصفية الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((service) => service.status === statusFilter);
     }
 
-    // Apply type filter
+    // تطبيق تصفية النوع
     if (typeFilter !== 'all') {
       filtered = filtered.filter((service) => service.serviceType === typeFilter);
     }
@@ -122,37 +122,37 @@ export default function TenantServicesPage() {
     setFilteredServices(filtered);
   };
 
-  // Handle status filter change
+  // التعامل مع تغيير تصفية الحالة
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value);
   };
 
-  // Handle type filter change
+  // التعامل مع تغيير تصفية النوع
   const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTypeFilter(e.target.value);
   };
 
-  // Stats cards
+  // بطاقات الإحصائيات
   const getStatusCount = (status: string) => {
     return services.filter(service => service.status === status).length;
   };
 
-  // Render "No reservations" state
+  // عرض حالة "لا توجد حجوزات"
   if (!hasReservations) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-          <h1 className="text-2xl font-bold text-gray-900">Service Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-900">طلبات الخدمة</h1>
         </div>
 
         <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
           <svg className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          <h2 className="text-xl font-medium text-gray-900 mb-2">No Active Leases Found</h2>
-          <p className="text-gray-600 mb-6">You need to have an active lease to submit service requests.</p>
+          <h2 className="text-xl font-medium text-gray-900 mb-2">لم يتم العثور على عقود إيجار نشطة</h2>
+          <p className="text-gray-600 mb-6">تحتاج إلى عقد إيجار نشط لتقديم طلبات الخدمة.</p>
           <Link href="/tenant/units">
-            <Button>View My Units</Button>
+            <Button>عرض وحداتي</Button>
           </Link>
         </div>
       </div>
@@ -161,9 +161,9 @@ export default function TenantServicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* الترويسة مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Service Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-900">طلبات الخدمة</h1>
         <Link href="/tenant/services/create">
           <Button
             variant="primary"
@@ -173,12 +173,12 @@ export default function TenantServicesPage() {
               </svg>
             }
           >
-            New Service Request
+            طلب خدمة جديد
           </Button>
         </Link>
       </div>
 
-      {/* Status summary cards */}
+      {/* بطاقات ملخص الحالة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-yellow-50 border-yellow-200">
           <div className="p-4">
@@ -188,8 +188,8 @@ export default function TenantServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-yellow-800">Pending</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-yellow-800">قيد الانتظار</h3>
                 <p className="text-2xl font-bold text-yellow-900">{getStatusCount('pending')}</p>
               </div>
             </div>
@@ -204,8 +204,8 @@ export default function TenantServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-blue-800">In Progress</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">قيد التنفيذ</h3>
                 <p className="text-2xl font-bold text-blue-900">{getStatusCount('in-progress')}</p>
               </div>
             </div>
@@ -220,8 +220,8 @@ export default function TenantServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-green-800">Completed</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-green-800">مكتمل</h3>
                 <p className="text-2xl font-bold text-green-900">{getStatusCount('completed')}</p>
               </div>
             </div>
@@ -236,8 +236,8 @@ export default function TenantServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-red-800">Cancelled</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-red-800">ملغي</h3>
                 <p className="text-2xl font-bold text-red-900">{getStatusCount('cancelled')}</p>
               </div>
             </div>
@@ -245,12 +245,12 @@ export default function TenantServicesPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Select
-              label="Status"
+              label="الحالة"
               id="statusFilter"
               name="statusFilter"
               value={statusFilter}
@@ -261,7 +261,7 @@ export default function TenantServicesPage() {
           </div>
           <div className="w-full sm:w-64">
             <Select
-              label="Service Type"
+              label="نوع الخدمة"
               id="typeFilter"
               name="typeFilter"
               value={typeFilter}
@@ -273,7 +273,7 @@ export default function TenantServicesPage() {
         </div>
       </div>
 
-      {/* Services List */}
+      {/* قائمة الخدمات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ServiceList
           services={filteredServices}

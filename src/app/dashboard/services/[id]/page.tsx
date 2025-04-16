@@ -29,12 +29,12 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
   const [newStatus, setNewStatus] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Fetch service details on component mount
+  // جلب تفاصيل الخدمة عند تحميل المكون
   useEffect(() => {
     fetchService();
   }, [id]);
 
-  // Fetch service data
+  // جلب بيانات الخدمة
   const fetchService = async () => {
     try {
       setIsLoading(true);
@@ -43,45 +43,45 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       if (response.success) {
         setService(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch service details');
+        toast.error(response.message || 'فشل في جلب تفاصيل الخدمة');
       }
     } catch (error) {
-      console.error('Error fetching service:', error);
-      toast.error('An error occurred while fetching service details');
+      console.error('خطأ في جلب الخدمة:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الخدمة');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Delete service
+  // حذف الخدمة
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await servicesApi.delete(id);
 
       if (response.success) {
-        toast.success('Service request deleted successfully');
+        toast.success('تم حذف طلب الخدمة بنجاح');
         router.push('/dashboard/services');
       } else {
-        toast.error(response.message || 'Failed to delete service request');
+        toast.error(response.message || 'فشل في حذف طلب الخدمة');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting service:', error);
-      toast.error('An error occurred while deleting the service request');
+      console.error('خطأ في حذف الخدمة:', error);
+      toast.error('حدث خطأ أثناء حذف طلب الخدمة');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Open status update modal
+  // فتح نافذة تحديث الحالة
   const openStatusUpdateModal = (status: string) => {
     setNewStatus(status);
     setStatusUpdateModalOpen(true);
   };
 
-  // Update service status
+  // تحديث حالة الخدمة
   const handleStatusUpdate = async () => {
     if (!service || !newStatus) return;
 
@@ -93,21 +93,29 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       });
 
       if (response.success) {
-        toast.success(`Service request status updated to ${newStatus.replace('-', ' ')}`);
+        let statusText = '';
+        switch (newStatus) {
+          case 'pending': statusText = 'قيد الانتظار'; break;
+          case 'in-progress': statusText = 'قيد التنفيذ'; break;
+          case 'completed': statusText = 'مكتمل'; break;
+          case 'cancelled': statusText = 'ملغي'; break;
+          default: statusText = newStatus.replace('-', ' ');
+        }
+        toast.success(`تم تحديث حالة طلب الخدمة إلى ${statusText}`);
         setStatusUpdateModalOpen(false);
         setService(response.data);
       } else {
-        toast.error(response.message || 'Failed to update service request status');
+        toast.error(response.message || 'فشل في تحديث حالة طلب الخدمة');
       }
     } catch (error) {
-      console.error('Error updating service status:', error);
-      toast.error('An error occurred while updating the service request status');
+      console.error('خطأ في تحديث حالة الخدمة:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة طلب الخدمة');
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -132,37 +140,77 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading service request details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل طلب الخدمة...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور
   if (!service) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Service Request Not Found</h2>
-        <p className="text-gray-600 mb-6">The service request you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">طلب الخدمة غير موجود</h2>
+        <p className="text-gray-600 mb-6">طلب الخدمة الذي تبحث عنه غير موجود أو ليس لديك صلاحية لعرضه.</p>
         <Link href="/dashboard/services">
-          <Button>Back to Service Requests</Button>
+          <Button>العودة إلى طلبات الخدمة</Button>
         </Link>
       </div>
     );
   }
 
+  // ترجمة حالة الخدمة
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case 'pending': return 'قيد الانتظار';
+      case 'in-progress': return 'قيد التنفيذ';
+      case 'completed': return 'مكتمل';
+      case 'cancelled': return 'ملغي';
+      default: return status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+  };
+
+  // ترجمة نوع الخدمة
+  const translateServiceType = (type: string) => {
+    switch (type) {
+      case 'maintenance': return 'صيانة';
+      case 'financial': return 'مالي';
+      case 'administrative': return 'إداري';
+      default: return type;
+    }
+  };
+
+  // ترجمة النوع الفرعي للخدمة
+  const translateServiceSubtype = (subtype: string) => {
+    switch (subtype) {
+      case 'electrical': return 'كهربائي';
+      case 'plumbing': return 'سباكة';
+      case 'hvac': return 'تكييف وتدفئة';
+      case 'appliance': return 'أجهزة منزلية';
+      case 'structural': return 'هيكلي';
+      case 'general': return 'عام';
+      case 'deep': return 'تنظيف عميق';
+      case 'windows': return 'تنظيف نوافذ';
+      case 'carpets': return 'تنظيف سجاد';
+      case 'locksmith': return 'أقفال';
+      case 'camera': return 'كاميرات أمنية';
+      case 'alarm': return 'نظام إنذار';
+      default: return subtype;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs and actions */}
+      {/* الترويسة مع مسار التنقل والإجراءات */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/services" className="hover:text-primary-600">Service Requests</Link>
+              <Link href="/dashboard/services" className="hover:text-primary-600">طلبات الخدمة</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -173,59 +221,59 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">
-            Service Request #{service.id}
+            طلب الخدمة #{service.id}
           </h1>
           <div className="flex space-x-3">
             <Link href={`/dashboard/services/${service.id}/edit`}>
-              <Button variant="outline">Edit</Button>
+              <Button variant="outline">تعديل</Button>
             </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>Delete</Button>
+            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
           </div>
         </div>
       </div>
 
-      {/* Service Details */}
+      {/* تفاصيل الخدمة */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* المعلومات الرئيسية */}
         <Card className="lg:col-span-2">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Request Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900">تفاصيل الطلب</h2>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                      service.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
+                  service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                    service.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
                   }`}
               >
-                {service.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {translateStatus(service.status)}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Service Type</h3>
-                <p className="mt-1 text-base text-gray-900 capitalize">
-                  {service.serviceType}
+                <h3 className="text-sm font-medium text-gray-500">نوع الخدمة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {translateServiceType(service.serviceType)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Service Subtype</h3>
-                <p className="mt-1 text-base text-gray-900 capitalize">
-                  {service.serviceSubtype}
+                <h3 className="text-sm font-medium text-gray-500">النوع الفرعي للخدمة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {translateServiceSubtype(service.serviceSubtype)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Submitted On</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ التقديم</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.createdAt)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
+                <h3 className="text-sm font-medium text-gray-500">آخر تحديث</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.updatedAt)}
                 </p>
@@ -233,7 +281,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">الوصف</h3>
               <div className="p-4 bg-gray-50 rounded-md text-gray-900">
                 {service.description}
               </div>
@@ -241,29 +289,29 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
 
             {service.attachmentUrl && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Attachment</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">المرفق</h3>
                 <a
                   href={service.attachmentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                  <svg className="mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="ml-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  View Attachment
+                  عرض المرفق
                 </a>
               </div>
             )}
           </div>
         </Card>
 
-        {/* Property & Tenant Info */}
+        {/* معلومات العقار والمستأجر */}
         <div className="space-y-6">
-          {/* Status Actions */}
+          {/* إجراءات تحديث الحالة */}
           <Card>
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Update Status</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">تحديث الحالة</h2>
 
               <div className="space-y-4">
                 <Button
@@ -273,7 +321,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   disabled={service.status === 'pending'}
                   onClick={() => openStatusUpdateModal('pending')}
                 >
-                  Mark as Pending
+                  تحديد كقيد الانتظار
                 </Button>
 
                 <Button
@@ -283,7 +331,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   disabled={service.status === 'in-progress'}
                   onClick={() => openStatusUpdateModal('in-progress')}
                 >
-                  Mark as In Progress
+                  تحديد كقيد التنفيذ
                 </Button>
 
                 <Button
@@ -293,7 +341,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   disabled={service.status === 'completed'}
                   onClick={() => openStatusUpdateModal('completed')}
                 >
-                  Mark as Completed
+                  تحديد كمكتمل
                 </Button>
 
                 <Button
@@ -303,36 +351,36 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   disabled={service.status === 'rejected'}
                   onClick={() => openStatusUpdateModal('cancelled')}
                 >
-                  Mark as Cancelled
+                  تحديد كملغي
                 </Button>
               </div>
             </div>
           </Card>
 
-          {/* Property Info */}
+          {/* معلومات العقار */}
           <Card>
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات العقار</h2>
 
               <div className="space-y-4">
                 {service.reservation?.unit ? (
                   <>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Unit</h3>
+                      <h3 className="text-sm font-medium text-gray-500">الوحدة</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.unitNumber}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Building</h3>
+                      <h3 className="text-sm font-medium text-gray-500">المبنى</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.unit.building?.name || 'N/A'}
+                        {service.reservation.unit.building?.name || 'غير متوفر'}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Floor</h3>
+                      <h3 className="text-sm font-medium text-gray-500">الطابق</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.floor}
                       </p>
@@ -341,42 +389,42 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/dashboard/units/${service.reservation.unit.id}`}>
                         <Button variant="outline" fullWidth>
-                          View Unit Details
+                          عرض تفاصيل الوحدة
                         </Button>
                       </Link>
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-500">Unit information not available</p>
+                  <p className="text-gray-500">معلومات الوحدة غير متوفرة</p>
                 )}
               </div>
             </div>
           </Card>
 
-          {/* Tenant Info */}
+          {/* معلومات المستأجر */}
           <Card>
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tenant Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المستأجر</h2>
 
               <div className="space-y-4">
                 {service.reservation?.user ? (
                   <>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Name</h3>
+                      <h3 className="text-sm font-medium text-gray-500">الاسم</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.user.fullName}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                      <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.user.email}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Phone</h3>
+                      <h3 className="text-sm font-medium text-gray-500">الهاتف</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.user.phone}
                       </p>
@@ -385,13 +433,13 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/dashboard/users/${service.reservation.user.id}`}>
                         <Button variant="outline" fullWidth>
-                          View Tenant Profile
+                          عرض ملف المستأجر
                         </Button>
                       </Link>
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-500">Tenant information not available</p>
+                  <p className="text-gray-500">معلومات المستأجر غير متوفرة</p>
                 )}
               </div>
             </div>
@@ -399,11 +447,11 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Service Request"
+        title="حذف طلب الخدمة"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -411,7 +459,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -419,21 +467,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600">
-          Are you sure you want to delete this service request? This action cannot be undone.
+          هل أنت متأكد من أنك تريد حذف طلب الخدمة هذا؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
       </Modal>
 
-      {/* Status Update Confirmation Modal */}
+      {/* نافذة تأكيد تحديث الحالة */}
       <Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
-        title="Update Status"
+        title="تحديث الحالة"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -441,7 +489,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               onClick={() => setStatusUpdateModalOpen(false)}
               disabled={isUpdatingStatus}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="primary"
@@ -449,21 +497,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               isLoading={isUpdatingStatus}
               disabled={isUpdatingStatus}
             >
-              Update Status
+              تحديث الحالة
             </Button>
           </div>
         }
       >
         <p className="text-gray-600">
-          Are you sure you want to change the status to{" "}
-          <span className="font-medium capitalize">
-            {newStatus.replace("-", " ")}
+          هل أنت متأكد من أنك تريد تغيير الحالة إلى{" "}
+          <span className="font-medium">
+            {translateStatus(newStatus)}
           </span>
-          ?
+          ؟
         </p>
         {newStatus === 'cancelled' && (
           <p className="mt-2 text-red-600 text-sm">
-            Note: Cancelling a service request will notify the tenant that their request will not be processed.
+            ملاحظة: إلغاء طلب الخدمة سيؤدي إلى إخطار المستأجر بأن طلبه لن تتم معالجته.
           </p>
         )}
       </Modal>

@@ -16,74 +16,74 @@ export default function UnitsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // Status filter options
+  // خيارات تصفية الحالة
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'available', label: 'Available' },
-    { value: 'rented', label: 'Rented' },
+    { value: 'all', label: 'جميع الحالات' },
+    { value: 'available', label: 'متاحة' },
+    { value: 'rented', label: 'مؤجرة' },
   ];
 
-  // Fetch units on component mount
+  // جلب الوحدات عند تحميل المكون
   useEffect(() => {
     fetchUnits();
   }, []);
 
-  // Apply filters when units or status filter changes
+  // تطبيق التصفية عند تغيير الوحدات أو تصفية الحالة
   useEffect(() => {
     applyFilters();
   }, [units, statusFilter]);
 
-  // Fetch units data
+  // جلب بيانات الوحدات
   const fetchUnits = async () => {
     try {
       setIsLoading(true);
       const response = await unitsApi.getAll();
-      
+
       if (response.success) {
         setUnits(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch units');
+        toast.error(response.message || 'فشل في جلب الوحدات');
       }
     } catch (error) {
-      console.error('Error fetching units:', error);
-      toast.error('An error occurred while fetching units');
+      console.error('خطأ في جلب الوحدات:', error);
+      toast.error('حدث خطأ أثناء جلب الوحدات');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters to units
+  // تطبيق التصفية على الوحدات
   const applyFilters = () => {
     let filtered = [...units];
-    
-    // Apply status filter
+
+    // تطبيق تصفية الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((unit) => unit.status === statusFilter);
     }
-    
+
     setFilteredUnits(filtered);
   };
 
-  // Handle status filter change
+  // التعامل مع تغيير تصفية الحالة
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value);
   };
 
-  // Handle unit deletion
+  // التعامل مع حذف الوحدة
   const handleDelete = (id: number) => {
     setUnits((prevUnits) => prevUnits.filter((unit) => unit.id !== id));
   };
 
-  // Stats cards
+  // بطاقات الإحصائيات
   const getStatusCount = (status: UnitStatus) => {
     return units.filter(unit => unit.status === status).length;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header with action buttons */}
+      {/* الترويسة مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">Units</h1>
+        <h1 className="text-2xl font-bold text-gray-900">الوحدات</h1>
         <Link href="/dashboard/units/create">
           <Button
             variant="primary"
@@ -93,12 +93,12 @@ export default function UnitsPage() {
               </svg>
             }
           >
-            Add Unit
+            إضافة وحدة
           </Button>
         </Link>
       </div>
-      
-      {/* Status summary cards */}
+
+      {/* بطاقات ملخص الحالة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
@@ -108,14 +108,14 @@ export default function UnitsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-green-800">Available</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-green-800">متاحة</h3>
                 <p className="text-2xl font-bold text-green-900">{getStatusCount('available')}</p>
               </div>
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-blue-50 border-blue-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -124,25 +124,21 @@ export default function UnitsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-blue-800">Rented</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">مؤجرة</h3>
                 <p className="text-2xl font-bold text-blue-900">{getStatusCount('rented')}</p>
               </div>
             </div>
           </div>
         </Card>
-        
- 
-        
-    
       </div>
-      
-      {/* Filters */}
+
+      {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Select
-              label="Status"
+              label="الحالة"
               id="statusFilter"
               name="statusFilter"
               value={statusFilter}
@@ -153,8 +149,8 @@ export default function UnitsPage() {
           </div>
         </div>
       </div>
-      
-      {/* Units List */}
+
+      {/* قائمة الوحدات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <UnitList
           units={filteredUnits}

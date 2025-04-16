@@ -29,7 +29,7 @@ export default function UnitList({
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Handle row click
+  // التعامل مع النقر على الصف
   const handleRowClick = (unit: Unit) => {
     if (forTenant) {
       router.push(`/tenant/units/${unit.id}`);
@@ -38,14 +38,14 @@ export default function UnitList({
     }
   };
 
-  // Open delete confirmation modal
+  // فتح نافذة تأكيد الحذف
   const openDeleteModal = (unit: Unit, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedUnit(unit);
     setDeleteModalOpen(true);
   };
 
-  // Delete unit
+  // حذف الوحدة
   const handleDelete = async () => {
     if (!selectedUnit) return;
 
@@ -54,117 +54,120 @@ export default function UnitList({
       const response = await unitsApi.delete(selectedUnit.id);
 
       if (response.success) {
-        toast.success('Unit deleted successfully');
+        toast.success('تم حذف الوحدة بنجاح');
         setDeleteModalOpen(false);
 
-        // Call the onDelete callback or refetch data
+        // استدعاء وظيفة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedUnit.id);
         } else {
           refetch();
         }
       } else {
-        toast.error(response.message || 'Failed to delete unit');
+        toast.error(response.message || 'فشل في حذف الوحدة');
       }
     } catch (error) {
-      console.error('Error deleting unit:', error);
-      toast.error('An error occurred while deleting the unit');
+      console.error('خطأ في حذف الوحدة:', error);
+      toast.error('حدث خطأ أثناء حذف الوحدة');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Define columns for the table
+  // تحديد الأعمدة للجدول
   const baseColumns: TableColumn<Unit>[] = [
     {
       key: 'unitNumber',
-      header: 'Unit Number',
+      header: 'رقم الوحدة',
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{unit.unitNumber}</span>
-          <span className="text-xs text-gray-500">Building: {unit.building?.name || 'N/A'}</span>
+          <span className="text-xs text-gray-500">المبنى: {unit.building?.name || 'غير متوفر'}</span>
         </div>
       ),
     },
     {
       key: 'details',
-      header: 'Details',
+      header: 'التفاصيل',
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="text-gray-700">
-            {unit.bedrooms} bed{unit.bedrooms !== 1 ? 's' : ''} • {unit.bathrooms} bath{unit.bathrooms !== 1 ? 's' : ''}
+            {unit.bedrooms} غرفة نوم • {unit.bathrooms} حمام
           </span>
-          <span className="text-xs text-gray-500">{unit.area} m² • Floor {unit.floor}</span>
+          <span className="text-xs text-gray-500">{unit.area} م² • الطابق {unit.floor}</span>
         </div>
       ),
     },
     {
       key: 'price',
-      header: 'Price',
+      header: 'السعر',
       cell: (unit) => <span className="font-medium text-gray-900">{formatCurrency(unit.price)}</span>,
     },
     {
       key: 'status',
-      header: 'Status',
-      cell: (unit) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-          ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
-              'bg-blue-100 text-blue-800'
-            }`}
-        >
-          {unit.status.charAt(0).toUpperCase() + unit.status.slice(1)}
-        </span>
-      ),
+      header: 'الحالة',
+      cell: (unit) => {
+        const statusText = unit.status === 'available' ? 'متاحة' : 'مؤجرة';
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+            ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
+                'bg-blue-100 text-blue-800'
+              }`}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
   ];
 
-  // Admin/Manager specific columns with actions
+  // أعمدة خاصة بالمشرف/المدير مع الإجراءات
   const adminColumns: TableColumn<Unit>[] = [
     ...baseColumns,
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (unit) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/units/${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline">عرض</Button>
           </Link>
           <Link href={`/dashboard/units/${unit.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">Edit</Button>
+            <Button size="sm" variant="outline">تعديل</Button>
           </Link>
           <Button
             size="sm"
             variant="danger"
             onClick={(e) => openDeleteModal(unit, e)}
           >
-            Delete
+            حذف
           </Button>
         </div>
       ),
     },
   ];
 
-  // Tenant specific columns
+  // أعمدة خاصة بالمستأجر
   const tenantColumns: TableColumn<Unit>[] = [
     ...baseColumns,
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (unit) => (
         <div className="flex space-x-2">
           <Link href={`/tenant/units/${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">View Details</Button>
+            <Button size="sm" variant="outline">عرض التفاصيل</Button>
           </Link>
           <Link href={`/tenant/services/create?unitId=${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="primary">Service Request</Button>
+            <Button size="sm" variant="primary">طلب خدمة</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Choose columns based on user type
+  // اختيار الأعمدة بناءً على نوع المستخدم
   const columns = forTenant ? tenantColumns : adminColumns;
 
   return (
@@ -174,16 +177,16 @@ export default function UnitList({
         columns={columns}
         keyExtractor={(unit) => unit.id}
         isLoading={isLoading}
-        emptyMessage="No units found"
+        emptyMessage="لا توجد وحدات"
         onRowClick={handleRowClick}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       {!forTenant && (
         <Modal
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
-          title="Delete Unit"
+          title="حذف الوحدة"
           footer={
             <div className="flex justify-end space-x-3">
               <Button
@@ -191,7 +194,7 @@ export default function UnitList({
                 onClick={() => setDeleteModalOpen(false)}
                 disabled={isDeleting}
               >
-                Cancel
+                إلغاء
               </Button>
               <Button
                 variant="danger"
@@ -199,15 +202,14 @@ export default function UnitList({
                 isLoading={isDeleting}
                 disabled={isDeleting}
               >
-                Delete
+                حذف
               </Button>
             </div>
           }
         >
           <p className="text-gray-600">
-            Are you sure you want to delete unit "{selectedUnit?.unitNumber}"? This action cannot be undone.
+            هل أنت متأكد من أنك تريد حذف الوحدة "{selectedUnit?.unitNumber}"؟ لا يمكن التراجع عن هذا الإجراء.
           </p>
-     
         </Modal>
       )}
     </>

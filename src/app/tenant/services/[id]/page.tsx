@@ -23,12 +23,12 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
   const [service, setService] = useState<ServiceOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch service details on component mount
+  // جلب تفاصيل الخدمة عند تحميل المكون
   useEffect(() => {
     fetchService();
   }, [id]);
 
-  // Fetch service data
+  // جلب بيانات الخدمة
   const fetchService = async () => {
     try {
       setIsLoading(true);
@@ -37,17 +37,17 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       if (response.success) {
         setService(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch service details');
+        toast.error(response.message || 'فشل في جلب تفاصيل الخدمة');
       }
     } catch (error) {
-      console.error('Error fetching service:', error);
-      toast.error('An error occurred while fetching service details');
+      console.error('خطأ في جلب الخدمة:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الخدمة');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -72,26 +72,26 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading service request details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل طلب الخدمة...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور
   if (!service) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Service Request Not Found</h2>
-        <p className="text-gray-600 mb-6">The service request you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">طلب الخدمة غير موجود</h2>
+        <p className="text-gray-600 mb-6">طلب الخدمة الذي تبحث عنه غير موجود أو ليس لديك صلاحية لعرضه.</p>
         <Link href="/tenant/services">
-          <Button>Back to Service Requests</Button>
+          <Button>العودة إلى طلبات الخدمة</Button>
         </Link>
       </div>
     );
   }
 
-  // Get status badge color
+  // الحصول على لون شارة الحالة
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'pending':
@@ -107,34 +107,74 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
     }
   };
 
-  // Get status description
+  // الحصول على وصف الحالة
   const getStatusDescription = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Your request has been received and is awaiting review.';
+        return 'تم استلام طلبك وهو في انتظار المراجعة.';
       case 'in-progress':
-        return 'Your request is currently being worked on by our maintenance team.';
+        return 'يعمل فريق الصيانة لدينا حاليًا على طلبك.';
       case 'completed':
-        return 'Your request has been completed. Please let us know if you have any further issues.';
+        return 'تم إكمال طلبك. يرجى إعلامنا إذا كان لديك أي مشاكل أخرى.';
       case 'cancelled':
-        return 'Your request has been cancelled. Please contact the property manager for more information.';
+        return 'تم إلغاء طلبك. يرجى الاتصال بمدير العقار للحصول على مزيد من المعلومات.';
       default:
         return '';
     }
   };
 
+  // ترجمة حالة الخدمة
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case 'pending': return 'قيد الانتظار';
+      case 'in-progress': return 'قيد التنفيذ';
+      case 'completed': return 'مكتمل';
+      case 'cancelled': return 'ملغي';
+      default: return status.replace('-', ' ');
+    }
+  };
+
+  // ترجمة نوع الخدمة
+  const translateServiceType = (type: string) => {
+    switch (type) {
+      case 'maintenance': return 'صيانة';
+      case 'financial': return 'مالي';
+      case 'administrative': return 'إداري';
+      default: return type;
+    }
+  };
+
+  // ترجمة النوع الفرعي للخدمة
+  const translateServiceSubtype = (subtype: string) => {
+    switch (subtype) {
+      case 'electrical': return 'كهربائي';
+      case 'plumbing': return 'سباكة';
+      case 'hvac': return 'تكييف وتدفئة';
+      case 'appliance': return 'أجهزة منزلية';
+      case 'structural': return 'هيكلي';
+      case 'general': return 'عام';
+      case 'deep': return 'تنظيف عميق';
+      case 'windows': return 'تنظيف نوافذ';
+      case 'carpets': return 'تنظيف سجاد';
+      case 'locksmith': return 'أقفال';
+      case 'camera': return 'كاميرات أمنية';
+      case 'alarm': return 'نظام إنذار';
+      default: return subtype;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs */}
+      {/* الترويسة مع مسار التنقل */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/tenant" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/tenant" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/tenant/services" className="hover:text-primary-600">Service Requests</Link>
+              <Link href="/tenant/services" className="hover:text-primary-600">طلبات الخدمة</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -145,18 +185,18 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">
-            Service Request #{service.id}
+            طلب الخدمة #{service.id}
           </h1>
 
           <div className="flex space-x-3">
             <Link href="/tenant/services/create">
-              <Button variant="primary">New Request</Button>
+              <Button variant="primary">طلب جديد</Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Status Banner */}
+      {/* شريط الحالة */}
       <div className={`rounded-lg p-4 ${getStatusBadgeClass(service.status)} bg-opacity-50`}>
         <div className="flex items-start">
           <div className="flex-shrink-0">
@@ -181,9 +221,9 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
               </svg>
             )}
           </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium capitalize">
-              Status: {service.status.replace('-', ' ')}
+          <div className="mr-3">
+            <h3 className="text-sm font-medium">
+              الحالة: {translateStatus(service.status)}
             </h3>
             <div className="mt-1 text-sm">
               <p>{getStatusDescription(service.status)}</p>
@@ -192,37 +232,37 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
         </div>
       </div>
 
-      {/* Service Details */}
+      {/* تفاصيل الخدمة */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* المعلومات الرئيسية */}
         <Card className="lg:col-span-2">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">تفاصيل الطلب</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Service Type</h3>
-                <p className="mt-1 text-base text-gray-900 capitalize">
-                  {service.serviceType}
+                <h3 className="text-sm font-medium text-gray-500">نوع الخدمة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {translateServiceType(service.serviceType)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Service Subtype</h3>
-                <p className="mt-1 text-base text-gray-900 capitalize">
-                  {service.serviceSubtype}
+                <h3 className="text-sm font-medium text-gray-500">النوع الفرعي للخدمة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {translateServiceSubtype(service.serviceSubtype)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Submitted On</h3>
+                <h3 className="text-sm font-medium text-gray-500">تاريخ التقديم</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.createdAt)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
+                <h3 className="text-sm font-medium text-gray-500">آخر تحديث</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(service.updatedAt)}
                 </p>
@@ -230,7 +270,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
             </div>
 
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">الوصف</h3>
               <div className="p-4 bg-gray-50 rounded-md text-gray-900">
                 {service.description}
               </div>
@@ -238,63 +278,63 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
 
             {service.attachmentUrl && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Attachment</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">المرفق</h3>
                 <a
                   href={service.attachmentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                  <svg className="mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="ml-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  View Attachment
+                  عرض المرفق
                 </a>
               </div>
             )}
           </div>
         </Card>
 
-        {/* Property Info */}
+        {/* معلومات العقار */}
         <div className="space-y-6">
           <Card>
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات العقار</h2>
 
               <div className="space-y-4">
                 {service.reservation?.unit ? (
                   <>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Unit</h3>
+                      <h3 className="text-sm font-medium text-gray-500">الوحدة</h3>
                       <p className="mt-1 text-base text-gray-900">
                         {service.reservation.unit.unitNumber}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Building</h3>
+                      <h3 className="text-sm font-medium text-gray-500">المبنى</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.unit.building?.name || 'N/A'}
+                        {service.reservation.unit.building?.name || 'غير متوفر'}
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Address</h3>
+                      <h3 className="text-sm font-medium text-gray-500">العنوان</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.unit.building?.address || 'N/A'}
+                        {service.reservation.unit.building?.address || 'غير متوفر'}
                       </p>
                     </div>
 
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/tenant/units/${service.reservation.unit.id}`}>
                         <Button variant="outline" fullWidth>
-                          View Unit Details
+                          عرض تفاصيل الوحدة
                         </Button>
                       </Link>
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-500">Unit information not available</p>
+                  <p className="text-gray-500">معلومات الوحدة غير متوفرة</p>
                 )}
               </div>
             </div>
@@ -302,13 +342,13 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
 
           <Card>
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Need More Help?</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">هل تحتاج إلى مزيد من المساعدة؟</h2>
               <p className="text-gray-600 mb-4">
-                If you need additional assistance or have questions about your service request, please contact your property manager.
+                إذا كنت بحاجة إلى مساعدة إضافية أو لديك أسئلة حول طلب الخدمة الخاص بك، يرجى الاتصال بمدير العقار.
               </p>
               <Link href="/tenant/services/create">
                 <Button variant="primary" fullWidth>
-                  Submit Another Request
+                  تقديم طلب آخر
                 </Button>
               </Link>
             </div>

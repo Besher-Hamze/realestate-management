@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Card from '@/components/ui/Card';
 import { dashboardApi } from '@/lib/api';
@@ -19,19 +18,19 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        
+
         // جلب الإحصائيات العامة
         const statsResponse = await dashboardApi.getStatistics();
         if (statsResponse.success) {
           setGeneralStats(statsResponse.data);
         }
-        
+
         // جلب إحصائيات حالة الوحدات
         const unitStatsResponse = await dashboardApi.getUnitsStatus();
         if (unitStatsResponse.success) {
           setUnitStats(unitStatsResponse.data);
         }
-        
+
         // جلب إحصائيات حالة طلبات الخدمة
         const serviceStatsResponse = await dashboardApi.getServicesStatus();
         if (serviceStatsResponse.success) {
@@ -44,7 +43,7 @@ export default function DashboardPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchDashboardData();
   }, []);
 
@@ -101,7 +100,7 @@ export default function DashboardPage() {
           إليك نظرة عامة على نظام إدارة العقارات الخاص بك.
         </p>
       </div>
-      
+
       {/* الإحصائيات العامة */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">نظرة عامة</h2>
@@ -116,7 +115,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-blue-100"
           />
-          
+
           <StatCard
             title="إجمالي الوحدات"
             value={generalStats?.totalUnits || 0}
@@ -127,7 +126,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-green-100"
           />
-          
+
           <StatCard
             title="الحجوزات النشطة"
             value={generalStats?.totalReservations || 0}
@@ -138,10 +137,10 @@ export default function DashboardPage() {
             }
             bgColor="bg-purple-100"
           />
-         
+
         </div>
       </div>
-      
+
       {/* حالة الوحدات */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">حالة الوحدات</h2>
@@ -156,7 +155,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-green-100"
           />
-          
+
           <StatCard
             title="الوحدات المؤجرة"
             value={unitStats?.rented || 0}
@@ -167,10 +166,10 @@ export default function DashboardPage() {
             }
             bgColor="bg-blue-100"
           />
-          
+
         </div>
       </div>
-      
+
       {/* حالة طلبات الخدمة */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">طلبات الخدمة</h2>
@@ -185,7 +184,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-yellow-100"
           />
-          
+
           <StatCard
             title="قيد التنفيذ"
             value={serviceStats?.inProgress || 0}
@@ -196,7 +195,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-blue-100"
           />
-          
+
           <StatCard
             title="المكتملة"
             value={serviceStats?.completed || 0}
@@ -207,7 +206,7 @@ export default function DashboardPage() {
             }
             bgColor="bg-green-100"
           />
-          
+
           <StatCard
             title="الملغاة"
             value={serviceStats?.cancelled || 0}

@@ -5,7 +5,6 @@ import useForm from '@/hooks/useForm';
 import { ServiceOrder, ServiceOrderFormData, Reservation, Unit, ServiceType, ServiceSubtype } from '@/lib/types';
 import { servicesApi, reservationsApi, unitsApi } from '@/lib/api';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 
@@ -26,32 +25,32 @@ const initialServiceData: ServiceOrderFormData = {
 };
 
 const serviceTypeOptions = [
-  { value: 'maintenance', label: 'maintenance' },
-  { value: 'financial', label: 'financial' },
-  { value: 'administrative', label: 'administrative' },
+  { value: 'maintenance', label: 'صيانة' },
+  { value: 'financial', label: 'مالي' },
+  { value: 'administrative', label: 'إداري' },
 ];
 
-// Mapping of service types to their subtypes
+// ربط أنواع الخدمة بالأنواع الفرعية
 const serviceSubtypeOptions: Record<ServiceType, { value: string; label: string }[]> = {
   maintenance: [
-    { value: 'electrical', label: 'Electrical' },
-    { value: 'plumbing', label: 'Plumbing' },
-    { value: 'hvac', label: 'HVAC' },
-    { value: 'appliance', label: 'Appliance' },
-    { value: 'structural', label: 'Structural' },
-    { value: 'general', label: 'General' },
+    { value: 'electrical', label: 'كهربائي' },
+    { value: 'plumbing', label: 'سباكة' },
+    { value: 'hvac', label: 'تكييف وتدفئة' },
+    { value: 'appliance', label: 'أجهزة منزلية' },
+    { value: 'structural', label: 'هيكلي' },
+    { value: 'general', label: 'عام' },
   ],
   financial: [
-    { value: 'general', label: 'General Cleaning' },
-    { value: 'deep', label: 'Deep Cleaning' },
-    { value: 'windows', label: 'Window Cleaning' },
-    { value: 'carpets', label: 'Carpet Cleaning' },
+    { value: 'general', label: 'تنظيف عام' },
+    { value: 'deep', label: 'تنظيف عميق' },
+    { value: 'windows', label: 'تنظيف نوافذ' },
+    { value: 'carpets', label: 'تنظيف سجاد' },
   ],
   administrative: [
-    { value: 'locksmith', label: 'Locksmith' },
-    { value: 'camera', label: 'Security Camera' },
-    { value: 'alarm', label: 'Alarm System' },
-    { value: 'general', label: 'General Security' },
+    { value: 'locksmith', label: 'أقفال' },
+    { value: 'camera', label: 'كاميرات أمنية' },
+    { value: 'alarm', label: 'نظام إنذار' },
+    { value: 'general', label: 'أمن عام' },
   ],
 };
 
@@ -70,7 +69,7 @@ export default function ServiceForm({
   const [selectedServiceType, setSelectedServiceType] = useState<ServiceType>('maintenance');
   const [attachmentFile, setAttachmentFile] = useState<File | undefined>(undefined);
 
-  // Set up initial data for edit mode or with preselected reservation
+  // إعداد البيانات الأولية لوضع التعديل أو مع حجز محدد مسبقًا
   const formInitialData: ServiceOrderFormData = isEdit && initialData
     ? {
       reservationId: initialData.reservationId,
@@ -82,7 +81,7 @@ export default function ServiceForm({
       ? { ...initialServiceData, reservationId: preSelectedReservationId }
       : initialServiceData;
 
-  // Form state using custom hook
+  // حالة النموذج باستخدام الخطاف المخصص
   const {
     formData,
     handleChange,
@@ -102,8 +101,8 @@ export default function ServiceForm({
     {
       onSuccess: (data) => {
         const successMessage = isEdit
-          ? 'Service request updated successfully'
-          : 'Service request submitted successfully';
+          ? 'تم تحديث طلب الخدمة بنجاح'
+          : 'تم تقديم طلب الخدمة بنجاح';
         toast.success(successMessage);
 
         if (onSuccess) {
@@ -117,23 +116,23 @@ export default function ServiceForm({
         }
       },
       onError: (errorMessage) => {
-        toast.error(errorMessage || 'An error occurred');
+        toast.error(errorMessage || 'حدث خطأ');
       },
     }
   );
 
-  // Effect for when serviceType changes, update the serviceSubtype
+  // تأثير عندما يتغير نوع الخدمة، تحديث النوع الفرعي للخدمة
   useEffect(() => {
     if (formData.serviceType !== selectedServiceType) {
       setSelectedServiceType(formData.serviceType as ServiceType);
 
-      // Set first subtype option for the selected service type
+      // تعيين أول خيار نوع فرعي لنوع الخدمة المحدد
       const firstSubtype = serviceSubtypeOptions[formData.serviceType as ServiceType][0].value;
       updateFormData({ serviceSubtype: firstSubtype as ServiceSubtype });
     }
   }, [formData.serviceType, selectedServiceType, updateFormData]);
 
-  // Reset form when initialData changes (for editing) or when preSelectedReservationId changes
+  // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل) أو عند تغيير معرف الحجز المحدد مسبقًا
   useEffect(() => {
     if (isEdit && initialData) {
       resetForm();
@@ -143,7 +142,7 @@ export default function ServiceForm({
     }
   }, [isEdit, initialData, preSelectedReservationId, resetForm, updateFormData]);
 
-  // Fetch reservations based on conditions
+  // جلب الحجوزات بناءً على الشروط
   useEffect(() => {
     const fetchReservationsData = async () => {
       try {
@@ -151,44 +150,44 @@ export default function ServiceForm({
 
         let response;
         if (isTenant) {
-          // Tenant can only see their own reservations
+          // المستأجر يمكنه رؤية حجوزاته فقط
           response = await reservationsApi.getMy();
         } else {
-          // Admins/Managers can see all reservations
+          // المشرفون/المديرون يمكنهم رؤية جميع الحجوزات
           response = await reservationsApi.getAll();
         }
 
         if (response.success) {
-          // Filter active reservations
+          // تصفية الحجوزات النشطة
           const activeReservations = response.data.filter(res => res.status === 'active');
 
-          // If preSelectedUnitId is provided, filter by that unit
+          // إذا تم توفير معرف وحدة محدد مسبقًا، تصفية حسب تلك الوحدة
           const filteredReservations = preSelectedUnitId
             ? activeReservations.filter(res => res.unitId === preSelectedUnitId)
             : activeReservations;
 
           setReservations(filteredReservations);
 
-          // Extract units from reservations for dropdown
+          // استخراج الوحدات من الحجوزات للقائمة المنسدلة
           const extractedUnits = filteredReservations
-            .filter(res => res.unit) // Filter out reservations without unit data
-            .map(res => res.unit as Unit); // Extract unit data
+            .filter(res => res.unit) // تصفية الحجوزات بدون بيانات الوحدة
+            .map(res => res.unit as Unit); // استخراج بيانات الوحدة
 
           setUnits(extractedUnits);
 
-          // If preSelectedReservationId is provided but not found in active reservations, show a warning
+          // إذا تم توفير معرف حجز محدد مسبقًا ولكن لم يتم العثور عليه في الحجوزات النشطة، أظهر تحذيرًا
           if (
             preSelectedReservationId &&
             !filteredReservations.some(res => res.id === preSelectedReservationId)
           ) {
-            toast.warning('The selected reservation is not active or not found');
+            toast.warning('الحجز المحدد غير نشط أو غير موجود');
           }
         } else {
-          toast.error(response.message || 'Failed to load reservations');
+          toast.error(response.message || 'فشل في تحميل الحجوزات');
         }
       } catch (error) {
-        console.error('Error fetching reservations:', error);
-        toast.error('An error occurred while loading reservations');
+        console.error('خطأ في جلب الحجوزات:', error);
+        toast.error('حدث خطأ أثناء تحميل الحجوزات');
       } finally {
         setIsLoadingReservations(false);
       }
@@ -197,17 +196,17 @@ export default function ServiceForm({
     fetchReservationsData();
   }, [isTenant, preSelectedUnitId, preSelectedReservationId]);
 
-  // Create reservation options for dropdown
+  // إنشاء خيارات الحجز للقائمة المنسدلة
   const reservationOptions = reservations.map((reservation) => {
-    const unitNumber = reservation.unit?.unitNumber || 'Unknown Unit';
-    const buildingName = reservation.unit?.building?.name || 'Unknown Building';
+    const unitNumber = reservation.unit?.unitNumber || 'وحدة غير معروفة';
+    const buildingName = reservation.unit?.building?.name || 'مبنى غير معروف';
     return {
       value: reservation.id,
       label: `${unitNumber} - ${buildingName}`,
     };
   });
 
-  // Handle file input change
+  // التعامل مع تغيير إدخال الملف
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setAttachmentFile(e.target.files[0]);
@@ -223,10 +222,10 @@ export default function ServiceForm({
           </div>
         )}
 
-        {/* Reservation Selection (only shown if not preselected) */}
+        {/* اختيار الحجز (يظهر فقط إذا لم يتم تحديده مسبقًا) */}
         {!preSelectedReservationId && (
           <Select
-            label="Select Property"
+            label="اختر العقار"
             id="reservationId"
             name="reservationId"
             value={formData.reservationId.toString()}
@@ -235,14 +234,14 @@ export default function ServiceForm({
             disabled={isLoadingReservations || isEdit}
             required
             fullWidth
-            helpText={isLoadingReservations ? 'Loading properties...' : undefined}
-            emptyOptionLabel="Select a property"
+            helpText={isLoadingReservations ? 'جاري تحميل العقارات...' : undefined}
+            emptyOptionLabel="اختر عقارًا"
           />
         )}
 
-        {/* Service Type */}
+        {/* نوع الخدمة */}
         <Select
-          label="Service Type"
+          label="نوع الخدمة"
           id="serviceType"
           name="serviceType"
           value={formData.serviceType}
@@ -252,9 +251,9 @@ export default function ServiceForm({
           fullWidth
         />
 
-        {/* Service Subtype (dependent on selected service type) */}
+        {/* النوع الفرعي للخدمة (يعتمد على نوع الخدمة المحدد) */}
         <Select
-          label="Service Subtype"
+          label="النوع الفرعي للخدمة"
           id="serviceSubtype"
           name="serviceSubtype"
           value={formData.serviceSubtype}
@@ -264,11 +263,11 @@ export default function ServiceForm({
           fullWidth
         />
 
-        {/* Description */}
+        {/* الوصف */}
         <div className="mb-4">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-            <span className="ml-1 text-red-500">*</span>
+            الوصف
+            <span className="mr-1 text-red-500">*</span>
           </label>
           <textarea
             id="description"
@@ -278,14 +277,14 @@ export default function ServiceForm({
             onChange={handleChange}
             required
             className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-            placeholder="Please describe the issue in detail..."
+            placeholder="يرجى وصف المشكلة بالتفصيل..."
           />
         </div>
 
-        {/* Attachment File */}
+        {/* ملف مرفق */}
         <div className="mb-4">
           <label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-700 mb-1">
-            Attachment (optional)
+            مرفق (اختياري)
           </label>
           <input
             id="attachmentFile"
@@ -295,7 +294,7 @@ export default function ServiceForm({
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
           />
           <p className="mt-1 text-xs text-gray-500">
-            You can attach images, documents, or other files related to your service request.
+            يمكنك إرفاق صور أو مستندات أو ملفات أخرى متعلقة بطلب الخدمة الخاص بك.
           </p>
         </div>
 
@@ -306,14 +305,14 @@ export default function ServiceForm({
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Cancel
+            إلغاء
           </Button>
           <Button
             type="submit"
             isLoading={isSubmitting}
             disabled={isSubmitting}
           >
-            {isEdit ? 'Update Service Request' : 'Submit Service Request'}
+            {isEdit ? 'تحديث طلب الخدمة' : 'تقديم طلب الخدمة'}
           </Button>
         </div>
       </form>
