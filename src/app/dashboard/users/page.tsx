@@ -285,15 +285,6 @@ export default function UsersPage() {
         {currentUser?.role === 'admin' && (
           <div className=" flex  gap-4">
             <Button
-              variant="outline"
-              onClick={() => {
-                setCreateRole('manager');
-                setCreateModalOpen(true);
-              }}
-            >
-              إضافة مدير
-            </Button>
-            <Button
               variant="primary"
               onClick={() => {
                 setCreateRole('admin');

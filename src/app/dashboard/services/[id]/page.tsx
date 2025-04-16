@@ -407,31 +407,31 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المستأجر</h2>
 
               <div className="space-y-4">
-                {service.reservation?.user ? (
+                {service?.user ? (
                   <>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">الاسم</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.user.fullName}
+                        {service.user.fullName}
                       </p>
                     </div>
 
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.user.email}
+                        {service.user.email}
                       </p>
                     </div>
 
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">الهاتف</h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {service.reservation.user.phone}
+                        {service.user.phone}
                       </p>
                     </div>
 
                     <div className="pt-4 mt-4 border-t border-gray-200">
-                      <Link href={`/dashboard/users/${service.reservation.user.id}`}>
+                      <Link href={`/dashboard/users/${service.user.id}`}>
                         <Button variant="outline" fullWidth>
                           عرض ملف المستأجر
                         </Button>

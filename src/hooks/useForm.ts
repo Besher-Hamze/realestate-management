@@ -100,12 +100,15 @@ export default function useForm<T, R = any>(
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
+      console.log(value);
+      console.log(name);
+
 
       if (type === 'checkbox') {
         const checked = (e.target as HTMLInputElement).checked;
         updateFormData({ [name]: checked } as unknown as Partial<T>);
       }
-      else if (type === 'number' || name === 'buildingId') {
+      else if (type === 'number' || name === 'buildingId' || name.includes("id")) {
         const numericValue = value === '' ? 0 : Number(value);
         updateFormData({ [name]: numericValue } as unknown as Partial<T>);
       } else {

@@ -23,7 +23,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   const id = params.id;
   const router = useRouter();
   const { user: currentUser } = useAuth();
-  
+
   const [company, setCompany] = useState<Company | null>(null);
   const [managers, setManagers] = useState<User[]>([]);
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -46,7 +46,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     try {
       setIsLoading(true);
       const response = await companiesApi.getById(id);
-      
+
       if (response.success) {
         setCompany(response.data);
         fetchCompanyManagers();
@@ -67,11 +67,11 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     try {
       setIsManagersLoading(true);
       const response = await usersApi.getAll();
-      
+
       if (response.success) {
         // تصفية لمستخدمي المديرين فقط في هذه الشركة
         const companyManagers = response.data.filter(
-          (user:User) => user.role === 'manager' && user.companyId === parseInt(id)
+          (user: User) => user.role === 'manager' && user.companyId === parseInt(id)
         );
         setManagers(companyManagers);
       } else {
@@ -90,11 +90,11 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     try {
       setIsBuildingsLoading(true);
       const response = await buildingsApi.getAll();
-      
+
       if (response.success) {
         // تصفية لمباني هذه الشركة فقط
         const companyBuildings = response.data.filter(
-          (building:Building) => building.companyId === parseInt(id)
+          (building: Building) => building.companyId === parseInt(id)
         );
         setBuildings(companyBuildings);
       } else {
@@ -113,7 +113,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     try {
       setIsDeleting(true);
       const response = await companiesApi.delete(id);
-      
+
       if (response.success) {
         toast.success('تم حذف الشركة بنجاح');
         router.push('/dashboard/companies');
@@ -334,13 +334,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
       {/* قسم المديرين */}
       <Card>
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">المديرون</h2>
-            <Link href={`/dashboard/users/managers/create?companyId=${id}`}>
-              <Button size="sm">إضافة مدير</Button>
-            </Link>
-          </div>
-          
+
           {isManagersLoading ? (
             <div className="flex justify-center items-center h-32">
               <div className="flex flex-col items-center">
@@ -367,7 +361,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
                 <p className="text-gray-600">جاري تحميل المديرين...</p>
               </div>
             </div>
-          ) : managers.length > 0 ? (
+          ) : managers.length > 0 && (
             <Table
               columns={managerColumns}
               data={managers}
@@ -375,13 +369,6 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               showHeader={true}
               striped={true}
             />
-          ) : (
-            <div className="bg-gray-50 p-6 text-center rounded-md">
-              <p className="text-gray-600 mb-4">لم يتم العثور على مديرين لهذه الشركة</p>
-              <Link href={`/dashboard/users/managers/create?companyId=${id}`}>
-                <Button size="sm">إضافة مدير</Button>
-              </Link>
-            </div>
           )}
         </div>
       </Card>
@@ -389,13 +376,13 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
       {/* قسم المباني */}
       <Card>
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
+          {currentUser?.role == "manager" && <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">المباني</h2>
             <Link href={`/dashboard/buildings/create?companyId=${id}`}>
               <Button size="sm">إضافة مبنى</Button>
             </Link>
           </div>
-          
+          }
           {isBuildingsLoading ? (
             <div className="flex justify-center items-center h-32">
               <div className="flex flex-col items-center">
@@ -433,9 +420,12 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
           ) : (
             <div className="bg-gray-50 p-6 text-center rounded-md">
               <p className="text-gray-600 mb-4">لم يتم العثور على مباني لهذه الشركة</p>
-              <Link href={`/dashboard/buildings/create?companyId=${id}`}>
-                <Button size="sm">إضافة مبنى</Button>
-              </Link>
+              {currentUser?.role == "manager" &&
+                <Link href={`/dashboard/buildings/create?companyId=${id}`}>
+                  <Button size="sm">إضافة مبنى</Button>
+                </Link>
+
+              }
             </div>
           )}
         </div>
@@ -449,7 +439,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
       >
         <div className="p-6">
           <p className="text-gray-700 mb-6">
-            هل أنت متأكد أنك تريد حذف <span className="font-semibold">{company?.name}</span>؟ 
+            هل أنت متأكد أنك تريد حذف <span className="font-semibold">{company?.name}</span>؟
             لا يمكن التراجع عن هذا الإجراء، وسيتم حذف جميع المباني والبيانات المرتبطة نهائيًا.
           </p>
           <div className="flex justify-end space-x-3">

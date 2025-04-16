@@ -29,12 +29,12 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch unit details on component mount
+  // جلب تفاصيل الوحدة عند تحميل المكون
   useEffect(() => {
     fetchUnit();
   }, [id]);
 
-  // Fetch unit data
+  // جلب بيانات الوحدة
   const fetchUnit = async () => {
     try {
       setIsLoading(true);
@@ -44,17 +44,17 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         setUnit(response.data);
         fetchReservations();
       } else {
-        toast.error(response.message || 'Failed to fetch unit details');
+        toast.error(response.message || 'فشل في جلب تفاصيل الوحدة');
       }
     } catch (error) {
-      console.error('Error fetching unit:', error);
-      toast.error('An error occurred while fetching unit details');
+      console.error('خطأ في جلب الوحدة:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الوحدة');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch reservations for this unit
+  // جلب الحجوزات لهذه الوحدة
   const fetchReservations = async () => {
     try {
       setIsReservationsLoading(true);
@@ -63,39 +63,39 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       if (response.success) {
         setReservations(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch unit reservations');
+        toast.error(response.message || 'فشل في جلب حجوزات الوحدة');
       }
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      toast.error('An error occurred while fetching unit reservations');
+      console.error('خطأ في جلب الحجوزات:', error);
+      toast.error('حدث خطأ أثناء جلب حجوزات الوحدة');
     } finally {
       setIsReservationsLoading(false);
     }
   };
 
-  // Delete unit
+  // حذف الوحدة
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       const response = await unitsApi.delete(id);
 
       if (response.success) {
-        toast.success('Unit deleted successfully');
+        toast.success('تم حذف الوحدة بنجاح');
         router.push('/dashboard/units');
       } else {
-        toast.error(response.message || 'Failed to delete unit');
+        toast.error(response.message || 'فشل في حذف الوحدة');
         setDeleteModalOpen(false);
       }
     } catch (error) {
-      console.error('Error deleting unit:', error);
-      toast.error('An error occurred while deleting the unit');
+      console.error('خطأ في حذف الوحدة:', error);
+      toast.error('حدث خطأ أثناء حذف الوحدة');
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Change unit status
+  // تغيير حالة الوحدة
   const handleStatusChange = async (newStatus: string) => {
     if (!unit) return;
 
@@ -103,32 +103,53 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       const response = await unitsApi.update(id, { ...unit, status: newStatus });
 
       if (response.success) {
-        toast.success(`Unit status updated to ${newStatus}`);
+        // ترجمة الحالة للرسالة
+        const statusText = newStatus === 'available' ? 'متاحة' : 'مؤجرة';
+        toast.success(`تم تحديث حالة الوحدة إلى ${statusText}`);
         setUnit(response.data);
       } else {
-        toast.error(response.message || 'Failed to update unit status');
+        toast.error(response.message || 'فشل في تحديث حالة الوحدة');
       }
     } catch (error) {
-      console.error('Error updating unit status:', error);
-      toast.error('An error occurred while updating unit status');
+      console.error('خطأ في تحديث حالة الوحدة:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة الوحدة');
     }
   };
 
-  // Define columns for the reservations table
+  // ترجمة حالة الوحدة
+  const translateUnitStatus = (status: string) => {
+    switch (status) {
+      case 'available': return 'متاحة';
+      case 'rented': return 'مؤجرة';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  // ترجمة حالة الحجز
+  const translateReservationStatus = (status: string) => {
+    switch (status) {
+      case 'active': return 'نشط';
+      case 'pending': return 'قيد الانتظار';
+      case 'expired': return 'منتهي';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  // تحديد الأعمدة لجدول الحجوزات
   const reservationColumns: TableColumn<Reservation>[] = [
     {
       key: 'tenant',
-      header: 'Tenant',
+      header: 'المستأجر',
       cell: (reservation) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{reservation.user?.fullName || 'N/A'}</span>
-          <span className="text-xs text-gray-500">{reservation.user?.email || 'N/A'}</span>
+          <span className="font-medium text-gray-900">{reservation.user?.fullName || 'غير متوفر'}</span>
+          <span className="text-xs text-gray-500">{reservation.user?.email || 'غير متوفر'}</span>
         </div>
       ),
     },
     {
       key: 'period',
-      header: 'Period',
+      header: 'الفترة',
       cell: (reservation) => (
         <div className="flex flex-col">
           <span className="text-gray-900">{formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}</span>
@@ -137,33 +158,33 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: 'الحالة',
       cell: (reservation) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-              reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                  'bg-red-100 text-red-800'
+            reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+              reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                'bg-red-100 text-red-800'
             }`}
         >
-          {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+          {translateReservationStatus(reservation.status)}
         </span>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'الإجراءات',
       cell: (reservation) => (
         <div className="flex space-x-2">
           <Link href={`/dashboard/reservations/${reservation.id}`}>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline">عرض</Button>
           </Link>
         </div>
       ),
     },
   ];
 
-  // Render loading state
+  // عرض حالة التحميل
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -188,20 +209,20 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading unit details...</p>
+          <p className="text-gray-600">جاري تحميل تفاصيل الوحدة...</p>
         </div>
       </div>
     );
   }
 
-  // Render not found state
+  // عرض حالة عدم العثور
   if (!unit) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Unit Not Found</h2>
-        <p className="text-gray-600 mb-6">The unit you're looking for doesn't exist or you don't have permission to view it.</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">الوحدة غير موجودة</h2>
+        <p className="text-gray-600 mb-6">الوحدة التي تبحث عنها غير موجودة أو ليس لديك صلاحية لعرضها.</p>
         <Link href="/dashboard/units">
-          <Button>Back to Units</Button>
+          <Button>العودة إلى الوحدات</Button>
         </Link>
       </div>
     );
@@ -209,16 +230,16 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with breadcrumbs and actions */}
+      {/* الترويسة مع مسار التنقل والإجراءات */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/units" className="hover:text-primary-600">Units</Link>
+              <Link href="/dashboard/units" className="hover:text-primary-600">الوحدات</Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -228,7 +249,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Unit {unit.unitNumber}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">الوحدة {unit.unitNumber}</h1>
           <div className="flex space-x-3">
             <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
               <Button
@@ -239,90 +260,90 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                   </svg>
                 }
               >
-                Create Reservation
+                إنشاء حجز
               </Button>
             </Link>
             <Link href={`/dashboard/units/${unit.id}/edit`}>
-              <Button variant="outline">Edit Unit</Button>
+              <Button variant="outline">تعديل الوحدة</Button>
             </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>Delete</Button>
+            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
           </div>
         </div>
       </div>
 
-      {/* Unit Details */}
+      {/* تفاصيل الوحدة */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* المعلومات الرئيسية */}
         <Card className="lg:col-span-2">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Unit Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900">معلومات الوحدة</h2>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
-                    'bg-blue-100 text-blue-800'
+                  'bg-blue-100 text-blue-800'
                   }`}
               >
-                {unit.status.charAt(0).toUpperCase() + unit.status.slice(1)}
+                {translateUnitStatus(unit.status)}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Building</h3>
+                <h3 className="text-sm font-medium text-gray-500">المبنى</h3>
                 <p className="mt-1 text-base text-gray-900">
-                  {unit.building?.name || 'N/A'}
+                  {unit.building?.name || 'غير متوفر'}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Floor</h3>
+                <h3 className="text-sm font-medium text-gray-500">الطابق</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.floor}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Area</h3>
+                <h3 className="text-sm font-medium text-gray-500">المساحة</h3>
                 <p className="mt-1 text-base text-gray-900">
-                  {unit.area} m²
+                  {unit.area} م²
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Price</h3>
+                <h3 className="text-sm font-medium text-gray-500">السعر</h3>
                 <p className="mt-1 text-base text-gray-900 font-medium">
                   {formatCurrency(unit.price)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Bedrooms</h3>
+                <h3 className="text-sm font-medium text-gray-500">غرف النوم</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.bedrooms}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Bathrooms</h3>
+                <h3 className="text-sm font-medium text-gray-500">الحمامات</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.bathrooms}
                 </p>
               </div>
 
               <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                <h3 className="text-sm font-medium text-gray-500">الوصف</h3>
                 <p className="mt-1 text-base text-gray-900">
-                  {unit.description || 'No description provided'}
+                  {unit.description || 'لا يوجد وصف متاح'}
                 </p>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Status Actions */}
+        {/* إجراءات تغيير الحالة */}
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Status</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">تغيير الحالة</h2>
 
             <div className="space-y-4">
               <Button
@@ -331,7 +352,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 disabled={unit.status === 'available'}
                 onClick={() => handleStatusChange('available')}
               >
-                Mark as Available
+                تعيين كمتاحة
               </Button>
 
               <Button
@@ -340,22 +361,22 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 disabled={unit.status === 'rented'}
                 onClick={() => handleStatusChange('rented')}
               >
-                Mark as Rented
+                تعيين كمؤجرة
               </Button>
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-md font-medium text-gray-900 mb-3">Quick Links</h3>
+              <h3 className="text-md font-medium text-gray-900 mb-3">روابط سريعة</h3>
               <div className="space-y-3">
                 <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
                   <Button variant="primary" fullWidth>
-                    Create Reservation
+                    إنشاء حجز
                   </Button>
                 </Link>
                 {unit.building && (
                   <Link href={`/dashboard/buildings/${unit.building.id}`}>
                     <Button variant="outline" fullWidth>
-                      View Building
+                      عرض المبنى
                     </Button>
                   </Link>
                 )}
@@ -365,10 +386,10 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         </Card>
       </div>
 
-      {/* Reservations History */}
+      {/* سجل الحجوزات */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Reservation History</h2>
+          <h2 className="text-xl font-semibold text-gray-900">سجل الحجوزات</h2>
           <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
             <Button
               variant="primary"
@@ -379,7 +400,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 </svg>
               }
             >
-              Create Reservation
+              إنشاء حجز
             </Button>
           </Link>
         </div>
@@ -390,17 +411,17 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             columns={reservationColumns}
             keyExtractor={(reservation) => reservation.id}
             isLoading={isReservationsLoading}
-            emptyMessage="No reservation history found for this unit"
+            emptyMessage="لا يوجد سجل حجوزات لهذه الوحدة"
             onRowClick={(reservation) => router.push(`/dashboard/reservations/${reservation.id}`)}
           />
         </Card>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Unit"
+        title="حذف الوحدة"
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -408,7 +429,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              إلغاء
             </Button>
             <Button
               variant="danger"
@@ -416,13 +437,13 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               isLoading={isDeleting}
               disabled={isDeleting}
             >
-              Delete
+              حذف
             </Button>
           </div>
         }
       >
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete unit "{unit.unitNumber}"? This action cannot be undone.
+          هل أنت متأكد من أنك تريد حذف الوحدة "{unit.unitNumber}"؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
       </Modal>
     </div>

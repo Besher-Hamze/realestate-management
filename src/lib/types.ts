@@ -154,6 +154,7 @@ export interface ServiceOrder {
   createdAt: string;
   updatedAt: string;
   reservation?: Reservation;
+  user: User;
 }
 
 export interface ServiceOrderFormData {

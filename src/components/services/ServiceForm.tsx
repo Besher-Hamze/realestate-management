@@ -143,6 +143,7 @@ export default function ServiceForm({
   }, [isEdit, initialData, preSelectedReservationId, resetForm, updateFormData]);
 
   // جلب الحجوزات بناءً على الشروط
+  // جلب الحجوزات بناءً على الشروط
   useEffect(() => {
     const fetchReservationsData = async () => {
       try {
@@ -175,6 +176,14 @@ export default function ServiceForm({
 
           setUnits(extractedUnits);
 
+          // إذا كان هناك حجز واحد فقط وليس هناك reservationId محدد مسبقًا،
+          // تعيين الحجز الوحيد تلقائياً
+          if (filteredReservations.length === 1 && !preSelectedReservationId && !isEdit) {
+            const singleReservationId = filteredReservations[0].id;
+            console.log('Auto-selecting the only reservation:', singleReservationId);
+            updateFormData({ reservationId: singleReservationId });
+          }
+
           // إذا تم توفير معرف حجز محدد مسبقًا ولكن لم يتم العثور عليه في الحجوزات النشطة، أظهر تحذيرًا
           if (
             preSelectedReservationId &&
@@ -194,8 +203,7 @@ export default function ServiceForm({
     };
 
     fetchReservationsData();
-  }, [isTenant, preSelectedUnitId, preSelectedReservationId]);
-
+  }, [isTenant, preSelectedUnitId, preSelectedReservationId, isEdit, updateFormData]);
   // إنشاء خيارات الحجز للقائمة المنسدلة
   const reservationOptions = reservations.map((reservation) => {
     const unitNumber = reservation.unit?.unitNumber || 'وحدة غير معروفة';
@@ -213,6 +221,18 @@ export default function ServiceForm({
     }
   };
 
+  // معالجة تغيير الحجز
+  const handleReservationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+
+    updateFormData({ reservationId: value });
+
+    console.log('Reservation ID changed to:', value);
+  };
+
+  // طباعة قيمة reservationId للتصحيح
+  console.log('Current reservationId in formData:', formData.reservationId);
+
   return (
     <Card>
       <form onSubmit={(e) => handleSubmit(e, formData)} className="space-y-6">
@@ -229,7 +249,7 @@ export default function ServiceForm({
             id="reservationId"
             name="reservationId"
             value={formData.reservationId.toString()}
-            onChange={handleChange}
+            onChange={handleReservationChange} // استخدام الدالة المخصصة بدلاً من handleChange
             options={reservationOptions}
             disabled={isLoadingReservations || isEdit}
             required
@@ -310,7 +330,7 @@ export default function ServiceForm({
           <Button
             type="submit"
             isLoading={isSubmitting}
-            disabled={isSubmitting}
+            disabled={isSubmitting || formData.reservationId === 0}
           >
             {isEdit ? 'تحديث طلب الخدمة' : 'تقديم طلب الخدمة'}
           </Button>

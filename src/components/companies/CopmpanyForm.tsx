@@ -46,11 +46,11 @@ export default function CompanyForm({
   // إعداد البيانات الأولية لوضع التعديل
   const formInitialData = isEdit && initialData
     ? {
-        name: initialData.name,
-        email: initialData.email,
-        phone: initialData.phone,
-        address: initialData.address,
-      }
+      name: initialData.name,
+      email: initialData.email,
+      phone: initialData.phone,
+      address: initialData.address,
+    }
     : initialCompanyData;
 
   // حالة النموذج باستخدام الخطاف المخصص
@@ -76,7 +76,7 @@ export default function CompanyForm({
           ? 'تم تحديث الشركة بنجاح'
           : 'تم إنشاء الشركة بنجاح';
         toast.success(successMessage);
-        
+
         // التحقق من توفر بيانات اعتماد المدير
         if (!isEdit && data.manager) {
           setManagerCredentials(data.manager);
@@ -101,7 +101,7 @@ export default function CompanyForm({
     if (isEdit && initialData) {
       resetForm();
     }
-  }, [isEdit, initialData, resetForm]);
+  }, [isEdit, initialData]);
 
   // التعامل مع تغيير إدخال الملف
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,7 +113,7 @@ export default function CompanyForm({
   // تبديل قسم إنشاء المدير
   const toggleManagerSection = () => {
     setCreateManager(!createManager);
-    
+
     // مسح حقول المدير عند التبديل
     if (createManager) {
       updateFormData({
@@ -138,7 +138,7 @@ export default function CompanyForm({
   // نسخ بيانات الاعتماد إلى الحافظة
   const copyCredentials = () => {
     if (!managerCredentials) return;
-    
+
     const credentials = `
 اسم المستخدم: ${managerCredentials.username}
 كلمة المرور: ${managerCredentials.password}
@@ -146,7 +146,7 @@ export default function CompanyForm({
 البريد الإلكتروني: ${managerCredentials.email}
 الدور: ${managerCredentials.role === 'manager' ? 'مدير' : managerCredentials.role}
     `;
-    
+
     navigator.clipboard.writeText(credentials.trim())
       .then(() => toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!'))
       .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
@@ -161,10 +161,10 @@ export default function CompanyForm({
               {error}
             </div>
           )}
-          
+
           <div className="mb-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">معلومات الشركة</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="اسم الشركة"
@@ -175,7 +175,7 @@ export default function CompanyForm({
                 required
                 fullWidth
               />
-              
+
               <Input
                 label="البريد الإلكتروني"
                 id="email"
@@ -186,7 +186,7 @@ export default function CompanyForm({
                 required
                 fullWidth
               />
-              
+
               <Input
                 label="الهاتف"
                 id="phone"
@@ -196,7 +196,7 @@ export default function CompanyForm({
                 required
                 fullWidth
               />
-              
+
               <Input
                 label="العنوان"
                 id="address"
@@ -207,7 +207,7 @@ export default function CompanyForm({
                 fullWidth
               />
             </div>
-            
+
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700">
                 شعار الشركة (اختياري)
@@ -223,7 +223,7 @@ export default function CompanyForm({
               <p className="mt-1 text-sm text-gray-500">
                 قم بتحميل شعار الشركة (PNG، JPG)
               </p>
-              
+
               {/* عرض الشعار الحالي في وضع التعديل */}
               {isEdit && initialData?.logoUrl && (
                 <div className="mt-2">
@@ -239,7 +239,7 @@ export default function CompanyForm({
               )}
             </div>
           </div>
-          
+
           {/* قسم إنشاء المدير - فقط للشركات الجديدة */}
           {!isEdit && (
             <div className="border-t border-gray-200 pt-4">
@@ -254,7 +254,7 @@ export default function CompanyForm({
                   {createManager ? 'إزالة المدير' : 'إضافة مدير'}
                 </Button>
               </div>
-              
+
               {createManager && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
@@ -266,7 +266,7 @@ export default function CompanyForm({
                     required
                     fullWidth
                   />
-                  
+
                   <Input
                     label="البريد الإلكتروني للمدير"
                     id="managerEmail"
@@ -277,7 +277,7 @@ export default function CompanyForm({
                     required
                     fullWidth
                   />
-                  
+
                   <Input
                     label="هاتف المدير"
                     id="managerPhone"
@@ -291,7 +291,7 @@ export default function CompanyForm({
               )}
             </div>
           )}
-          
+
           <div className="flex justify-end space-x-3 border-t border-gray-200 pt-4">
             <Button
               type="button"
@@ -324,10 +324,10 @@ export default function CompanyForm({
             <>
               <div className="mb-4">
                 <p className="text-gray-700 mb-4">
-                  تم إنشاء حساب مدير جديد لـ <span className="font-semibold">{formData.name}</span>. 
+                  تم إنشاء حساب مدير جديد لـ <span className="font-semibold">{formData.name}</span>.
                   يرجى حفظ بيانات الاعتماد هذه في مكان آمن:
                 </p>
-                
+
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md font-mono">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-500">اسم المستخدم:</span>
@@ -350,7 +350,7 @@ export default function CompanyForm({
                     <span className="text-base text-blue-800 capitalize">{managerCredentials.role === 'manager' ? 'مدير' : managerCredentials.role}</span>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 text-sm text-gray-500">
                   <p className="mb-2">
                     <span className="text-red-500 font-bold">مهم:</span> سيتم عرض بيانات الاعتماد هذه مرة واحدة فقط.
@@ -361,7 +361,7 @@ export default function CompanyForm({
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex justify-between mt-6">
                 <Button
                   variant="outline"
