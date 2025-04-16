@@ -345,11 +345,11 @@ export default function ReservationForm({
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
               required={!isEdit}
             />
-            {initialData?.contractUrl && (
+            {initialData?.contractImageUrl && (
               <div className="mt-2">
                 <p className="text-sm text-gray-500">الوثيقة الحالية:</p>
                 <a
-                  href={initialData.contractUrl}
+                  href={initialData.contractImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-600 hover:text-primary-500 text-sm font-medium"

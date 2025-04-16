@@ -437,11 +437,11 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             </div>
 
             {/* العقد */}
-            {reservation.contractUrl && (
+            {reservation.contractImageUrl && (
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-gray-500 mb-2">وثيقة العقد</h3>
                 <a
-                  href={reservation.contractUrl}
+                  href={reservation.contractImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
