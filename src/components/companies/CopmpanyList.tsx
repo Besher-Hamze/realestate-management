@@ -50,7 +50,7 @@ export default function CompanyList({
       if (response.success) {
         toast.success('تم حذف الشركة بنجاح');
         setDeleteModalOpen(false);
-        
+
         // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedCompany.id);
@@ -75,10 +75,10 @@ export default function CompanyList({
       header: '',
       cell: (company) => (
         <div className="w-10 h-10 flex items-center justify-center">
-          {company.logoUrl ? (
-            <img 
-              src={company.logoUrl} 
-              alt={`شعار ${company.name}`} 
+          {company.logoImageUrl ? (
+            <img
+              src={company.logoImageUrl}
+              alt={`شعار ${company.name}`}
               className="w-8 h-8 object-contain rounded"
             />
           ) : (
@@ -151,7 +151,7 @@ export default function CompanyList({
         emptyMessage="لم يتم العثور على شركات"
         onRowClick={handleRowClick}
       />
-      
+
       {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}

@@ -84,7 +84,7 @@ export interface Company {
   email: string;
   phone: string;
   address: string;
-  logoUrl?: string;
+  logoImageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -111,7 +111,8 @@ export interface Reservation {
   endDate: string;
   status: ReservationStatus;
   notes: string;
-  contractUrl?: string;
+  contractImageUrl?: string;
+  commercialRegisterImageUrl?: string;
   createdAt: string;
   updatedAt: string;
   unit?: Unit;
@@ -150,7 +151,7 @@ export interface ServiceOrder {
   serviceSubtype: ServiceSubtype;
   description: string;
   status: ServiceStatus;
-  attachmentUrl?: string;
+  attachmentFileUrl?: string;
   createdAt: string;
   updatedAt: string;
   reservation?: Reservation;
@@ -177,7 +178,7 @@ export interface Payment {
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
   notes: string;
-  checkUrl?: string;
+  checkImageUrl?: string;
   createdAt: string;
   updatedAt: string;
   reservation?: Reservation;

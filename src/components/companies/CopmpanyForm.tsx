@@ -225,12 +225,12 @@ export default function CompanyForm({
               </p>
 
               {/* عرض الشعار الحالي في وضع التعديل */}
-              {isEdit && initialData?.logoUrl && (
+              {isEdit && initialData?.logoImageUrl && (
                 <div className="mt-2">
                   <p className="text-sm text-gray-700">الشعار الحالي:</p>
                   <div className="mt-1 relative w-32 h-32 border border-gray-200 rounded-md overflow-hidden">
                     <img
-                      src={initialData.logoUrl}
+                      src={initialData.logoImageUrl}
                       alt={`شعار ${initialData.name}`}
                       className="w-full h-full object-contain"
                     />

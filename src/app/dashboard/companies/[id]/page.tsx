@@ -316,11 +316,11 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
                 <p className="text-sm font-medium text-gray-500">العنوان</p>
                 <p className="text-gray-800">{company.address || 'غير متوفر'}</p>
               </div>
-              {company.logoUrl && (
+              {company.logoImageUrl && (
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-2">الشعار</p>
                   <img
-                    src={company.logoUrl}
+                    src={company.logoImageUrl}
                     alt={`شعار ${company.name}`}
                     className="h-24 w-auto object-contain border rounded p-2"
                   />
