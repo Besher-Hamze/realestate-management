@@ -35,6 +35,8 @@ export default function LoginPage() {
       const success = await login(username, password);
       if (success) {
         toast.success('تم تسجيل الدخول بنجاح!');
+        console.log(user);
+
         if (user?.role === 'tenant') {
           router.push('/tenant');
         } else {
@@ -57,9 +59,9 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Link href="/" className="inline-block">
             <div className="flex justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                   strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-                   className="w-10 h-10 text-primary-600 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="w-10 h-10 text-primary-600 mb-2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
@@ -67,14 +69,14 @@ export default function LoginPage() {
             <h1 className="text-3xl font-extrabold text-primary-600">نظام إدارة العقارات</h1>
           </Link>
           <h2 className="mt-4 text-xl font-semibold text-gray-800">
-          تسجيل الدخول إلى حسابك
+            تسجيل الدخول إلى حسابك
 
           </h2>
           <p className="mt-2 text-gray-600">
-          أدخل بيانات الاعتماد للوصول إلى لوحة التحكم الخاصة بك
+            أدخل بيانات الاعتماد للوصول إلى لوحة التحكم الخاصة بك
           </p>
         </div>
-        
+
         <Card className="shadow-lg border border-gray-200 rounded-lg">
           <div className="p-8">
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -89,14 +91,14 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 fullWidth
                 leftIcon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" 
-                       viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" 
-                          clipRule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd" />
                   </svg>
                 }
               />
-              
+
               <Input
                 id="password"
                 name="password"
@@ -108,14 +110,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 fullWidth
                 leftIcon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" 
-                       viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" 
-                          clipRule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd" />
                   </svg>
                 }
               />
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
@@ -125,11 +127,11 @@ export default function LoginPage() {
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  تذكرني
+                    تذكرني
                   </label>
                 </div>
               </div>
-              
+
               <div>
                 <Button
                   type="submit"
@@ -138,16 +140,16 @@ export default function LoginPage() {
                   disabled={isSubmitting}
                   className="py-2.5"
                 >
-  تسجيل الدخول
+                  تسجيل الدخول
                 </Button>
               </div>
             </form>
           </div>
         </Card>
-        
+
         <div className="mt-8 text-center">
           <div className="text-sm text-gray-600 mb-4">
-          هل تحتاج إلى مساعدة؟ اتصل بمدير العقار الخاص بك
+            هل تحتاج إلى مساعدة؟ اتصل بمدير العقار الخاص بك
           </div>
           <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-500 font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

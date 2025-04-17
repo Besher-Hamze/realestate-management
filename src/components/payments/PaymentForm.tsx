@@ -206,7 +206,7 @@ export default function PaymentForm({
             label="الحجز"
             id="reservationId"
             name="reservationId"
-            value={formData.reservationId.toString()}
+            value={selectedReservation?.id}
             onChange={handleReservationChange}
             options={reservationOptions}
             disabled={isLoadingReservations || isEdit || !!preSelectedReservationId}

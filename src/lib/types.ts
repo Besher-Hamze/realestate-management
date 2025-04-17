@@ -120,7 +120,7 @@ export interface Reservation {
 }
 
 export interface ReservationFormData {
-  unitId: number;
+  unitId?: number;
   userId?: number;
   startDate: string;
   endDate: string;

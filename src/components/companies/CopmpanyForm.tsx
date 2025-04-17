@@ -110,19 +110,7 @@ export default function CompanyForm({
     }
   };
 
-  // تبديل قسم إنشاء المدير
-  const toggleManagerSection = () => {
-    setCreateManager(!createManager);
 
-    // مسح حقول المدير عند التبديل
-    if (createManager) {
-      updateFormData({
-        managerFullName: '',
-        managerEmail: '',
-        managerPhone: '',
-      });
-    }
-  };
 
   // التعامل مع إغلاق النافذة المنبثقة
   const handleModalClose = () => {
@@ -243,52 +231,38 @@ export default function CompanyForm({
           {/* قسم إنشاء المدير - فقط للشركات الجديدة */}
           {!isEdit && (
             <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">مدير الشركة</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleManagerSection}
-                >
-                  {createManager ? 'إزالة المدير' : 'إضافة مدير'}
-                </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="الاسم الكامل للمدير"
+                  id="managerFullName"
+                  name="managerFullName"
+                  value={formData.managerFullName || ''}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                />
+
+                <Input
+                  label="البريد الإلكتروني للمدير"
+                  id="managerEmail"
+                  name="managerEmail"
+                  type="email"
+                  value={formData.managerEmail || ''}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                />
+
+                <Input
+                  label="هاتف المدير"
+                  id="managerPhone"
+                  name="managerPhone"
+                  value={formData.managerPhone || ''}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                />
               </div>
-
-              {createManager && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="الاسم الكامل للمدير"
-                    id="managerFullName"
-                    name="managerFullName"
-                    value={formData.managerFullName || ''}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                  />
-
-                  <Input
-                    label="البريد الإلكتروني للمدير"
-                    id="managerEmail"
-                    name="managerEmail"
-                    type="email"
-                    value={formData.managerEmail || ''}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                  />
-
-                  <Input
-                    label="هاتف المدير"
-                    id="managerPhone"
-                    name="managerPhone"
-                    value={formData.managerPhone || ''}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                  />
-                </div>
-              )}
             </div>
           )}
 

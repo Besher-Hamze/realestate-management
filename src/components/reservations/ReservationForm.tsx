@@ -26,7 +26,7 @@ interface ReservationFormProps {
 }
 
 const initialReservationData: ReservationFormData = {
-  unitId: 0,
+  unitId: null,
   startDate: new Date().toISOString().split('T')[0],
   endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
   notes: '',
@@ -134,7 +134,6 @@ export default function ReservationForm({
       try {
         setIsLoadingUnits(true);
 
-        // للتعديل، احصل على جميع الوحدات. للإنشاء، احصل فقط على المتاحة
         const response = isEdit
           ? await unitsApi.getAll()
           : await unitsApi.getAvailable();
@@ -215,7 +214,7 @@ export default function ReservationForm({
             label="وحدة العقار"
             id="unitId"
             name="unitId"
-            value={formData.unitId.toString()}
+            value={formData.unitId}
             onChange={handleChange}
             options={unitOptions}
             disabled={isLoadingUnits || isEdit}

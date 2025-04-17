@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: false,
   isAuthenticated: false,
   login: async () => false,
-  logout: () => {},
+  logout: () => { },
   checkAuth: async () => false,
 });
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await checkAuth();
         setIsLoading(false);
       };
-      
+
       initAuth();
     }
   }, []);
@@ -46,20 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
+
       const response = await authApi.login(username, password);
-      
-      if (response.success && response.data) {
-        const { token, user: userData } = response.data as AuthResponse;
-        
+      console.log(response.data);
+      if (response.data) {
+        const { token, ...userData } = response.data as AuthResponse;
+
         // Set token in cookie
         Cookies.set('token', token, { expires: 7 }); // 7 days
-        
+
         // Set user from login response - no need for separate getMe call
-        setUser(userData as User);
+        setUser(userData as any);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error('Login error:', error);
@@ -80,19 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async (): Promise<boolean> => {
     try {
       const token = Cookies.get('token');
-      
+
       if (!token) {
         setUser(null);
         return false;
       }
-      
+
       const response = await authApi.getMe();
-      
+
       if (response.success && response.data) {
         setUser(response.data);
         return true;
       }
-      
+
       Cookies.remove('token');
       setUser(null);
       return false;
@@ -126,10 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 }

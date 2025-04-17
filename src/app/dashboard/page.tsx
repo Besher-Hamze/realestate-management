@@ -5,7 +5,66 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import Card from '@/components/ui/Card';
 import { dashboardApi } from '@/lib/api';
-import { GeneralStatistics, UnitStatusStatistics, ServiceStatusStatistics } from '@/lib/types';
+
+interface GeneralStatistics {
+  totalBuildings: number;
+  totalUnits: number;
+  unitsByStatus: Array<{ status: string; count: number }>;
+  activeReservations: number;
+  totalPayment: number;
+  pendingServiceOrders: number;
+}
+
+interface UnitStatusResponse {
+  unitsByCompany: Array<{
+    companyName: string;
+    totalUnits: number;
+    availableUnits: number;
+    rentedUnits: number;
+    maintenanceUnits: number;
+  }>;
+  unitsByBuilding: Array<{
+    buildingName: string;
+    companyName: string;
+    totalUnits: number;
+    availableUnits: number;
+    rentedUnits: number;
+    maintenanceUnits: number;
+  }>;
+}
+
+interface ServiceStatusResponse {
+  serviceOrdersByType: Array<{
+    serviceType: string;
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+    rejected: number;
+  }>;
+  serviceOrdersByMonth: Array<{
+    month: string;
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+    rejected: number;
+  }>;
+}
+
+// Calculated stat types used for display
+interface UnitStatusStatistics {
+  available: number;
+  rented: number;
+  maintenance: number;
+}
+
+interface ServiceStatusStatistics {
+  pending: number;
+  inProgress: number;
+  completed: number;
+  cancelled: number; // Note: API uses 'rejected' but UI expects 'cancelled'
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -19,22 +78,64 @@ export default function DashboardPage() {
       try {
         setIsLoading(true);
 
-        // جلب الإحصائيات العامة
+        // جلب الإحصائيات العامة (Fetch general statistics)
         const statsResponse = await dashboardApi.getStatistics();
         if (statsResponse.success) {
           setGeneralStats(statsResponse.data);
         }
 
-        // جلب إحصائيات حالة الوحدات
+        // جلب إحصائيات حالة الوحدات (Fetch unit status statistics)
         const unitStatsResponse = await dashboardApi.getUnitsStatus();
         if (unitStatsResponse.success) {
-          setUnitStats(unitStatsResponse.data);
+          // Process the unit stats to match what the UI expects
+          const unitData = unitStatsResponse.data as UnitStatusResponse;
+
+          // Calculate totals from all companies
+          const available = unitData.unitsByCompany.reduce(
+            (sum, company) => sum + company.availableUnits, 0
+          );
+          const rented = unitData.unitsByCompany.reduce(
+            (sum, company) => sum + company.rentedUnits, 0
+          );
+          const maintenance = unitData.unitsByCompany.reduce(
+            (sum, company) => sum + company.maintenanceUnits, 0
+          );
+
+          setUnitStats({
+            available,
+            rented,
+            maintenance
+          });
         }
 
-        // جلب إحصائيات حالة طلبات الخدمة
+        // جلب إحصائيات حالة طلبات الخدمة (Fetch service request statistics)
         const serviceStatsResponse = await dashboardApi.getServicesStatus();
+        console.log(serviceStatsResponse);
+
         if (serviceStatsResponse.success) {
-          setServiceStats(serviceStatsResponse.data);
+          // Process the service stats to match what the UI expects
+          const serviceData = serviceStatsResponse.data as ServiceStatusResponse;
+
+          // Calculate totals across all service types
+          const pending = serviceData.serviceOrdersByType.reduce(
+            (sum, type) => sum + type.pending, 0
+          );
+          const inProgress = serviceData.serviceOrdersByType.reduce(
+            (sum, type) => sum + type.inProgress, 0
+          );
+          const completed = serviceData.serviceOrdersByType.reduce(
+            (sum, type) => sum + type.completed, 0
+          );
+          const cancelled = serviceData.serviceOrdersByType.reduce(
+            (sum, type) => sum + type.rejected, 0
+          );
+
+          setServiceStats({
+            pending,
+            inProgress,
+            completed,
+            cancelled
+          });
         }
       } catch (error) {
         console.error('خطأ في جلب بيانات لوحة التحكم:', error);
@@ -47,7 +148,7 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, []);
 
-  // مكون بطاقة الإحصائيات
+  // مكون بطاقة الإحصائيات (Stats card component)
   const StatCard = ({ title, value, icon, bgColor }: { title: string; value: number | string; icon: React.ReactNode; bgColor: string }) => (
     <Card className="h-full">
       <div className="flex items-center">
@@ -60,7 +161,7 @@ export default function DashboardPage() {
     </Card>
   );
 
-  // عرض حالة التحميل
+  // عرض حالة التحميل (Display loading state)
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -93,7 +194,7 @@ export default function DashboardPage() {
 
   return (
     <div dir="rtl" className="space-y-6">
-      {/* رسالة الترحيب */}
+      {/* رسالة الترحيب (Welcome message) */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <h1 className="text-2xl font-bold text-gray-800">مرحباً بعودتك، {user?.fullName || 'المستخدم'}!</h1>
         <p className="mt-2 text-gray-600">
@@ -101,7 +202,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* الإحصائيات العامة */}
+      {/* الإحصائيات العامة (General statistics) */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">نظرة عامة</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -129,7 +230,7 @@ export default function DashboardPage() {
 
           <StatCard
             title="الحجوزات النشطة"
-            value={generalStats?.totalReservations || 0}
+            value={generalStats?.activeReservations || 0}
             icon={
               <svg className="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -141,7 +242,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* حالة الوحدات */}
+      {/* حالة الوحدات (Unit status) */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">حالة الوحدات</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -170,7 +271,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* حالة طلبات الخدمة */}
+      {/* حالة طلبات الخدمة (Service request status) */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">طلبات الخدمة</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,18 +4,24 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import PaymentForm from '@/components/payments/PaymentForm';
+import { reservationsApi } from '@/lib/api';
 
 export default function CreatePaymentPage() {
   const searchParams = useSearchParams();
   const [reservationId, setReservationId] = useState<number | undefined>(undefined);
-  
+  const [reservation, setReservation] = useState<any>(null);
+
   useEffect(() => {
     // التحقق مما إذا كان معرف الحجز مقدمًا في عنوان URL
     const reservationIdParam = searchParams.get('reservationId');
-    
     if (reservationIdParam) {
       setReservationId(parseInt(reservationIdParam, 10));
+      if (reservationId) {
+        reservationsApi.getById(reservationId).then(res => setReservation(res.data));
+      }
     }
+    console.log("THIS IS THE RESERVATION ID :", reservationId);
+
   }, [searchParams]);
 
   return (
@@ -42,9 +48,9 @@ export default function CreatePaymentPage() {
           تسجيل مدفوعة جديدة لحجز. جميع الحقول المميزة بعلامة * مطلوبة.
         </p>
       </div>
-      
+
       {/* نموذج المدفوعة */}
-      <PaymentForm preSelectedReservationId={reservationId} />
+      <PaymentForm preSelectedReservationId={reservationId} initialData={reservation} />
     </div>
   );
 }

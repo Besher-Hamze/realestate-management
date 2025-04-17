@@ -224,7 +224,7 @@ export default function UnitForm({
                         value={formData.bathrooms.toString()}
                         onChange={handleNumberChange}
                         min="0"
-                        step="0.5"
+                        step="1"
                         required
                         fullWidth
                     />
