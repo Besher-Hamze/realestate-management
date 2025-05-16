@@ -2,23 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Reservation, Unit } from '@/lib/types';
+import { RealEstateUnit, Reservation } from '@/lib/types';
 import { reservationsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import UnitList from '@/components/units/UnitList';
-import PaymentsTable from '@/components/payments/PaymentsTable';
 
 export default function TenantUnitsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [units, setUnits] = useState<RealEstateUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch tenant's reservations on component mount
+  // جلب حجوزات المستأجر عند تحميل المكون
   useEffect(() => {
     fetchReservations();
   }, []);
 
-  // Fetch reservations data
+  // جلب بيانات الحجوزات
   const fetchReservations = async () => {
     try {
       setIsLoading(true);
@@ -27,31 +26,31 @@ export default function TenantUnitsPage() {
       if (response.success) {
         setReservations(response.data);
 
-        // Extract units from reservations
+        // استخراج الوحدات من الحجوزات
         const extractedUnits = response.data
-          .filter(reservation => reservation.unit) // Filter out reservations without unit data
-          .map(reservation => reservation.unit as Unit); // Extract unit data
+          .filter(reservation => reservation.unit) // تصفية الحجوزات التي لا تحتوي على بيانات الوحدة
+          .map(reservation => reservation.unit as any); // استخراج بيانات الوحدة
 
         setUnits(extractedUnits);
       } else {
-        toast.error(response.message || 'Failed to fetch your units');
+        toast.error(response.message || 'فشل في جلب الوحدات الخاصة بك');
       }
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      toast.error('An error occurred while fetching your units');
+      console.error('خطأ في جلب الحجوزات:', error);
+      toast.error('حدث خطأ أثناء جلب الوحدات الخاصة بك');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6" dir="rtl">
+      {/* العنوان */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">My Rented Units</h1>
+        <h1 className="text-2xl font-bold text-gray-900">وحداتي المستأجرة</h1>
       </div>
 
-      {/* Active Reservations Summary */}
+      {/* ملخص الحجوزات النشطة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">
@@ -61,10 +60,10 @@ export default function TenantUnitsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-blue-800">Pending Leases</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">عقود الإيجار </h3>
                 <p className="text-2xl font-bold text-blue-900">
-                  {reservations.filter(r => r.status === 'pending').length}
+                  {reservations.filter(r => r.status === 'active').length}
                 </p>
               </div>
             </div>
@@ -79,8 +78,8 @@ export default function TenantUnitsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h3 className="font-medium text-gray-800">Total Units</h3>
+              <div className="mr-4">
+                <h3 className="font-medium text-gray-800">إجمالي الوحدات</h3>
                 <p className="text-2xl font-bold text-gray-900">
                   {units.length}
                 </p>
@@ -90,7 +89,7 @@ export default function TenantUnitsPage() {
         </Card>
       </div>
 
-      {/* Units List */}
+      {/* قائمة الوحدات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <UnitList
           units={units}

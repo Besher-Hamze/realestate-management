@@ -142,18 +142,16 @@ export default function ReservationForm({
         formDataToSubmit.contractPdf = contractPdfFile;
       }
 
-      if (selectedTenantOption === 'new') {
-        if (identityImageFront) {
-          formDataToSubmit.identityImageFront = identityImageFront;
-        }
+      if (identityImageFront) {
+        formDataToSubmit.identityImageFront = identityImageFront;
+      }
 
-        if (identityImageBack) {
-          formDataToSubmit.identityImageBack = identityImageBack;
-        }
+      if (identityImageBack) {
+        formDataToSubmit.identityImageBack = identityImageBack;
+      }
 
-        if (commercialRegisterImage) {
-          formDataToSubmit.commercialRegisterImage = commercialRegisterImage;
-        }
+      if (commercialRegisterImage) {
+        formDataToSubmit.commercialRegisterImage = commercialRegisterImage;
       }
 
       if (isEdit && initialData) {
@@ -198,12 +196,11 @@ export default function ReservationForm({
     }
 
     if (preSelectedUserId) {
-      setSelectedTenantOption('existing');
       updateFormData({ userId: preSelectedUserId });
     } else {
-      setSelectedTenantOption('new');
+      // setSelectedTenantOption('new');
       // Set default tenant type to 'person' for new tenants
-      updateFormData({ tenantType: 'person' });
+      // updateFormData({ tenantType: 'person' });
     }
   }, [isEdit, initialData, preSelectedUnitId, preSelectedUserId, resetForm, updateFormData]);
 
@@ -545,7 +542,7 @@ export default function ReservationForm({
                     label="نوع المستأجر"
                     id="tenantType"
                     name="tenantType"
-                    value={formData.tenantType || 'person'}
+                    value={formData.tenantType}
                     onChange={handleChange}
                     options={tenantTypeOptions}
                     required

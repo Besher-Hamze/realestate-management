@@ -31,6 +31,25 @@ interface ServiceStatusResponse {
   }[];
 }
 
+// New interface for the unit statistics response structure
+interface UnitStatusResponse {
+  unitsByCompany: {
+    companyName: string;
+    totalUnits: number;
+    availableUnits: number;
+    rentedUnits: number;
+    maintenanceUnits: number;
+  }[];
+  unitsByBuilding: {
+    buildingName: string;
+    companyName: string;
+    totalUnits: number;
+    availableUnits: number;
+    rentedUnits: number;
+    maintenanceUnits: number;
+  }[];
+}
+
 // Service type translation mapping
 const serviceTypeTranslations = {
   maintenance: 'صيانة',
@@ -56,6 +75,38 @@ export default function DashboardPage() {
   const [unitStats, setUnitStats] = useState<UnitStatusStatistics | null>(null);
   const [serviceStats, setServiceStats] = useState<ServiceStatusStatistics | null>(null);
   const [serviceResponse, setServiceResponse] = useState<ServiceStatusResponse | null>(null);
+  const [unitResponse, setUnitResponse] = useState<UnitStatusResponse | null>(null);
+
+  const isAdmin = useAuth().user?.role == "admin";
+  // Helper function to transform the unit statistics data
+  const transformUnitStats = (data: UnitStatusResponse): UnitStatusStatistics => {
+    // Default values if data is invalid
+    if (!data || !data.unitsByCompany || !Array.isArray(data.unitsByCompany)) {
+      return {
+        available: 0,
+        rented: 0,
+        maintenance: 0,
+        total: 0
+      };
+    }
+
+    // Aggregate data from all companies
+    const aggregated: UnitStatusStatistics = {
+      available: 0,
+      rented: 0,
+      maintenance: 0,
+      total: 0
+    };
+
+    data.unitsByCompany.forEach(company => {
+      aggregated.available += company.availableUnits || 0;
+      aggregated.rented += company.rentedUnits || 0;
+      aggregated.maintenance += company.maintenanceUnits || 0;
+      aggregated.total += company.totalUnits || 0;
+    });
+
+    return aggregated;
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -71,7 +122,14 @@ export default function DashboardPage() {
         // جلب إحصائيات حالة الوحدات (Fetch unit status statistics)
         const unitStatsResponse = await dashboardApi.getUnitsStatus();
         if (unitStatsResponse.success) {
-          setUnitStats(unitStatsResponse.data);
+          console.log(unitStatsResponse.data);
+
+          // Store the original response
+          setUnitResponse(unitStatsResponse.data);
+
+          // Transform the data to match the expected format
+          const transformedUnitStats = transformUnitStats(unitStatsResponse.data);
+          setUnitStats(transformedUnitStats);
         }
 
         // جلب إحصائيات حالة طلبات الخدمة (Fetch service request statistics)
@@ -186,7 +244,7 @@ export default function DashboardPage() {
 
           <StatCard
             title="إجمالي الوحدات"
-            value={generalStats?.totalUnits || 0}
+            value={generalStats?.totalUnits || unitStats?.total || 0}
             icon={
               <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -396,48 +454,118 @@ export default function DashboardPage() {
         <div>
           <h2 className="text-xl font-semibold text-gray-800 mb-4">إحصائيات الطلبات حسب الشهر</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {serviceResponse.serviceOrdersByMonth.map((monthData, index) => {
-              // تنسيق التاريخ بالعربية (Format date in Arabic)
-              const dateParts = monthData.month.split('-');
-              const year = dateParts[0];
-              const month = parseInt(dateParts[1]);
+            {
+              serviceResponse.serviceOrdersByMonth.map((monthData, index) => {
+                // تنسيق التاريخ بالعربية (Format date in Arabic)
+                const dateParts = monthData.month.split('-');
+                const year = dateParts[0];
+                const month = parseInt(dateParts[1]);
 
-              // أسماء الأشهر بالعربية (Arabic month names)
-              const arabicMonths = [
-                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-              ];
+                // أسماء الأشهر بالعربية (Arabic month names)
+                const arabicMonths = [
+                  'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                ];
 
-              const formattedDate = `${arabicMonths[month - 1]} ${year}`;
+                const formattedDate = `${arabicMonths[month - 1]} ${year}`;
 
-              return (
-                <Card key={index} className="p-4">
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">{formattedDate}</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">المعلقة:</span>
-                      <span className="font-medium">{monthData.pending}</span>
+                return (
+                  <Card key={index} className="p-4">
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">{formattedDate}</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">المعلقة:</span>
+                        <span className="font-medium">{monthData.pending}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">قيد التنفيذ:</span>
+                        <span className="font-medium">{monthData.inProgress}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">المكتملة:</span>
+                        <span className="font-medium">{monthData.completed}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">المرفوضة:</span>
+                        <span className="font-medium">{monthData.rejected}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
+                        <span>الإجمالي:</span>
+                        <span>{monthData.total}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">قيد التنفيذ:</span>
-                      <span className="font-medium">{monthData.inProgress}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">المكتملة:</span>
-                      <span className="font-medium">{monthData.completed}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">المرفوضة:</span>
-                      <span className="font-medium">{monthData.rejected}</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
-                      <span>الإجمالي:</span>
-                      <span>{monthData.total}</span>
-                    </div>
+                  </Card>
+                )
+
+              })}
+          </div>
+
+
+        </div>
+      )}
+
+
+      {/* إضافة قسم لعرض تفاصيل الوحدات حسب المبنى */}
+      {unitResponse?.unitsByBuilding && unitResponse.unitsByBuilding.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">تفاصيل الوحدات حسب المبنى</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {unitResponse.unitsByBuilding.map((building, index) => (
+              <Card key={index} className="p-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-2">{building.buildingName}</h3>
+                <p className="text-sm text-gray-500 mb-3">{building.companyName}</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات المتاحة:</span>
+                    <span className="font-medium">{building.availableUnits}</span>
                   </div>
-                </Card>
-              );
-            })}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات المؤجرة:</span>
+                    <span className="font-medium">{building.rentedUnits}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات قيد الصيانة:</span>
+                    <span className="font-medium">{building.maintenanceUnits}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
+                    <span>إجمالي الوحدات:</span>
+                    <span>{building.totalUnits}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* إضافة قسم لعرض تفاصيل الوحدات حسب الشركة */}
+      {unitResponse?.unitsByCompany && unitResponse.unitsByCompany.length > 0 && isAdmin && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">تفاصيل الوحدات حسب الشركة</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {unitResponse.unitsByCompany.map((company, index) => (
+              <Card key={index} className="p-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-2">{company.companyName}</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات المتاحة:</span>
+                    <span className="font-medium">{company.availableUnits}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات المؤجرة:</span>
+                    <span className="font-medium">{company.rentedUnits}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">الوحدات قيد الصيانة:</span>
+                    <span className="font-medium">{company.maintenanceUnits}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
+                    <span>إجمالي الوحدات:</span>
+                    <span>{company.totalUnits}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       )}

@@ -370,9 +370,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
           <h1 className="text-2xl font-bold text-gray-900">
             الحجز #{reservation.id}
           </h1>
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 ">
             <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
-              <Button variant="outline">تعديل</Button>
+              <Button variant="outline" className='mx-4'>تعديل</Button>
             </Link>
             <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
           </div>
