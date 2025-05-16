@@ -48,14 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
 
       const response = await authApi.login(username, password);
-      console.log(response.data);
-      if (response.data) {
-        const { token, ...userData } = response.data as AuthResponse;
+
+      if (response.success && response.data) {
+        const { token, ...userData } = response.data;
 
         // Set token in cookie
         Cookies.set('token', token, { expires: 7 }); // 7 days
 
-        // Set user from login response - no need for separate getMe call
+        // Set user from login response
         setUser(userData as any);
         return true;
       }

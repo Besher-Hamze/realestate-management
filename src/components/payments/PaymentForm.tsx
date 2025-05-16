@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import useForm from '@/hooks/useForm';
-import { Payment, PaymentFormData, Reservation } from '@/lib/types';
+import { Payment, Reservation, CreatePaymentFormData, UpdatePaymentFormData } from '@/lib/types';
 import { paymentsApi, reservationsApi } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { PAYMENT_METHOD_OPTIONS, PAYMENT_STATUS_OPTIONS } from '@/constants/options';
 
 interface PaymentFormProps {
   isEdit?: boolean;
@@ -17,7 +17,7 @@ interface PaymentFormProps {
   onSuccess?: (payment: Payment) => void;
 }
 
-const initialPaymentData: PaymentFormData = {
+const initialPaymentData: CreatePaymentFormData = {
   reservationId: 0,
   amount: 0,
   paymentDate: new Date().toISOString().split('T')[0],
@@ -26,20 +26,6 @@ const initialPaymentData: PaymentFormData = {
   notes: '',
 };
 
-const paymentMethodOptions = [
-  { value: 'cash', label: 'نقدًا' },
-  { value: 'credit_card', label: 'بطاقة ائتمان' },
-  { value: 'bank_transfer', label: 'تحويل بنكي' },
-  { value: 'check', label: 'شيك' },
-  { value: 'other', label: 'أخرى' },
-];
-const paymentStatusOptions = [
-  { value: 'pending', label: 'قيد الانتظار' },
-  { value: 'paid', label: 'مدفوعة' },
-  { value: 'cancelled', label: 'ملغية' },
-  { value: 'delayed', label: 'متأخرة' },
-];
-
 export default function PaymentForm({
   isEdit = false,
   initialData,
@@ -47,70 +33,26 @@ export default function PaymentForm({
   onSuccess,
 }: PaymentFormProps) {
   const router = useRouter();
+  const [formData, setFormData] = useState<CreatePaymentFormData | UpdatePaymentFormData>(
+    isEdit && initialData
+      ? {
+        amount: initialData.amount,
+        paymentDate: initialData.paymentDate.split('T')[0],
+        paymentMethod: initialData.paymentMethod,
+        status: initialData.status,
+        notes: initialData.notes || '',
+      }
+      : {
+        ...initialPaymentData,
+        reservationId: preSelectedReservationId || 0,
+      }
+  );
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isLoadingReservations, setIsLoadingReservations] = useState(true);
-  const [checkImage, setCheckImage] = useState<File | undefined>(undefined);
-
-  // إعداد البيانات الأولية لوضع التعديل أو مع الحجز المحدد مسبقًا
-  const formInitialData: PaymentFormData = isEdit && initialData
-    ? {
-      reservationId: initialData.reservationId,
-      amount: initialData.amount,
-      paymentDate: initialData.paymentDate.split('T')[0],
-      paymentMethod: initialData.paymentMethod,
-      status: initialData.status,
-      notes: initialData.notes,
-    }
-    : {
-      ...initialPaymentData,
-      reservationId: preSelectedReservationId || 0,
-    };
-
-  // حالة النموذج باستخدام الخطاف المخصص
-  const {
-    formData,
-    handleChange,
-    handleSubmit,
-    updateFormData,
-    isSubmitting,
-    error,
-    resetForm,
-  } = useForm<PaymentFormData, Payment>(
-    async (data) => {
-      if (isEdit && initialData) {
-        return paymentsApi.update(initialData.id, data, checkImage);
-      }
-      return paymentsApi.create(data, checkImage);
-    },
-    formInitialData,
-    {
-      onSuccess: (data) => {
-        const successMessage = isEdit
-          ? 'تم تحديث المدفوعة بنجاح'
-          : 'تم إنشاء المدفوعة بنجاح';
-        toast.success(successMessage);
-
-        if (onSuccess) {
-          onSuccess(data);
-        } else {
-          router.push(`/dashboard/payments`);
-        }
-      },
-      onError: (errorMessage) => {
-        toast.error(errorMessage || 'حدث خطأ ما');
-      },
-    }
-  );
-
-  // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل)
-  useEffect(() => {
-    if (isEdit && initialData) {
-      resetForm();
-    } else if (preSelectedReservationId) {
-      updateFormData({ reservationId: preSelectedReservationId });
-    }
-  }, [isEdit, initialData, preSelectedReservationId, resetForm, updateFormData]);
+  const [checkImage, setCheckImage] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   // جلب الحجوزات للقائمة المنسدلة
   useEffect(() => {
@@ -125,14 +67,14 @@ export default function PaymentForm({
           setReservations(activeReservations);
 
           // إذا كان لدينا preSelectedReservationId أو في وضع التعديل، ابحث عن الحجز المطابق
-          if ((preSelectedReservationId || (isEdit && initialData)) && response.data.length > 0) {
+          if ((preSelectedReservationId || (isEdit && initialData)) && activeReservations.length > 0) {
             const id = preSelectedReservationId || (initialData?.reservationId || 0);
-            const reservation = response.data.find(res => res.id === id);
+            const reservation = activeReservations.find(res => res.id === id);
             if (reservation) {
               setSelectedReservation(reservation);
               // إذا كانت مدفوعة جديدة، اضبط المبلغ الافتراضي على سعر الوحدة
               if (!isEdit && reservation.unit && reservation.unit.price) {
-                updateFormData({ amount: reservation.unit.price });
+                setFormData(prev => ({ ...prev, amount: reservation.unit.price }));
               }
             }
           }
@@ -148,12 +90,18 @@ export default function PaymentForm({
     };
 
     fetchReservations();
-  }, [isEdit, initialData, preSelectedReservationId, updateFormData]);
+  }, [isEdit, initialData, preSelectedReservationId]);
+
+  // التعامل مع تغييرات الحقول
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   // التعامل مع تغيير الحجز
   const handleReservationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const reservationId = parseInt(e.target.value);
-    updateFormData({ reservationId });
+    setFormData(prev => ({ ...prev, reservationId }));
 
     // البحث عن الحجز المحدد
     const reservation = reservations.find(res => res.id === reservationId);
@@ -161,19 +109,18 @@ export default function PaymentForm({
 
     // تعيين المبلغ الافتراضي إلى سعر الوحدة إذا كان متاحًا
     if (reservation?.unit?.price) {
-      updateFormData({ amount: reservation.unit.price });
+      setFormData(prev => ({ ...prev, amount: reservation.unit.price }));
     }
   };
 
-  // إنشاء خيارات الحجز للقائمة المنسدلة
-  const reservationOptions = reservations.map((reservation) => {
-    const unitNumber = reservation.unit?.unitNumber || 'غير معروف';
-    const tenantName = reservation.user?.fullName || 'غير معروف';
-    return {
-      value: reservation.id,
-      label: `${unitNumber} - ${tenantName}`,
-    };
-  });
+  // التعامل مع تغيير إدخال العملة
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // السماح فقط بالأرقام والنقطة العشرية
+    if (/^\d*\.?\d*$/.test(value) || value === '') {
+      setFormData(prev => ({ ...prev, amount: value === '' ? 0 : parseFloat(value) }));
+    }
+  };
 
   // التعامل مع تغيير إدخال الملف
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,18 +129,72 @@ export default function PaymentForm({
     }
   };
 
-  // تنسيق إدخال العملة
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // السماح فقط بالأرقام والنقطة العشرية
-    if (/^\d*\.?\d*$/.test(value) || value === '') {
-      updateFormData({ amount: value === '' ? 0 : parseFloat(value) });
+  // تقديم النموذج
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      let response;
+      
+      if (isEdit && initialData) {
+        response = await paymentsApi.update(
+          initialData.id, 
+          formData as UpdatePaymentFormData, 
+          checkImage ? { checkImage } : undefined
+        );
+      } else {
+        if (!('reservationId' in formData) || !formData.reservationId) {
+          throw new Error('يرجى اختيار حجز');
+        }
+        
+        response = await paymentsApi.create(
+          formData as CreatePaymentFormData,
+          checkImage ? { checkImage } : undefined
+        );
+      }
+
+      if (response.success) {
+        const successMessage = isEdit
+          ? 'تم تحديث المدفوعة بنجاح'
+          : 'تم إنشاء المدفوعة بنجاح';
+        toast.success(successMessage);
+
+        if (onSuccess) {
+          onSuccess(response.data);
+        } else {
+          router.push(`/dashboard/payments`);
+        }
+      } else {
+        setError(response.message || 'حدث خطأ أثناء حفظ المدفوعة');
+        toast.error(response.message || 'حدث خطأ');
+      }
+    } catch (error: any) {
+      console.error('خطأ في حفظ المدفوعة:', error);
+      setError(error.message || 'حدث خطأ أثناء حفظ المدفوعة');
+      toast.error(error.message || 'حدث خطأ أثناء حفظ المدفوعة');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // إنشاء خيارات الحجز للقائمة المنسدلة
+  const reservationOptions = [
+    { value: '', label: 'اختر حجزًا' },
+    ...reservations.map((reservation) => {
+      const unitNumber = reservation.unit?.unitNumber || 'غير معروف';
+      const tenantName = reservation.user?.fullName || 'غير معروف';
+      return {
+        value: reservation.id.toString(),
+        label: `${unitNumber} - ${tenantName}`,
+      };
+    })
+  ];
+
   return (
     <Card>
-      <form onSubmit={(e) => handleSubmit(e, formData)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-md mb-4">
             {error}
@@ -206,14 +207,16 @@ export default function PaymentForm({
             label="الحجز"
             id="reservationId"
             name="reservationId"
-            value={selectedReservation?.id}
+            value={
+              ((formData as CreatePaymentFormData).reservationId || 
+              selectedReservation?.id || '').toString()
+            }
             onChange={handleReservationChange}
             options={reservationOptions}
             disabled={isLoadingReservations || isEdit || !!preSelectedReservationId}
             required
             fullWidth
             helpText={isLoadingReservations ? 'جاري تحميل الحجوزات...' : 'اختر الحجز لهذه المدفوعة'}
-            emptyOptionLabel="اختر حجزًا"
           />
 
           {selectedReservation && (
@@ -230,11 +233,11 @@ export default function PaymentForm({
                 </div>
                 <div>
                   <span className="text-gray-500">الفترة:</span>
-                  <span className="mr-2">{new Date(selectedReservation.startDate).toLocaleDateString()} - {new Date(selectedReservation.endDate).toLocaleDateString()}</span>
+                  <span className="mr-2">{formatDate(selectedReservation.startDate)} - {formatDate(selectedReservation.endDate)}</span>
                 </div>
                 {selectedReservation.unit?.price && (
                   <div>
-                    <span className="text-gray-500">الإيجار الشهري:</span>
+                    <span className="text-gray-500">الإيجار:</span>
                     <span className="mr-2 font-medium">{formatCurrency(selectedReservation.unit.price)}</span>
                   </div>
                 )}
@@ -252,7 +255,7 @@ export default function PaymentForm({
             type="number"
             step="0.01"
             min="0"
-            value={formData.amount.toString()}
+            value={(formData.amount || 0).toString()}
             onChange={handleAmountChange}
             required
             fullWidth
@@ -276,7 +279,7 @@ export default function PaymentForm({
             name="paymentMethod"
             value={formData.paymentMethod}
             onChange={handleChange}
-            options={paymentMethodOptions}
+            options={PAYMENT_METHOD_OPTIONS}
             required
             fullWidth
           />
@@ -287,7 +290,7 @@ export default function PaymentForm({
             name="status"
             value={formData.status}
             onChange={handleChange}
-            options={paymentStatusOptions}
+            options={PAYMENT_STATUS_OPTIONS}
             required
             fullWidth
           />

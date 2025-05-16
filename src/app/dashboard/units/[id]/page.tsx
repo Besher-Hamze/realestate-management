@@ -4,13 +4,19 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Unit, Reservation } from '@/lib/types';
+import { RealEstateUnit, Reservation } from '@/lib/types';
 import { unitsApi, reservationsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { 
+  getUnitTypeLabel, 
+  getUnitLayoutLabel, 
+  getUnitStatusLabel,
+  getReservationStatusLabel
+} from '@/constants/options';
 
 interface UnitDetailPageProps {
   params: Promise<{
@@ -22,7 +28,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
 
-  const [unit, setUnit] = useState<Unit | null>(null);
+  const [unit, setUnit] = useState<RealEstateUnit | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReservationsLoading, setIsReservationsLoading] = useState(true);
@@ -100,12 +106,10 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     if (!unit) return;
 
     try {
-      const response = await unitsApi.update(id, { ...unit, status: newStatus });
+      const response = await unitsApi.update(id, { status: newStatus });
 
       if (response.success) {
-        // ترجمة الحالة للرسالة
-        const statusText = newStatus === 'available' ? 'متاحة' : 'مؤجرة';
-        toast.success(`تم تحديث حالة الوحدة إلى ${statusText}`);
+        toast.success(`تم تحديث حالة الوحدة إلى ${getUnitStatusLabel(newStatus)}`);
         setUnit(response.data);
       } else {
         toast.error(response.message || 'فشل في تحديث حالة الوحدة');
@@ -113,25 +117,6 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     } catch (error) {
       console.error('خطأ في تحديث حالة الوحدة:', error);
       toast.error('حدث خطأ أثناء تحديث حالة الوحدة');
-    }
-  };
-
-  // ترجمة حالة الوحدة
-  const translateUnitStatus = (status: string) => {
-    switch (status) {
-      case 'available': return 'متاحة';
-      case 'rented': return 'مؤجرة';
-      default: return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-  };
-
-  // ترجمة حالة الحجز
-  const translateReservationStatus = (status: string) => {
-    switch (status) {
-      case 'active': return 'نشط';
-      case 'pending': return 'قيد الانتظار';
-      case 'expired': return 'منتهي';
-      default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 
@@ -153,23 +138,46 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       cell: (reservation) => (
         <div className="flex flex-col">
           <span className="text-gray-900">{formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}</span>
+          <span className="text-xs text-gray-500">{reservation.contractDuration}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'contract',
+      header: 'العقد',
+      cell: (reservation) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{reservation.contractType === 'residential' ? 'سكني' : 'تجاري'}</span>
+          <span className="text-xs text-gray-500">
+            {reservation.paymentMethod === 'cash' ? 'نقدي' : 'شيكات'} • 
+            {reservation.paymentSchedule === 'monthly' ? ' شهري' : 
+             reservation.paymentSchedule === 'quarterly' ? ' ربع سنوي' :
+             reservation.paymentSchedule === 'biannual' ? ' نصف سنوي' :
+             reservation.paymentSchedule === 'annual' ? ' سنوي' : 
+             reservation.paymentSchedule}
+          </span>
         </div>
       ),
     },
     {
       key: 'status',
       header: 'الحالة',
-      cell: (reservation) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-            reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                'bg-red-100 text-red-800'
-            }`}
-        >
-          {translateReservationStatus(reservation.status)}
-        </span>
-      ),
+      cell: (reservation) => {
+        const statusClasses = {
+          active: 'bg-green-100 text-green-800',
+          expired: 'bg-gray-100 text-gray-800',
+          cancelled: 'bg-red-100 text-red-800',
+        };
+        
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+            ${statusClasses[reservation.status]}`}
+          >
+            {getReservationStatusLabel(reservation.status)}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
@@ -228,6 +236,13 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     );
   }
 
+  // تحديد لون الحالة
+  const statusColors = {
+    available: 'bg-green-100 text-green-800 border-green-200',
+    rented: 'bg-blue-100 text-blue-800 border-blue-200',
+    maintenance: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  };
+
   return (
     <div className="space-y-6">
       {/* الترويسة مع مسار التنقل والإجراءات */}
@@ -279,11 +294,9 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900">معلومات الوحدة</h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
-                  'bg-blue-100 text-blue-800'
-                  }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[unit.status]}`}
               >
-                {translateUnitStatus(unit.status)}
+                {getUnitStatusLabel(unit.status)}
               </span>
             </div>
 
@@ -291,7 +304,15 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <div>
                 <h3 className="text-sm font-medium text-gray-500">المبنى</h3>
                 <p className="mt-1 text-base text-gray-900">
-                  {unit.building?.name || 'غير متوفر'}
+                  {unit.building ? `${unit.building.buildingNumber} - ${unit.building.name}` : 'غير متوفر'}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">نوع الوحدة</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {getUnitTypeLabel(unit.unitType)}
+                  {unit.unitLayout && ` (${getUnitLayoutLabel(unit.unitLayout)})`}
                 </p>
               </div>
 
@@ -363,6 +384,15 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               >
                 تعيين كمؤجرة
               </Button>
+
+              <Button
+                variant="warning"
+                fullWidth
+                disabled={unit.status === 'maintenance'}
+                onClick={() => handleStatusChange('maintenance')}
+              >
+                تعيين تحت الصيانة
+              </Button>
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200">
@@ -370,7 +400,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <div className="space-y-3">
                 <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
                   <Button variant="primary" fullWidth>
-                    إنشاء حجز
+                    إنشاء حجز جديد
                   </Button>
                 </Link>
                 {unit.building && (
@@ -445,6 +475,19 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         <p className="text-gray-600 mb-4">
           هل أنت متأكد من أنك تريد حذف الوحدة "{unit.unitNumber}"؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
+        {reservations.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mt-2">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="text-yellow-700 font-medium">تحذير</span>
+            </div>
+            <p className="text-yellow-600 mt-1 text-sm">
+              هذه الوحدة لديها {reservations.length} حجز. حذف الوحدة قد يؤثر على هذه الحجوزات.
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

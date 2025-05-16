@@ -8,6 +8,8 @@ import { ServiceOrder } from '@/lib/types';
 import { servicesApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import ServiceHistory from '@/components/services/ServiceHistory';
+import ServiceComments from '@/components/services/ServiceComments';
 import { formatDate } from '@/lib/utils';
 
 interface TenantServiceDetailPageProps {
@@ -22,10 +24,13 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
 
   const [service, setService] = useState<ServiceOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [comments, setComments] = useState<any[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
 
   // جلب تفاصيل الخدمة عند تحميل المكون
   useEffect(() => {
     fetchService();
+    fetchComments();
   }, [id]);
 
   // جلب بيانات الخدمة
@@ -44,6 +49,74 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       toast.error('حدث خطأ أثناء جلب تفاصيل الخدمة');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // جلب تعليقات الخدمة
+  const fetchComments = async () => {
+    try {
+      setIsLoadingComments(true);
+      // This is a mock implementation. In a real app, you would fetch comments from the API
+      // You would need to create an endpoint and implement this in the servicesApi
+      // const response = await servicesApi.getServiceComments(id);
+
+      // For now, we'll simulate this with some mock data
+      const mockComments = [
+        {
+          id: 1,
+          serviceId: parseInt(id),
+          userId: 1,
+          userName: 'أحمد محمد',
+          userRole: 'tenant',
+          message: 'أريد معرفة متى سيتم إصلاح مكيف الهواء؟ الطقس حار جداً هذه الأيام.',
+          createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+          attachmentUrl: null,
+        },
+        {
+          id: 2,
+          serviceId: parseInt(id),
+          userId: 2,
+          userName: 'سارة الأحمد',
+          userRole: 'manager',
+          message: 'شكراً لطلبك. سيقوم فني الصيانة بزيارة الوحدة غداً بين الساعة 10 صباحاً و 12 ظهراً. يرجى التأكد من تواجدك في المنزل.',
+          createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+          attachmentUrl: null,
+        },
+      ];
+
+      setComments(mockComments);
+    } catch (error) {
+      console.error('خطأ في جلب التعليقات:', error);
+      toast.error('حدث خطأ أثناء جلب التعليقات');
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  // إضافة تعليق جديد
+  const handleAddComment = async (message: string, file?: File) => {
+    try {
+      // This is a mock implementation. In a real app, you would send the comment to the API
+      // const response = await servicesApi.addServiceComment(id, message, file);
+
+      // For now, we'll simulate this
+      const newComment = {
+        id: comments.length + 1,
+        serviceId: parseInt(id),
+        userId: 1, // Assuming the current user's ID
+        userName: 'أنا', // This would be the current user's name
+        userRole: 'tenant',
+        message,
+        createdAt: new Date().toISOString(),
+        attachmentUrl: file ? URL.createObjectURL(file) : undefined,
+      };
+
+      setComments([...comments, newComment]);
+      toast.success('تم إضافة التعليق بنجاح');
+    } catch (error) {
+      console.error('خطأ في إضافة التعليق:', error);
+      toast.error('حدث خطأ أثناء إضافة التعليق');
+      throw error; // Re-throw the error to handle it in the component
     }
   };
 
@@ -354,6 +427,22 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* Additional Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Service History */}
+        <Card>
+          <div className="p-6">
+            <ServiceHistory
+              serviceId={service.id}
+              currentStatus={service.status}
+              createdAt={service.createdAt}
+              updatedAt={service.updatedAt}
+            />
+          </div>
+        </Card>
+
       </div>
     </div>
   );

@@ -94,17 +94,21 @@ export async function apiRequest<T>(
 export async function formDataRequest<T>(
   url: string,
   method: 'POST' | 'PUT',
-  data: Record<string, any>,
-  files?: Record<string, File | undefined>
+  data: Record<string, any> = {},
+  files?: Record<string, File | undefined>,
+  existingFormData?: FormData
 ): Promise<ApiResponse<T>> {
-  const formData = new FormData();
+  // Use existing FormData if provided, otherwise create new
+  const formData = existingFormData || new FormData();
   
-  // Add regular data to form
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      formData.append(key, String(value));
-    }
-  });
+  // Add regular data to form if not using existing FormData
+  if (!existingFormData) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+  }
   
   // Add files to form
   if (files) {

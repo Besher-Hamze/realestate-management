@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import ServiceList from '@/components/services/ServiceList';
+import ServiceListFilter from '@/components/services/ServiceListFilter';
 
 export default function TenantServicesPage() {
   const [services, setServices] = useState<ServiceOrder[]>([]);
@@ -122,14 +123,9 @@ export default function TenantServicesPage() {
     setFilteredServices(filtered);
   };
 
-  // التعامل مع تغيير تصفية الحالة
-  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value);
-  };
-
-  // التعامل مع تغيير تصفية النوع
-  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTypeFilter(e.target.value);
+  // التعامل مع تغييرات الفلتر المتقدم
+  const handleFilteredServicesChange = (filtered: ServiceOrder[]) => {
+    setFilteredServices(filtered);
   };
 
   // بطاقات الإحصائيات
@@ -245,33 +241,11 @@ export default function TenantServicesPage() {
         </Card>
       </div>
 
-      {/* المرشحات */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-64">
-            <Select
-              label="الحالة"
-              id="statusFilter"
-              name="statusFilter"
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              options={statusOptions}
-              fullWidth
-            />
-          </div>
-          <div className="w-full sm:w-64">
-            <Select
-              label="نوع الخدمة"
-              id="typeFilter"
-              name="typeFilter"
-              value={typeFilter}
-              onChange={handleTypeFilterChange}
-              options={typeOptions}
-              fullWidth
-            />
-          </div>
-        </div>
-      </div>
+      {/* المرشحات المتقدمة */}
+      <ServiceListFilter 
+        services={services} 
+        onFilterChange={handleFilteredServicesChange} 
+      />
 
       {/* قائمة الخدمات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">

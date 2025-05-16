@@ -18,7 +18,7 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="en" dir='rtl'>
+    <html lang="ar" dir='rtl'>
       <body className={inter.className}>
         <AuthProvider>
           {children}
@@ -28,7 +28,7 @@ export default function RootLayout({
             hideProgressBar={false}
             newestOnTop
             closeOnClick
-            rtl={true}  
+            rtl={true}
             pauseOnFocusLoss
             draggable
             pauseOnHover

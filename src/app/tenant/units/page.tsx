@@ -6,6 +6,7 @@ import { Reservation, Unit } from '@/lib/types';
 import { reservationsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import UnitList from '@/components/units/UnitList';
+import PaymentsTable from '@/components/payments/PaymentsTable';
 
 export default function TenantUnitsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -22,15 +23,15 @@ export default function TenantUnitsPage() {
     try {
       setIsLoading(true);
       const response = await reservationsApi.getMy();
-      
+
       if (response.success) {
         setReservations(response.data);
-        
+
         // Extract units from reservations
         const extractedUnits = response.data
           .filter(reservation => reservation.unit) // Filter out reservations without unit data
           .map(reservation => reservation.unit as Unit); // Extract unit data
-        
+
         setUnits(extractedUnits);
       } else {
         toast.error(response.message || 'Failed to fetch your units');
@@ -49,7 +50,7 @@ export default function TenantUnitsPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">My Rented Units</h1>
       </div>
-      
+
       {/* Active Reservations Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="bg-green-50 border-green-200">
@@ -69,7 +70,7 @@ export default function TenantUnitsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-gray-50 border-gray-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -88,7 +89,7 @@ export default function TenantUnitsPage() {
           </div>
         </Card>
       </div>
-      
+
       {/* Units List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <UnitList
@@ -98,6 +99,7 @@ export default function TenantUnitsPage() {
           forTenant={true}
         />
       </div>
+
     </div>
   );
 }

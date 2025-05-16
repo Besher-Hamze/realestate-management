@@ -2,15 +2,20 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Unit } from '@/lib/types';
+import { RealEstateUnit } from '@/lib/types';
 import Table, { TableColumn } from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { unitsApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
+import { 
+  getUnitTypeLabel,
+  getUnitLayoutLabel,  
+  getUnitStatusLabel 
+} from '@/constants/options';
 
 interface UnitListProps {
-  units: Unit[];
+  units: RealEstateUnit[];
   isLoading: boolean;
   onDelete?: (id: number) => void;
   refetch: () => void;
@@ -26,11 +31,11 @@ export default function UnitList({
 }: UnitListProps) {
   const router = useRouter();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<RealEstateUnit | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // التعامل مع النقر على الصف
-  const handleRowClick = (unit: Unit) => {
+  const handleRowClick = (unit: RealEstateUnit) => {
     if (forTenant) {
       router.push(`/tenant/units/${unit.id}`);
     } else {
@@ -39,7 +44,7 @@ export default function UnitList({
   };
 
   // فتح نافذة تأكيد الحذف
-  const openDeleteModal = (unit: Unit, e: React.MouseEvent) => {
+  const openDeleteModal = (unit: RealEstateUnit, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedUnit(unit);
     setDeleteModalOpen(true);
@@ -75,14 +80,32 @@ export default function UnitList({
   };
 
   // تحديد الأعمدة للجدول
-  const baseColumns: TableColumn<Unit>[] = [
+  const baseColumns: TableColumn<RealEstateUnit>[] = [
     {
       key: 'unitNumber',
       header: 'رقم الوحدة',
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{unit.unitNumber}</span>
-          <span className="text-xs text-gray-500">المبنى: {unit.building?.name || 'غير متوفر'}</span>
+          <span className="text-xs text-gray-500">
+            المبنى: {unit.building?.name || 'غير متوفر'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'unitType',
+      header: 'نوع الوحدة',
+      cell: (unit) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">
+            {getUnitTypeLabel(unit.unitType)}
+          </span>
+          {unit.unitLayout && (
+            <span className="text-xs text-gray-500">
+              {getUnitLayoutLabel(unit.unitLayout)}
+            </span>
+          )}
         </div>
       ),
     },
@@ -92,30 +115,39 @@ export default function UnitList({
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="text-gray-700">
-            {unit.bedrooms} غرفة نوم • {unit.bathrooms} حمام
+            {unit.bathrooms} حمام
           </span>
-          <span className="text-xs text-gray-500">{unit.area} م² • الطابق {unit.floor}</span>
+          <span className="text-xs text-gray-500">
+            {unit.area} م² • الطابق {unit.floor}
+          </span>
         </div>
       ),
     },
     {
       key: 'price',
       header: 'السعر',
-      cell: (unit) => <span className="font-medium text-gray-900">{formatCurrency(unit.price)}</span>,
+      cell: (unit) => (
+        <span className="font-medium text-gray-900">
+          {formatCurrency(unit.price)}
+        </span>
+      ),
     },
     {
       key: 'status',
       header: 'الحالة',
       cell: (unit) => {
-        const statusText = unit.status === 'available' ? 'متاحة' : 'مؤجرة';
+        const statusClasses = {
+          available: 'bg-green-100 text-green-800',
+          rented: 'bg-blue-100 text-blue-800',
+          maintenance: 'bg-yellow-100 text-yellow-800',
+        };
+        
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-            ${unit.status === 'available' ? 'bg-green-100 text-green-800' :
-                'bg-blue-100 text-blue-800'
-              }`}
+            ${statusClasses[unit.status]}`}
           >
-            {statusText}
+            {getUnitStatusLabel(unit.status)}
           </span>
         );
       },
@@ -123,7 +155,7 @@ export default function UnitList({
   ];
 
   // أعمدة خاصة بالمشرف/المدير مع الإجراءات
-  const adminColumns: TableColumn<Unit>[] = [
+  const adminColumns: TableColumn<RealEstateUnit>[] = [
     ...baseColumns,
     {
       key: 'actions',
@@ -149,7 +181,7 @@ export default function UnitList({
   ];
 
   // أعمدة خاصة بالمستأجر
-  const tenantColumns: TableColumn<Unit>[] = [
+  const tenantColumns: TableColumn<RealEstateUnit>[] = [
     ...baseColumns,
     {
       key: 'actions',

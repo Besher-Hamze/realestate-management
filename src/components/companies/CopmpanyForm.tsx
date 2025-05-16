@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
+import Select from '../ui/Select';
+import { COMPANY_TYPE_OPTIONS } from '@/constants/options';
 
 interface CompanyFormProps {
   isEdit?: boolean;
@@ -27,8 +29,13 @@ interface ManagerCredentials {
 
 const initialCompanyData: CompanyFormData = {
   name: '',
+  companyType: 'agency',
   email: '',
   phone: '',
+  whatsappNumber: '',
+  secondaryPhone: '',
+  registrationNumber: '',
+  delegateName: '',
   address: '',
 };
 
@@ -47,8 +54,13 @@ export default function CompanyForm({
   const formInitialData = isEdit && initialData
     ? {
       name: initialData.name,
+      companyType: initialData.companyType,
       email: initialData.email,
       phone: initialData.phone,
+      whatsappNumber: initialData.whatsappNumber || '',
+      secondaryPhone: initialData.secondaryPhone || '',
+      registrationNumber: initialData.registrationNumber || '',
+      delegateName: initialData.delegateName || '',
       address: initialData.address,
     }
     : initialCompanyData;
@@ -164,6 +176,17 @@ export default function CompanyForm({
                 fullWidth
               />
 
+              <Select
+                label="نوع الشركة"
+                id="companyType"
+                name="companyType"
+                value={formData.companyType}
+                onChange={handleChange}
+                options={COMPANY_TYPE_OPTIONS}
+                required
+                fullWidth
+              />
+
               <Input
                 label="البريد الإلكتروني"
                 id="email"
@@ -186,6 +209,42 @@ export default function CompanyForm({
               />
 
               <Input
+                label="رقم الواتساب"
+                id="whatsappNumber"
+                name="whatsappNumber"
+                value={formData.whatsappNumber}
+                onChange={handleChange}
+                fullWidth
+              />
+
+              <Input
+                label="رقم الهاتف الثاني"
+                id="secondaryPhone"
+                name="secondaryPhone"
+                value={formData.secondaryPhone}
+                onChange={handleChange}
+                fullWidth
+              />
+
+              <Input
+                label="رقم السجل التجاري"
+                id="registrationNumber"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleChange}
+                fullWidth
+              />
+
+              <Input
+                label="اسم المفوض"
+                id="delegateName"
+                name="delegateName"
+                value={formData.delegateName}
+                onChange={handleChange}
+                fullWidth
+              />
+
+              <Input
                 label="العنوان"
                 id="address"
                 name="address"
@@ -196,21 +255,97 @@ export default function CompanyForm({
               />
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">
-                شعار الشركة (اختياري)
-              </label>
-              <input
-                type="file"
-                id="logoImage"
-                name="logoImage"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                قم بتحميل شعار الشركة (PNG، JPG)
-              </p>
+            <div className="mt-8 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  الوثائق والصور
+                </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      صورة البطاقة الشخصية (الوجه الأمامي)
+                    </label>
+                    <input
+                      type="file"
+                      id="identityImageFront"
+                      name="identityImageFront"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          updateFormData({
+                            ...formData,
+                            identityImageFront: e.target.files[0]
+                          });
+                        }
+                      }}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    />
+                    {isEdit && initialData?.identityImageFrontUrl && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500">الصورة الحالية:</p>
+                        <div className="mt-1 relative w-24 h-16 border border-gray-200 rounded-md overflow-hidden">
+                          <img
+                            src={initialData.identityImageFrontUrl}
+                            alt="صورة الهوية الأمامية"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      صورة البطاقة الشخصية (الوجه الخلفي)
+                    </label>
+                    <input
+                      type="file"
+                      id="identityImageBack"
+                      name="identityImageBack"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          updateFormData({
+                            ...formData,
+                            identityImageBack: e.target.files[0]
+                          });
+                        }
+                      }}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    />
+                    {isEdit && initialData?.identityImageBackUrl && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500">الصورة الحالية:</p>
+                        <div className="mt-1 relative w-24 h-16 border border-gray-200 rounded-md overflow-hidden">
+                          <img
+                            src={initialData.identityImageBackUrl}
+                            alt="صورة الهوية الخلفية"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      شعار الشركة (اختياري)
+                    </label>
+                    <input
+                      type="file"
+                      id="logoImage"
+                      name="logoImage"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      قم بتحميل شعار الشركة (PNG، JPG)
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* عرض الشعار الحالي في وضع التعديل */}
               {isEdit && initialData?.logoImageUrl && (

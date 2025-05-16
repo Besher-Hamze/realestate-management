@@ -8,6 +8,8 @@ import Card from '@/components/ui/Card';
 import { reservationsApi, servicesApi } from '@/lib/api';
 import { Reservation, ServiceOrder } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
+import Button from '@/components/ui/Button';
+import TenantServicesSummary from '@/components/dashboard/TenantServicesSummary';
 
 export default function TenantDashboardPage() {
   const { user } = useAuth();
@@ -282,83 +284,7 @@ export default function TenantDashboardPage() {
 
       {/* طلبات الخدمة الأخيرة */}
       <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">طلبات الخدمة الأخيرة</h2>
-          <div className="flex space-x-4">
-            <Link href="/tenant/services" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              عرض الكل
-            </Link>
-            <Link href="/tenant/services/create" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              إنشاء جديد
-            </Link>
-          </div>
-        </div>
-
-        {serviceOrders.length === 0 ? (
-          <Card className="p-6 text-center">
-            <p className="text-gray-500">لم تقم بتقديم أي طلبات خدمة حتى الآن.</p>
-          </Card>
-        ) : (
-          <div className="overflow-hidden shadow-sm rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    النوع
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الوصف
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    التاريخ
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الحالة
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {serviceOrders.slice(0, 5).map((service) => (
-                  <tr key={service.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end">
-                        <span>{translateServiceType(service.serviceType)}</span>
-                        <span className="mr-2 text-gray-500">({translateServiceSubtype(service.serviceSubtype)})</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="text-sm text-gray-900 line-clamp-1">
-                        {service.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(service.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                            service.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'
-                        }`}>
-                        {translateServiceStatus(service.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                      <Link href={`/tenant/services/${service.id}`} className="text-primary-600 hover:text-primary-700">
-                        عرض
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <TenantServicesSummary limit={5} />
       </div>
 
       {/* الإجراءات السريعة */}

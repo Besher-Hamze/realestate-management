@@ -93,9 +93,20 @@ export default function ServiceForm({
   } = useForm<ServiceOrderFormData, ServiceOrder>(
     async (data) => {
       if (isEdit && initialData) {
-        return servicesApi.update(initialData.id, data, attachmentFile);
+        return servicesApi.update(initialData.id, { 
+          serviceType: data.serviceType,
+          serviceSubtype: data.serviceSubtype,
+          description: data.description,
+          attachmentFile: attachmentFile
+        });
       }
-      return servicesApi.create(data, attachmentFile);
+      return servicesApi.create({
+        reservationId: data.reservationId,
+        serviceType: data.serviceType,
+        serviceSubtype: data.serviceSubtype,
+        description: data.description,
+        attachmentFile: attachmentFile
+      });
     },
     formInitialData,
     {

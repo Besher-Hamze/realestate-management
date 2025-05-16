@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import useForm from '@/hooks/useForm';
-import { Building, BuildingFormData, BuildingType } from '@/lib/types';
-import { buildingsApi } from '@/lib/api';
+import { Building, Company, CreateBuildingFormData, UpdateBuildingFormData } from '@/lib/types';
+import { buildingsApi, companiesApi } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
+import { BUILDING_TYPE_OPTIONS } from '@/constants/options';
 
 interface BuildingFormProps {
   isEdit?: boolean;
@@ -15,19 +16,16 @@ interface BuildingFormProps {
   onSuccess?: (building: Building) => void;
 }
 
-const initialBuildingData: BuildingFormData = {
+const initialBuildingData: CreateBuildingFormData = {
+  buildingNumber: '',
   name: '',
   address: '',
-  buildingType: 'apartment',
+  buildingType: 'residential',
   totalUnits: 0,
+  totalFloors: 1,
+  internalParkingSpaces: 0,
   description: '',
 };
-
-const buildingTypeOptions = [
-  { value: 'apartment', label: 'مبنى شقق' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'commercial', label: 'تجاري' },
-];
 
 export default function BuildingForm({
   isEdit = false,
@@ -35,14 +33,20 @@ export default function BuildingForm({
   onSuccess,
 }: BuildingFormProps) {
   const router = useRouter();
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
 
   // إعداد البيانات الأولية لوضع التعديل
   const formInitialData = isEdit && initialData
     ? {
+      buildingNumber: initialData.buildingNumber,
+      companyId: initialData.companyId,
       name: initialData.name,
       address: initialData.address,
       buildingType: initialData.buildingType,
       totalUnits: initialData.totalUnits,
+      totalFloors: initialData.totalFloors,
+      internalParkingSpaces: initialData.internalParkingSpaces,
       description: initialData.description,
     }
     : initialBuildingData;
@@ -54,12 +58,12 @@ export default function BuildingForm({
     isSubmitting,
     error,
     resetForm,
-  } = useForm<BuildingFormData, Building>(
+  } = useForm<CreateBuildingFormData | UpdateBuildingFormData, Building>(
     async (data) => {
       if (isEdit && initialData) {
-        return await buildingsApi.update(initialData.id, data);
+        return await buildingsApi.update(initialData.id, data as UpdateBuildingFormData);
       }
-      return await buildingsApi.create(data);
+      return await buildingsApi.create(data as CreateBuildingFormData);
     },
     formInitialData,
     {
@@ -86,7 +90,32 @@ export default function BuildingForm({
     if (isEdit && initialData) {
       resetForm();
     }
-  }, [isEdit, initialData]);
+  }, [isEdit, initialData, resetForm]);
+
+  // جلب الشركات للقائمة المنسدلة
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setIsLoadingCompanies(true);
+        const response = await companiesApi.getAll();
+
+        if (response.success) {
+          setCompanies(response.data);
+        } else {
+          toast.error(response.message || 'فشل في تحميل الشركات');
+        }
+      } catch (error) {
+        console.error('خطأ في جلب الشركات:', error);
+        toast.error('حدث خطأ أثناء تحميل الشركات');
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+
 
   return (
     <Card>
@@ -97,15 +126,29 @@ export default function BuildingForm({
           </div>
         )}
 
-        <Input
-          label="اسم المبنى"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          fullWidth
-        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="رقم المبنى"
+            id="buildingNumber"
+            name="buildingNumber"
+            value={formData.buildingNumber}
+            onChange={handleChange}
+            required
+            fullWidth
+            helpText="الرقم الخارجي للمبنى"
+          />
+
+          <Input
+            label="اسم المبنى"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            fullWidth
+          />
+        </div>
 
         <Input
           label="العنوان"
@@ -123,22 +166,48 @@ export default function BuildingForm({
           name="buildingType"
           value={formData.buildingType}
           onChange={handleChange}
-          options={buildingTypeOptions}
+          options={BUILDING_TYPE_OPTIONS}
           required
           fullWidth
         />
 
-        <Input
-          label="إجمالي الوحدات"
-          id="totalUnits"
-          name="totalUnits"
-          type="number"
-          value={formData.totalUnits.toString()}
-          onChange={handleChange}
-          min="0"
-          required
-          fullWidth
-        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Input
+            label="إجمالي الوحدات"
+            id="totalUnits"
+            name="totalUnits"
+            type="number"
+            value={(formData.totalUnits || 0).toString()}
+            onChange={handleChange}
+            min="0"
+            required
+            fullWidth
+          />
+
+          <Input
+            label="عدد الطوابق"
+            id="totalFloors"
+            name="totalFloors"
+            type="number"
+            value={(formData.totalFloors || 1).toString()}
+            onChange={handleChange}
+            min="1"
+            required
+            fullWidth
+          />
+
+          <Input
+            label="عدد المواقف الداخلية"
+            id="internalParkingSpaces"
+            name="internalParkingSpaces"
+            type="number"
+            value={(formData.internalParkingSpaces || 0).toString()}
+            onChange={handleChange}
+            min="0"
+            required
+            fullWidth
+          />
+        </div>
 
         <div className="mb-4">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">

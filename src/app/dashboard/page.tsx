@@ -5,66 +5,49 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import Card from '@/components/ui/Card';
 import { dashboardApi } from '@/lib/api';
+import {
+  GeneralStatistics,
+  UnitStatusStatistics,
+  ServiceStatusStatistics
+} from '@/lib/types';
 
-interface GeneralStatistics {
-  totalBuildings: number;
-  totalUnits: number;
-  unitsByStatus: Array<{ status: string; count: number }>;
-  activeReservations: number;
-  totalPayment: number;
-  pendingServiceOrders: number;
-}
-
-interface UnitStatusResponse {
-  unitsByCompany: Array<{
-    companyName: string;
-    totalUnits: number;
-    availableUnits: number;
-    rentedUnits: number;
-    maintenanceUnits: number;
-  }>;
-  unitsByBuilding: Array<{
-    buildingName: string;
-    companyName: string;
-    totalUnits: number;
-    availableUnits: number;
-    rentedUnits: number;
-    maintenanceUnits: number;
-  }>;
-}
-
+// New interface to match the actual API response structure
 interface ServiceStatusResponse {
-  serviceOrdersByType: Array<{
+  serviceOrdersByType: {
     serviceType: string;
     total: number;
     pending: number;
     inProgress: number;
     completed: number;
     rejected: number;
-  }>;
-  serviceOrdersByMonth: Array<{
+  }[];
+  serviceOrdersByMonth: {
     month: string;
     total: number;
     pending: number;
     inProgress: number;
     completed: number;
     rejected: number;
-  }>;
+  }[];
 }
 
-// Calculated stat types used for display
-interface UnitStatusStatistics {
-  available: number;
-  rented: number;
-  maintenance: number;
-}
-
-interface ServiceStatusStatistics {
-  pending: number;
-  inProgress: number;
-  completed: number;
-  cancelled: number; // Note: API uses 'rejected' but UI expects 'cancelled'
-}
+// Service type translation mapping
+const serviceTypeTranslations = {
+  maintenance: 'صيانة',
+  electrical: 'كهربائي',
+  plumbing: 'سباكة',
+  hvac: 'تكييف وتدفئة',
+  appliance: 'أجهزة منزلية',
+  structural: 'هيكلي',
+  general: 'عام',
+  financial: 'مالي',
+  administrative: 'إداري',
+  cleaning: 'تنظيف',
+  security: 'أمن',
+  locksmith: 'أقفال',
+  camera: 'كاميرات أمنية',
+  alarm: 'نظام إنذار'
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -72,6 +55,7 @@ export default function DashboardPage() {
   const [generalStats, setGeneralStats] = useState<GeneralStatistics | null>(null);
   const [unitStats, setUnitStats] = useState<UnitStatusStatistics | null>(null);
   const [serviceStats, setServiceStats] = useState<ServiceStatusStatistics | null>(null);
+  const [serviceResponse, setServiceResponse] = useState<ServiceStatusResponse | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -87,55 +71,38 @@ export default function DashboardPage() {
         // جلب إحصائيات حالة الوحدات (Fetch unit status statistics)
         const unitStatsResponse = await dashboardApi.getUnitsStatus();
         if (unitStatsResponse.success) {
-          // Process the unit stats to match what the UI expects
-          const unitData = unitStatsResponse.data as UnitStatusResponse;
-
-          // Calculate totals from all companies
-          const available = unitData.unitsByCompany.reduce(
-            (sum, company) => sum + company.availableUnits, 0
-          );
-          const rented = unitData.unitsByCompany.reduce(
-            (sum, company) => sum + company.rentedUnits, 0
-          );
-          const maintenance = unitData.unitsByCompany.reduce(
-            (sum, company) => sum + company.maintenanceUnits, 0
-          );
-
-          setUnitStats({
-            available,
-            rented,
-            maintenance
-          });
+          setUnitStats(unitStatsResponse.data);
         }
 
         // جلب إحصائيات حالة طلبات الخدمة (Fetch service request statistics)
         const serviceStatsResponse = await dashboardApi.getServicesStatus();
-        console.log(serviceStatsResponse);
-
         if (serviceStatsResponse.success) {
-          // Process the service stats to match what the UI expects
-          const serviceData = serviceStatsResponse.data as ServiceStatusResponse;
+          console.log(serviceStatsResponse.data);
 
-          // Calculate totals across all service types
-          const pending = serviceData.serviceOrdersByType.reduce(
-            (sum, type) => sum + type.pending, 0
-          );
-          const inProgress = serviceData.serviceOrdersByType.reduce(
-            (sum, type) => sum + type.inProgress, 0
-          );
-          const completed = serviceData.serviceOrdersByType.reduce(
-            (sum, type) => sum + type.completed, 0
-          );
-          const cancelled = serviceData.serviceOrdersByType.reduce(
-            (sum, type) => sum + type.rejected, 0
-          );
+          // Store the original response
+          setServiceResponse(serviceStatsResponse.data);
 
-          setServiceStats({
-            pending,
-            inProgress,
-            completed,
-            cancelled
-          });
+          // Calculate totals from the received data
+          const aggregated: ServiceStatusStatistics = {
+            pending: 0,
+            inProgress: 0,
+            completed: 0,
+            rejected: 0,
+            total: 0
+          };
+
+          // Sum up all service types
+          if (serviceStatsResponse.data?.serviceOrdersByType) {
+            serviceStatsResponse.data.serviceOrdersByType.forEach(item => {
+              aggregated.pending += item.pending;
+              aggregated.inProgress += item.inProgress;
+              aggregated.completed += item.completed;
+              aggregated.rejected += item.rejected;
+              aggregated.total += item.total;
+            });
+          }
+
+          setServiceStats(aggregated);
         }
       } catch (error) {
         console.error('خطأ في جلب بيانات لوحة التحكم:', error);
@@ -229,8 +196,19 @@ export default function DashboardPage() {
           />
 
           <StatCard
+            title="إجمالي المستأجرين"
+            value={generalStats?.totalTenants || 0}
+            icon={
+              <svg className="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            }
+            bgColor="bg-indigo-100"
+          />
+
+          <StatCard
             title="الحجوزات النشطة"
-            value={generalStats?.activeReservations || 0}
+            value={generalStats?.totalReservations || 0}
             icon={
               <svg className="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -239,6 +217,27 @@ export default function DashboardPage() {
             bgColor="bg-purple-100"
           />
 
+          <StatCard
+            title="طلبات الخدمة المعلقة"
+            value={generalStats?.totalPendingServices || serviceStats?.pending || 0}
+            icon={
+              <svg className="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            bgColor="bg-yellow-100"
+          />
+
+          <StatCard
+            title="الإيرادات (الشهر الحالي)"
+            value={generalStats?.totalRevenueThisMonth ? `${generalStats.totalRevenueThisMonth} $` : '$0'}
+            icon={
+              <svg className="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            bgColor="bg-emerald-100"
+          />
         </div>
       </div>
 
@@ -268,13 +267,35 @@ export default function DashboardPage() {
             bgColor="bg-blue-100"
           />
 
+          <StatCard
+            title="الوحدات قيد الصيانة"
+            value={unitStats?.maintenance || 0}
+            icon={
+              <svg className="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            }
+            bgColor="bg-yellow-100"
+          />
+
+          <StatCard
+            title="إجمالي الوحدات"
+            value={unitStats?.total || 0}
+            icon={
+              <svg className="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+              </svg>
+            }
+            bgColor="bg-gray-100"
+          />
         </div>
       </div>
 
       {/* حالة طلبات الخدمة (Service request status) */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">طلبات الخدمة</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             title="الطلبات المعلقة"
             value={serviceStats?.pending || 0}
@@ -309,8 +330,8 @@ export default function DashboardPage() {
           />
 
           <StatCard
-            title="الملغاة"
-            value={serviceStats?.cancelled || 0}
+            title="المرفوضة"
+            value={serviceStats?.rejected || 0}
             icon={
               <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -318,8 +339,108 @@ export default function DashboardPage() {
             }
             bgColor="bg-red-100"
           />
+
+          <StatCard
+            title="إجمالي الطلبات"
+            value={serviceStats?.total || 0}
+            icon={
+              <svg className="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            }
+            bgColor="bg-gray-100"
+          />
         </div>
       </div>
+
+      {/* إضافة قسم لعرض تفاصيل أنواع الخدمات */}
+      {serviceResponse?.serviceOrdersByType && serviceResponse.serviceOrdersByType.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">تفاصيل أنواع الخدمات</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {serviceResponse.serviceOrdersByType.map((serviceType, index) => (
+              <Card key={index} className="p-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                  {serviceTypeTranslations[serviceType.serviceType as keyof typeof serviceTypeTranslations] || serviceType.serviceType}
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">المعلقة:</span>
+                    <span className="font-medium">{serviceType.pending}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">قيد التنفيذ:</span>
+                    <span className="font-medium">{serviceType.inProgress}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">المكتملة:</span>
+                    <span className="font-medium">{serviceType.completed}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">المرفوضة:</span>
+                    <span className="font-medium">{serviceType.rejected}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
+                    <span>الإجمالي:</span>
+                    <span>{serviceType.total}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* إضافة قسم لعرض إحصائيات الطلبات حسب الشهر */}
+      {serviceResponse?.serviceOrdersByMonth && serviceResponse.serviceOrdersByMonth.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">إحصائيات الطلبات حسب الشهر</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {serviceResponse.serviceOrdersByMonth.map((monthData, index) => {
+              // تنسيق التاريخ بالعربية (Format date in Arabic)
+              const dateParts = monthData.month.split('-');
+              const year = dateParts[0];
+              const month = parseInt(dateParts[1]);
+
+              // أسماء الأشهر بالعربية (Arabic month names)
+              const arabicMonths = [
+                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+              ];
+
+              const formattedDate = `${arabicMonths[month - 1]} ${year}`;
+
+              return (
+                <Card key={index} className="p-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">{formattedDate}</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">المعلقة:</span>
+                      <span className="font-medium">{monthData.pending}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">قيد التنفيذ:</span>
+                      <span className="font-medium">{monthData.inProgress}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">المكتملة:</span>
+                      <span className="font-medium">{monthData.completed}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">المرفوضة:</span>
+                      <span className="font-medium">{monthData.rejected}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-200">
+                      <span>الإجمالي:</span>
+                      <span>{monthData.total}</span>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,38 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import useForm from '@/hooks/useForm';
-import { Unit, UnitFormData, UnitStatus, Building } from '@/lib/types';
+import { RealEstateUnit, Building, CreateUnitFormData, UpdateUnitFormData } from '@/lib/types';
 import { unitsApi, buildingsApi } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
+import {
+    UNIT_TYPE_OPTIONS,
+    UNIT_LAYOUT_OPTIONS,
+    UNIT_STATUS_OPTIONS,
+    FLOOR_OPTIONS
+} from '@/constants/options';
 
 interface UnitFormProps {
     isEdit?: boolean;
-    initialData?: Unit;
+    initialData?: RealEstateUnit;
     preSelectedBuildingId?: number;
-    onSuccess?: (unit: Unit) => void;
+    onSuccess?: (unit: RealEstateUnit) => void;
 }
 
-const initialUnitData: UnitFormData = {
+const initialUnitData: CreateUnitFormData = {
     buildingId: 0,
     unitNumber: '',
-    floor: 1,
+    unitType: 'apartment',
+    unitLayout: '2bhk',
+    floor: '1',
     area: 0,
-    bedrooms: 1,
     bathrooms: 1,
     price: 0,
     status: 'available',
     description: '',
 };
-
-const statusOptions = [
-    { value: 'available', label: 'متاحة' },
-    { value: 'rented', label: 'مؤجرة' },
-    { value: 'maintenance', label: 'تحت الصيانة' },
-];
 
 export default function UnitForm({
     isEdit = false,
@@ -43,69 +43,46 @@ export default function UnitForm({
     const router = useRouter();
     const [buildings, setBuildings] = useState<Building[]>([]);
     const [isLoadingBuildings, setIsLoadingBuildings] = useState(true);
-
-    // إعداد البيانات الأولية لوضع التعديل أو مع مبنى محدد مسبقًا
-    const formInitialData: UnitFormData = isEdit && initialData
-        ? {
-            buildingId: initialData.buildingId,
-            unitNumber: initialData.unitNumber,
-            floor: initialData.floor,
-            area: initialData.area,
-            bedrooms: initialData.bedrooms,
-            bathrooms: initialData.bathrooms,
-            price: initialData.price,
-            status: initialData.status,
-            description: initialData.description,
-        }
-        : preSelectedBuildingId
-            ? { ...initialUnitData, buildingId: preSelectedBuildingId }
-            : initialUnitData;
-
-    // حالة النموذج باستخدام الخطاف المخصص
-    const {
-        formData,
-        handleChange,
-        handleSubmit,
-        updateFormData,
-        isSubmitting,
-        error,
-        resetForm,
-    } = useForm<UnitFormData, Unit>(
-        async (data) => {
-            if (isEdit && initialData) {
-                return unitsApi.update(initialData.id, data);
+    const [formData, setFormData] = useState<CreateUnitFormData | UpdateUnitFormData>(
+        isEdit && initialData
+            ? {
+                unitNumber: initialData.unitNumber,
+                unitType: initialData.unitType,
+                unitLayout: initialData.unitLayout || '2bhk',
+                floor: initialData.floor,
+                area: initialData.area,
+                bathrooms: initialData.bathrooms,
+                price: initialData.price,
+                status: initialData.status,
+                description: initialData.description,
             }
-            return unitsApi.create(data);
-        },
-        formInitialData,
-        {
-            onSuccess: (data) => {
-                const successMessage = isEdit
-                    ? 'تم تحديث الوحدة بنجاح'
-                    : 'تم إنشاء الوحدة بنجاح';
-                toast.success(successMessage);
-
-                if (onSuccess) {
-                    onSuccess(data);
-                } else {
-                    router.push(`/dashboard/units/${data.id}`);
-                }
-            },
-            onError: (errorMessage) => {
-                toast.error(errorMessage || 'حدث خطأ');
-            },
-        }
+            : preSelectedBuildingId
+                ? { ...initialUnitData, buildingId: preSelectedBuildingId }
+                : initialUnitData
     );
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string>('');
 
-    // إعادة تعيين النموذج عند تغيير البيانات الأولية (للتعديل) أو عند تغيير معرف المبنى المحدد مسبقًا
+    // إعادة تعيين النموذج عند تغيير البيانات الأولية
     useEffect(() => {
         if (isEdit && initialData) {
-            resetForm();
+            setFormData({
+                unitNumber: initialData.unitNumber,
+                unitType: initialData.unitType,
+                unitLayout: initialData.unitLayout || '2bhk',
+                floor: initialData.floor,
+                area: initialData.area,
+                bathrooms: initialData.bathrooms,
+                price: initialData.price,
+                status: initialData.status,
+                description: initialData.description,
+            });
         } else if (preSelectedBuildingId) {
-            updateFormData({ buildingId: preSelectedBuildingId });
+            setFormData({ ...initialUnitData, buildingId: preSelectedBuildingId });
+        } else {
+            setFormData(initialUnitData);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEdit, initialData?.id, preSelectedBuildingId]);
+    }, [isEdit, initialData, preSelectedBuildingId]);
 
     // جلب المباني للقائمة المنسدلة
     useEffect(() => {
@@ -130,22 +107,67 @@ export default function UnitForm({
         fetchBuildings();
     }, []);
 
-    // إنشاء خيارات المباني للقائمة المنسدلة
-    const buildingOptions = buildings.map((building) => ({
-        value: building.id,
-        label: building.name,
-    }));
+    // التعامل مع تغييرات الحقول
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prevData => ({ ...prevData, [name]: value }));
+    };
 
-    // التعامل مع إدخال الأرقام للتأكد من أنها رقمية
+    // التعامل مع إدخال الأرقام
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         const numericValue = value === '' ? 0 : parseFloat(value);
-        updateFormData({ [name]: numericValue } as unknown as Partial<UnitFormData>);
+        setFormData(prevData => ({ ...prevData, [name]: numericValue }));
     };
+
+    // تقديم النموذج
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            let response;
+
+            if (isEdit && initialData) {
+                response = await unitsApi.update(initialData.id, formData as UpdateUnitFormData);
+            } else {
+                response = await unitsApi.create(formData as CreateUnitFormData);
+            }
+
+            if (response.success) {
+                const successMessage = isEdit
+                    ? 'تم تحديث الوحدة بنجاح'
+                    : 'تم إنشاء الوحدة بنجاح';
+                toast.success(successMessage);
+
+                if (onSuccess) {
+                    onSuccess(response.data);
+                } else {
+                    router.push(`/dashboard/units/${response.data.id}`);
+                }
+            } else {
+                setError(response.message || 'حدث خطأ أثناء حفظ الوحدة');
+                toast.error(response.message || 'حدث خطأ');
+            }
+        } catch (error) {
+            console.error('خطأ في حفظ الوحدة:', error);
+            setError('حدث خطأ أثناء حفظ الوحدة');
+            toast.error('حدث خطأ أثناء حفظ الوحدة');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // إنشاء خيارات المباني للقائمة المنسدلة
+    const buildingOptions = buildings.map((building) => ({
+        value: building.id,
+        label: `${building.buildingNumber} - ${building.name}`,
+    }));
 
     return (
         <Card>
-            <form onSubmit={(e) => handleSubmit(e, formData)} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
                     <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-md mb-4">
                         {error}
@@ -156,7 +178,7 @@ export default function UnitForm({
                     label="المبنى"
                     id="buildingId"
                     name="buildingId"
-                    value={formData.buildingId}
+                    value={(formData as any).buildingId}
                     onChange={handleChange}
                     options={buildingOptions}
                     disabled={isLoadingBuildings || isEdit}
@@ -177,14 +199,36 @@ export default function UnitForm({
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
+                    <Select
+                        label="نوع الوحدة"
+                        id="unitType"
+                        name="unitType"
+                        value={formData.unitType}
+                        onChange={handleChange}
+                        options={UNIT_TYPE_OPTIONS}
+                        required
+                        fullWidth
+                    />
+
+                    <Select
+                        label="تخطيط الوحدة"
+                        id="unitLayout"
+                        name="unitLayout"
+                        value={formData.unitLayout || ''}
+                        onChange={handleChange}
+                        options={UNIT_LAYOUT_OPTIONS}
+                        fullWidth
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
                         label="الطابق"
                         id="floor"
                         name="floor"
-                        type="number"
-                        value={formData.floor.toString()}
-                        onChange={handleNumberChange}
-                        min="0"
+                        value={formData.floor}
+                        onChange={handleChange}
+                        options={FLOOR_OPTIONS}
                         required
                         fullWidth
                     />
@@ -203,19 +247,7 @@ export default function UnitForm({
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="عدد غرف النوم"
-                        id="bedrooms"
-                        name="bedrooms"
-                        type="number"
-                        value={formData.bedrooms.toString()}
-                        onChange={handleNumberChange}
-                        min="0"
-                        required
-                        fullWidth
-                    />
-
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                     <Input
                         label="عدد الحمامات"
                         id="bathrooms"
@@ -253,7 +285,7 @@ export default function UnitForm({
                         name="status"
                         value={formData.status}
                         onChange={handleChange}
-                        options={statusOptions}
+                        options={UNIT_STATUS_OPTIONS}
                         required
                         fullWidth
                     />

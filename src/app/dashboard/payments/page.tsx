@@ -10,6 +10,7 @@ import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import PaymentList from '@/components/payments/PaymentList';
 import { formatCurrency } from '@/lib/utils';
+import EnhancedPaymentList from '@/components/payments/EnhancedPaymentList';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -223,12 +224,10 @@ export default function PaymentsPage() {
 
       {/* قائمة المدفوعات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
-        <PaymentList
+        <EnhancedPaymentList
           payments={filteredPayments}
           isLoading={isLoading}
-          onDelete={handleDelete}
-          refetch={fetchPayments}
-        />
+          onRefresh={() => { }} reservationId={0} />
       </div>
     </div>
   );

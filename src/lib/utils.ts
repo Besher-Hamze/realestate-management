@@ -1,162 +1,234 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import axios from "axios";
 
-// Combine class names with tailwind-merge
+/**
+ * Combines Tailwind CSS classes without conflicts
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format date to locale string
-export function formatDate(date: string | Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
+/**
+ * Get error message from various error types
+ */
+export function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    // Handle Axios errors
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      return error.response.data?.message ||
+        `Error ${error.response.status}: ${error.response.statusText}`;
+    } else if (error.request) {
+      // The request was made but no response was received
+      return 'No response received from server. Please check your connection.';
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return error.message || 'An unexpected error occurred';
+    }
+  } else if (error instanceof Error) {
+    // Handle standard Error objects
+    return error.message;
+  } else if (typeof error === 'string') {
+    // Handle string errors
+    return error;
+  } else {
+    // Handle other types of errors
+    return 'An unknown error occurred';
+  }
+}
+
+/**
+ * Format a date string to a localized date format
+ */
+export function formatDate(date: string | Date, locale: string = 'en-US'): string {
+  if (!date) return '';
+
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  return dateObj.toLocaleDateString(locale, {
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 }
 
-// Format currency
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+/**
+ * Format a date for input fields (YYYY-MM-DD)
+ */
+export function formatDateForInput(date: string | Date): string {
+  if (!date) return '';
+
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  return dateObj.toISOString().split('T')[0];
+}
+
+/**
+ * Format currency with proper locale
+ */
+export function formatCurrency(amount: number, locale: string = 'en-US', currency: string = 'USD'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency: currency
   }).format(amount);
 }
 
-// Format phone number
-export function formatPhone(phone: string): string {
+/**
+ * Format a phone number
+ */
+export function formatPhoneNumber(phone: string): string {
   if (!phone) return '';
-  
-  // Handle international format
-  if (phone.startsWith('+')) {
-    return phone;
+  return phone.replace(/(\+966)(\d{2})(\d{3})(\d{4})/, '$1 $2 $3 $4');
+
+  // Basic formatting for Saudi numbers
+  if (phone.startsWith('+966')) {
   }
-  
-  // Handle 10-digit US format
-  if (phone.length === 10) {
-    return `(${phone.substring(0, 3)}) ${phone.substring(3, 6)}-${phone.substring(6)}`;
-  }
-  
-  return phone;
+
+  // Basic formatting for other numbers
+  return phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
 }
 
-// Truncate text with ellipsis
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return `${text.substring(0, maxLength)}...`;
+/**
+ * Calculate date difference in days
+ */
+export function dateDiffInDays(date1: Date | string, date2: Date | string): number {
+  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+
+  // Convert to UTC to avoid DST issues
+  const utc1 = Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate());
+  const utc2 = Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate());
+
+  // Calculate difference in days
+  return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
 }
 
-// Get initials from name
-export function getInitials(name: string): string {
-  if (!name) return '';
-  
-  const parts = name.split(' ');
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-  
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+/**
+ * Calculate contract period in human-readable format
+ */
+export function calculateContractPeriod(startDate: string | Date, endDate: string | Date, locale: string = 'ar-SA'): string {
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
 
-// Check if user has a specific role
-export function hasRole(userRole: string, allowedRoles: string[]): boolean {
-  return allowedRoles.includes(userRole);
-}
+  // Calculate years and months difference
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
 
-// Parse query parameters
-export function parseQueryParams(
-  params: URLSearchParams | Record<string, string>
-): Record<string, string> {
-  if (params instanceof URLSearchParams) {
-    const result: Record<string, string> = {};
-    params.forEach((value, key) => {
-      result[key] = value;
-    });
-    return result;
-  }
-  
-  return params;
-}
-
-// Create URL with query parameters
-export function createUrlWithParams(
-  baseUrl: string,
-  params: Record<string, string | number | boolean | undefined>
-): string {
-  const url = new URL(baseUrl, window.location.origin);
-  
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      url.searchParams.append(key, String(value));
+  if (months < 0) {
+    months += 12;
+    if (years > 0) {
+      years--;
     }
-  });
-  
-  return url.toString();
-}
-
-// Extract error message from API response
-export function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') return error;
-  
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message);
   }
-  
-  return 'An unknown error occurred';
-}
 
-// Check if object is empty
-export function isEmptyObject(obj: Record<string, any>): boolean {
-  return Object.keys(obj).length === 0;
-}
-
-// Deep clone an object
-export function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-// Group array by property
-export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((result, item) => {
-    const groupKey = String(item[key]);
-    if (!result[groupKey]) {
-      result[groupKey] = [];
+  // Adjust for end date being before the same calendar day
+  if (end.getDate() < start.getDate()) {
+    months--;
+    if (months < 0) {
+      months += 12;
+      if (years > 0) {
+        years--;
+      }
     }
-    result[groupKey].push(item);
-    return result;
-  }, {} as Record<string, T[]>);
+  }
+
+  // Format the result based on locale
+  if (locale.startsWith('ar')) {
+    if (years > 0 && months > 0) {
+      return `${years} سنة و ${months} شهر`;
+    } else if (years > 0) {
+      return `${years} سنة`;
+    } else {
+      return `${months} شهر`;
+    }
+  } else {
+    if (years > 0 && months > 0) {
+      return `${years} year${years > 1 ? 's' : ''} and ${months} month${months > 1 ? 's' : ''}`;
+    } else if (years > 0) {
+      return `${years} year${years > 1 ? 's' : ''}`;
+    } else {
+      return `${months} month${months > 1 ? 's' : ''}`;
+    }
+  }
 }
 
-// Check if current user is authorized to access resource
-export function isAuthorized(userRole: string, requiredRoles: string[]): boolean {
-  if (!userRole || !requiredRoles || requiredRoles.length === 0) {
-    return false;
-  }
-  
+/**
+ * Check if user has permission based on role
+ */
+export function hasPermission(userRole: string, requiredRoles: string[]): boolean {
   return requiredRoles.includes(userRole);
 }
 
-// Get status color by status type
-export function getStatusColor(status: string): string {
-  const statusColors: Record<string, string> = {
-    // Reservation status
-    pending: 'bg-yellow-200 text-yellow-800',
-    active: 'bg-green-200 text-green-800',
-    expired: 'bg-gray-200 text-gray-800',
-    cancelled: 'bg-red-200 text-red-800',
-    
-    // Unit status
-    available: 'bg-green-200 text-green-800',
-    rented: 'bg-blue-200 text-blue-800',
-    
-    // Service status
-    'in-progress': 'bg-blue-200 text-blue-800',
-    completed: 'bg-green-200 text-green-800',
-    
-    // Payment status
-    paid: 'bg-green-200 text-green-800',
-    refunded: 'bg-purple-200 text-purple-800',
-    failed: 'bg-red-200 text-red-800',
+/**
+ * Generate a random string ID
+ */
+export function generateId(length: number = 8): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return result;
+}
+
+/**
+ * Get file extension from filename
+ */
+export function getFileExtension(filename: string): string {
+  return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+/**
+ * Check if file is an image
+ */
+export function isImageFile(filename: string): boolean {
+  const ext = getFileExtension(filename);
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+}
+
+/**
+ * Check if file is a document
+ */
+export function isDocumentFile(filename: string): boolean {
+  const ext = getFileExtension(filename);
+  return ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'].includes(ext);
+}
+
+/**
+ * Convert file size to readable format
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Debounce function to limit how often a function is called
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  return function (...args: Parameters<T>): void {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
+
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(later, wait);
   };
-  
-  return statusColors[status.toLowerCase()] || 'bg-gray-200 text-gray-800';
 }

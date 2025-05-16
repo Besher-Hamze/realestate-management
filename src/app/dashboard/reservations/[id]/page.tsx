@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import EnhancedPaymentList from '@/components/payments/EnhancedPaymentList';
 
 interface ReservationDetailPageProps {
   params: Promise<{
@@ -232,7 +233,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
   const paymentColumns: TableColumn<Payment>[] = [
     {
       key: 'date',
-      header: 'التاريخ',
+      header: 'تاريخ الاستحقاق',
       cell: (payment) => <span className="text-gray-700">{formatDate(payment.paymentDate)}</span>,
     },
     {
@@ -535,6 +536,12 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </div>
 
                 <div>
+                  <h3 className="text-sm font-medium text-gray-500"> كلمة المرور الإبتدائية</h3>
+                  <p className="mt-1 text-base text-gray-900">
+                    {reservation.user.copassword}
+                  </p>
+                </div>
+                <div>
                   <h3 className="text-sm font-medium text-gray-500">تاريخ الانضمام</h3>
                   <p className="mt-1 text-base text-gray-900">
                     {formatDate(reservation.user.createdAt)}
@@ -568,13 +575,11 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         </div>
 
         <Card>
-          <Table
-            data={payments}
-            columns={paymentColumns}
-            keyExtractor={(payment) => payment.id}
+          <EnhancedPaymentList
+            payments={payments}
             isLoading={isPaymentsLoading}
-            emptyMessage="لم يتم العثور على سجل مدفوعات لهذا الحجز"
-            onRowClick={(payment) => router.push(`/dashboard/payments/${payment.id}`)}
+            reservationId={reservation.id}
+            onRefresh={() => fetchPayments(reservation.id)}
           />
         </Card>
       </div>

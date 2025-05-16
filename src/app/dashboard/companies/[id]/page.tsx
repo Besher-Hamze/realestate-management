@@ -296,37 +296,92 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
       <Card>
         <div className="p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">معلومات الشركة</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">البريد الإلكتروني</p>
-                <p className="text-gray-800">{company.email || 'غير متوفر'}</p>
-              </div>
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">الهاتف</p>
-                <p className="text-gray-800">{company.phone || 'غير متوفر'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">تاريخ الإنشاء</p>
-                <p className="text-gray-800">{formatDate(company.createdAt)}</p>
-              </div>
-            </div>
-            <div>
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500">العنوان</p>
-                <p className="text-gray-800">{company.address || 'غير متوفر'}</p>
-              </div>
-              {company.logoImageUrl && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">الشعار</p>
+          <div className="overflow-hidden border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">اسم الشركة</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.name || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">نوع الشركة</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.companyType === 'owner' ? 'مالك' : 'شركة عقارية'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">البريد الإلكتروني</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.email || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">رقم الهاتف</th>
+                  <td className="px-4 py-3 text-sm text-gray-900 dir-ltr text-right">{company.phone || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">رقم الواتساب</th>
+                  <td className="px-4 py-3 text-sm text-gray-900 dir-ltr text-right">{company.whatsappNumber || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">الهاتف الثانوي</th>
+                  <td className="px-4 py-3 text-sm text-gray-900 dir-ltr text-right">{company.secondaryPhone || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">رقم السجل التجاري</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.registrationNumber || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">اسم المفوض</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.delegateName || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">العنوان</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{company.address || 'غير متوفر'}</td>
+                </tr>
+                <tr>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 bg-gray-50 w-1/3">تاريخ الإنشاء</th>
+                  <td className="px-4 py-3 text-sm text-gray-900">{formatDate(company.createdAt)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {company.logoImageUrl && (
+              <div className="border rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-500 mb-2">شعار الشركة</p>
+                <div className="flex justify-center">
                   <img
                     src={company.logoImageUrl}
                     alt={`شعار ${company.name}`}
-                    className="h-24 w-auto object-contain border rounded p-2"
+                    className="h-32 w-auto object-contain"
                   />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {company.identityImageFrontUrl && (
+              <div className="border rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-500 mb-2">بطاقة الهوية (الوجه الأمامي)</p>
+                <div className="flex justify-center">
+                  <img
+                    src={company.identityImageFrontUrl}
+                    alt="صورة الهوية الأمامية"
+                    className="h-32 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
+            {company.identityImageBackUrl && (
+              <div className="border rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-500 mb-2">بطاقة الهوية (الوجه الخلفي)</p>
+                <div className="flex justify-center">
+                  <img
+                    src={company.identityImageBackUrl}
+                    alt="صورة الهوية الخلفية"
+                    className="h-32 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -334,7 +389,9 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
       {/* قسم المديرين */}
       <Card>
         <div className="p-6">
-
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">مديرو الشركة</h2>
+          </div>
           {isManagersLoading ? (
             <div className="flex justify-center items-center h-32">
               <div className="flex flex-col items-center">

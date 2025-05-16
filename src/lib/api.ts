@@ -1,45 +1,88 @@
 import { apiRequest, formDataRequest } from '@/utils/axios';
-import {  AuthResponse, User } from './types';
+import {
+  ApiResponse,
+  AuthResponse,
+  User,
+  Building,
+  BuildingFormData,
+  Company,
+  CompanyFormData,
+  RealEstateUnit,
+  UnitFormData,
+  Reservation,
+  ReservationFormData,
+  ServiceOrder,
+  ServiceOrderFormData,
+  Payment,
+  PaymentFormData,
+  Tenant,
+  TenantFormData,
+  GeneralStatistics,
+  UnitStatusStatistics,
+  ServiceStatusStatistics
+} from './types';
 
+// Manager credentials interface for company creation response
+interface ManagerCredentials {
+  companyId: number;
+  email: string;
+  fullName: string;
+  id: number;
+  password: string;
+  role: string;
+  username: string;
+}
 
 // Authentication
 export const authApi = {
-  login: (username: string, password: string) => 
+  login: (username: string, password: string) =>
     apiRequest<AuthResponse>({
       url: '/auth/login',
       method: 'POST',
       data: { username, password },
     }),
-  
-  getMe: () => 
+
+  getMe: () =>
     apiRequest<User>({
       url: '/auth/me',
       method: 'GET',
     }),
-    
-  registerAdmin: (data: Record<string, any>) => 
-    apiRequest<any>({
+
+  registerAdmin: (data: {
+    username: string;
+    password: string;
+    fullName: string;
+    email: string;
+    phone: string;
+  }) =>
+    apiRequest<User>({
       url: '/auth/admin/register',
       method: 'POST',
       data,
     }),
-    
-  registerManager: (data: Record<string, any>) => 
-    apiRequest<any>({
+
+  registerManager: (data: {
+    username: string;
+    password: string;
+    fullName: string;
+    email: string;
+    phone: string;
+  }) =>
+    apiRequest<User>({
       url: '/auth/manager/register',
       method: 'POST',
       data,
     }),
-    
-  changePassword: (currentPassword: string, newPassword: string) => 
-    apiRequest<any>({
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<ApiResponse<null>>({
       url: '/auth/change-password',
       method: 'POST',
       data: { currentPassword, newPassword },
     }),
-    
-  resetManagerPassword: (managerId: number, newPassword: string) => 
-    apiRequest<any>({
+
+  resetManagerPassword: (managerId: number, newPassword: string) =>
+    apiRequest<ApiResponse<null>>({
       url: '/auth/reset-manager-password',
       method: 'POST',
       data: { managerId, newPassword },
@@ -48,34 +91,40 @@ export const authApi = {
 
 // Buildings
 export const buildingsApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<Building[]>({
       url: '/buildings',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+
+  getById: (id: number | string) =>
+    apiRequest<Building>({
       url: `/buildings/${id}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>) => 
-    apiRequest<any>({
+
+  getByCompany: (companyId: number | string) =>
+    apiRequest<Building[]>({
+      url: `/buildings/company/${companyId}`,
+      method: 'GET',
+    }),
+
+  create: (data: BuildingFormData) =>
+    apiRequest<Building>({
       url: '/buildings',
       method: 'POST',
       data,
     }),
-    
-  update: (id: number | string, data: Record<string, any>) => 
-    apiRequest<any>({
+
+  update: (id: number | string, data: Partial<BuildingFormData>) =>
+    apiRequest<Building>({
       url: `/buildings/${id}`,
       method: 'PUT',
       data,
     }),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/buildings/${id}`,
       method: 'DELETE',
     }),
@@ -83,36 +132,67 @@ export const buildingsApi = {
 
 // Companies
 export const companiesApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<Company[]>({
       url: '/companies',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
-      url: `/companies/${id}`,
+
+  getById: (id: number | string, includeManager: boolean = false) =>
+    apiRequest<Company>({
+      url: `/companies/${id}${includeManager ? '?includeManager=true' : ''}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>, logoImage?: File) => 
-    formDataRequest(
+
+  create: (data: CompanyFormData) =>
+    formDataRequest<{ company: Company; manager?: ManagerCredentials }>(
       '/companies',
       'POST',
-      data,
-      logoImage ? { logoImage } : undefined
+      {
+        name: data.name,
+        companyType: data.companyType,
+        email: data.email,
+        phone: data.phone,
+        whatsappNumber: data.whatsappNumber || '',
+        secondaryPhone: data.secondaryPhone || '',
+        registrationNumber: data.registrationNumber || '',
+        delegateName: data.delegateName || '',
+        address: data.address,
+        managerFullName: data.managerFullName || '',
+        managerEmail: data.managerEmail || '',
+        managerPhone: data.managerPhone || '',
+      },
+      {
+        logoImage: data.logoImage,
+        identityImageFront: data.identityImageFront,
+        identityImageBack: data.identityImageBack
+      }
     ),
-    
-  update: (id: number | string, data: Record<string, any>, logoImage?: File) => 
-    formDataRequest(
+
+  update: (id: number | string, data: Partial<CompanyFormData>) =>
+    formDataRequest<Company>(
       `/companies/${id}`,
       'PUT',
-      data,
-      logoImage ? { logoImage } : undefined
+      {
+        name: data.name,
+        companyType: data.companyType,
+        email: data.email,
+        phone: data.phone,
+        whatsappNumber: data.whatsappNumber || '',
+        secondaryPhone: data.secondaryPhone || '',
+        registrationNumber: data.registrationNumber || '',
+        delegateName: data.delegateName || '',
+        address: data.address,
+      },
+      {
+        logoImage: data.logoImage,
+        identityImageFront: data.identityImageFront,
+        identityImageBack: data.identityImageBack
+      }
     ),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/companies/${id}`,
       method: 'DELETE',
     }),
@@ -120,101 +200,237 @@ export const companiesApi = {
 
 // Units
 export const unitsApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<RealEstateUnit[]>({
       url: '/units',
       method: 'GET',
     }),
-    
-  getAvailable: () => 
-    apiRequest<any>({
-      url: '/units/available',
+
+  getAvailable: (filters?: {
+    minPrice?: number;
+    maxPrice?: number;
+    bathrooms?: number;
+    buildingId?: number;
+    unitType?: string;
+    unitLayout?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+
+    return apiRequest<RealEstateUnit[]>({
+      url: `/units/unit-building/available${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
       method: 'GET',
-    }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+    });
+  },
+
+  getById: (id: number | string) =>
+    apiRequest<RealEstateUnit>({
       url: `/units/${id}`,
       method: 'GET',
     }),
-    
-  getByBuildingId: (buildingId: number | string) => 
-    apiRequest<any>({
+
+  getByBuildingId: (buildingId: number | string) =>
+    apiRequest<RealEstateUnit[]>({
       url: `/units/building/${buildingId}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>) => 
-    apiRequest<any>({
+
+  create: (data: UnitFormData) =>
+    apiRequest<RealEstateUnit>({
       url: '/units',
       method: 'POST',
       data,
     }),
-    
-  update: (id: number | string, data: Record<string, any>) => 
-    apiRequest<any>({
+
+  update: (id: number | string, data: Partial<UnitFormData>) =>
+    apiRequest<RealEstateUnit>({
       url: `/units/${id}`,
       method: 'PUT',
       data,
     }),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/units/${id}`,
+      method: 'DELETE',
+    }),
+};
+
+// Tenants
+export const tenantsApi = {
+  getAll: () =>
+    apiRequest<Tenant[]>({
+      url: '/tenants',
+      method: 'GET',
+    }),
+
+  getById: (id: number | string) =>
+    apiRequest<Tenant>({
+      url: `/tenants/${id}`,
+      method: 'GET',
+    }),
+
+  getByUserId: (userId: number | string) =>
+    apiRequest<Tenant>({
+      url: `/tenants/user/${userId}`,
+      method: 'GET',
+    }),
+
+  getMyInfo: () =>
+    apiRequest<Tenant>({
+      url: '/tenants/my-info',
+      method: 'GET',
+    }),
+
+  create: (data: TenantFormData) => {
+    const formData = new FormData();
+
+    // Add all fields to formData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    return formDataRequest<Tenant>(
+      '/tenants',
+      'POST',
+      {},
+      {
+        identityImageFront: data.identityImageFront,
+        identityImageBack: data.identityImageBack,
+        commercialRegisterImage: data.commercialRegisterImage,
+      },
+      formData
+    );
+  },
+
+  update: (id: number | string, data: Partial<TenantFormData>) => {
+    const formData = new FormData();
+
+    // Add all fields to formData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    return formDataRequest<Tenant>(
+      `/tenants/${id}`,
+      'PUT',
+      {},
+      {
+        identityImageFront: data.identityImageFront,
+        identityImageBack: data.identityImageBack,
+        commercialRegisterImage: data.commercialRegisterImage,
+      },
+      formData
+    );
+  },
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
+      url: `/tenants/${id}`,
       method: 'DELETE',
     }),
 };
 
 // Reservations
 export const reservationsApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<Reservation[]>({
       url: '/reservations',
       method: 'GET',
     }),
-    
-  getMy: () => 
-    apiRequest<any>({
+
+  getMy: () =>
+    apiRequest<Reservation[]>({
       url: '/reservations/my',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+
+  getById: (id: number | string) =>
+    apiRequest<Reservation>({
       url: `/reservations/${id}`,
       method: 'GET',
     }),
-    
-  getByUnitId: (unitId: number | string) => 
-    apiRequest<any>({
+
+  getByUnitId: (unitId: number | string) =>
+    apiRequest<Reservation[]>({
       url: `/reservations/unit/${unitId}`,
       method: 'GET',
     }),
-    
-  getByUserId: (userId: number | string) => 
-    apiRequest<any>({
+
+  getByUserId: (userId: number | string) =>
+    apiRequest<Reservation[]>({
       url: `/reservations/user/${userId}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>, files?: Record<string, File | undefined>) => 
-    formDataRequest(
+
+  create: (data: ReservationFormData) => {
+    const formData = new FormData();
+
+    // Add all fields to formData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        // formData.append(key, value);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    return formDataRequest<Reservation>(
       '/reservations',
       'POST',
-      data,
-      files
-    ),
-    
-  update: (id: number | string, data: Record<string, any>, contractImage?: File) => 
-    formDataRequest(
+      {},
+      {
+        contractImage: data.contractImage,
+        contractPdf: data.contractPdf,
+        identityImageFront: data.identityImageFront,
+        identityImageBack: data.identityImageBack,
+        commercialRegisterImage: data.commercialRegisterImage,
+      },
+      formData
+    );
+  },
+
+  update: (id: number | string, data: Partial<ReservationFormData>) => {
+    const formData = new FormData();
+
+    // Add all fields to formData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    return formDataRequest<Reservation>(
       `/reservations/${id}`,
       'PUT',
-      data,
-      contractImage ? { contractImage } : undefined
-    ),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+      {},
+      {
+        contractImage: data.contractImage,
+        contractPdf: data.contractPdf,
+      },
+      formData
+    );
+  },
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/reservations/${id}`,
       method: 'DELETE',
     }),
@@ -222,42 +438,122 @@ export const reservationsApi = {
 
 // Service Orders
 export const servicesApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<ServiceOrder[]>({
       url: '/services',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+
+  getById: (id: number | string) =>
+    apiRequest<ServiceOrder>({
       url: `/services/${id}`,
       method: 'GET',
     }),
-    
-  getByReservationId: (reservationId: number | string) => 
-    apiRequest<any>({
+
+  getByReservationId: (reservationId: number | string) =>
+    apiRequest<ServiceOrder[]>({
       url: `/services/reservation/${reservationId}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>, attachmentFile?: File) => 
-    formDataRequest(
-      '/services',
-      'POST',
-      data,
-      attachmentFile ? { attachmentFile } : undefined
-    ),
-    
-  update: (id: number | string, data: Record<string, any>, attachmentFile?: File) => 
-    formDataRequest(
-      `/services/${id}`,
-      'PUT',
-      data,
-      attachmentFile ? { attachmentFile } : undefined
-    ),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+
+  // Service history endpoint
+  getServiceHistory: (serviceId: number | string) =>
+    apiRequest<{ status: string, date: string, note?: string }[]>({
+      url: `/services/${serviceId}/history`,
+      method: 'GET',
+    }),
+
+  // Added service comments API
+  getServiceComments: (serviceId: number | string) =>
+    apiRequest<any[]>({
+      url: `/services/${serviceId}/comments`,
+      method: 'GET',
+    }),
+
+  // Add a comment to a service
+  addServiceComment: (serviceId: number | string, message: string, file?: File) => {
+    const formData = new FormData();
+    formData.append('message', message);
+
+    if (file) {
+      formData.append('attachment', file);
+    }
+
+    return apiRequest<any>({
+      url: `/services/${serviceId}/comments`,
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  create: (data: ServiceOrderFormData) => {
+    try {
+      return formDataRequest<ServiceOrder>(
+        '/services',
+        'POST',
+        {
+          reservationId: data.reservationId,
+          serviceType: data.serviceType,
+          serviceSubtype: data.serviceSubtype,
+          description: data.description,
+        },
+        data.attachmentFile ? { attachmentFile: data.attachmentFile } : undefined
+      );
+    } catch (error) {
+      console.error('Error creating service order:', error);
+      return Promise.resolve({
+        success: false,
+        message: 'Failed to create service order. Please try again.',
+        data: {} as ServiceOrder,
+      });
+    }
+  },
+
+  update: (id: number | string, data: Partial<ServiceOrderFormData>) => {
+    try {
+      return formDataRequest<ServiceOrder>(
+        `/services/${id}`,
+        'PUT',
+        {
+          serviceType: data.serviceType,
+          serviceSubtype: data.serviceSubtype,
+          description: data.description,
+        },
+        data.attachmentFile ? { attachmentFile: data.attachmentFile } : undefined
+      );
+    } catch (error) {
+      console.error('Error updating service order:', error);
+      return Promise.resolve({
+        success: false,
+        message: 'Failed to update service order. Please try again.',
+        data: {} as ServiceOrder,
+      });
+    }
+  },
+
+  // Added status update method
+  updateStatus: (id: number | string, status: string, note?: string) => {
+    try {
+      return apiRequest<ServiceOrder>({
+        url: `/services/${id}/status`,
+        method: 'PATCH',
+        data: { status, note },
+      });
+    } catch (error) {
+      console.error('Error updating service status:', error);
+      return Promise.resolve({
+        success: false,
+        message: 'Failed to update service status. Please try again.',
+        data: {} as ServiceOrder,
+      });
+    }
+  },
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/services/${id}`,
       method: 'DELETE',
     }),
@@ -265,42 +561,77 @@ export const servicesApi = {
 
 // Payments
 export const paymentsApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<Payment[]>({
       url: '/payments',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+
+  getById: (id: number | string) =>
+    apiRequest<Payment>({
       url: `/payments/${id}`,
       method: 'GET',
     }),
-    
-  getByReservationId: (reservationId: number | string) => 
-    apiRequest<any>({
+
+  getByReservationId: (reservationId: number | string) =>
+    apiRequest<Payment[]>({
       url: `/payments/reservation/${reservationId}`,
       method: 'GET',
     }),
-    
-  create: (data: Record<string, any>, checkImage?: File) => 
-    formDataRequest(
+
+  create: (data: PaymentFormData, files?: { checkImage?: File }) => {
+    // If there are no files, use regular API request
+    if (!files || !files.checkImage) {
+      return apiRequest<Payment>({
+        url: '/payments',
+        method: 'POST',
+        data,
+      });
+    }
+
+    // If we have files, use FormData for uploading
+    return formDataRequest<Payment>(
       '/payments',
       'POST',
-      data,
-      checkImage ? { checkImage } : undefined
-    ),
-    
-  update: (id: number | string, data: Record<string, any>, checkImage?: File) => 
-    formDataRequest(
+      {
+        reservationId: data.reservationId,
+        amount: data.amount,
+        paymentDate: data.paymentDate,
+        paymentMethod: data.paymentMethod,
+        status: data.status,
+        notes: data.notes,
+      },
+      { checkImage: files.checkImage }
+    );
+  },
+
+  update: (id: number | string, data: Partial<PaymentFormData>, files?: { checkImage?: File }) => {
+    // If there are no files, use regular API request for simple updates
+    if (!files || !files.checkImage) {
+      return apiRequest<Payment>({
+        url: `/payments/${id}`,
+        method: 'PUT',
+        data,
+      });
+    }
+
+    // If we have files, use FormData for uploading
+    return formDataRequest<Payment>(
       `/payments/${id}`,
       'PUT',
-      data,
-      checkImage ? { checkImage } : undefined
-    ),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+      {
+        amount: data.amount,
+        paymentDate: data.paymentDate,
+        paymentMethod: data.paymentMethod,
+        status: data.status,
+        notes: data.notes,
+      },
+      { checkImage: files.checkImage }
+    );
+  },
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/payments/${id}`,
       method: 'DELETE',
     }),
@@ -308,28 +639,41 @@ export const paymentsApi = {
 
 // Users
 export const usersApi = {
-  getAll: () => 
-    apiRequest<any>({
+  getAll: () =>
+    apiRequest<User[]>({
       url: '/users',
       method: 'GET',
     }),
-    
-  getById: (id: number | string) => 
-    apiRequest<any>({
+
+  getById: (id: number | string) =>
+    apiRequest<User>({
       url: `/users/${id}`,
       method: 'GET',
     }),
-    
-  update: (id: number | string, data: Record<string, any>, files?: Record<string, File | undefined>) => 
-    formDataRequest(
+
+  update: (id: number | string, data: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    identityImage?: File;
+    commercialRegisterImage?: File;
+  }) =>
+    formDataRequest<User>(
       `/users/${id}`,
       'PUT',
-      data,
-      files
+      {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+      },
+      {
+        identityImage: data.identityImage,
+        commercialRegisterImage: data.commercialRegisterImage,
+      }
     ),
-    
-  delete: (id: number | string) => 
-    apiRequest<any>({
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
       url: `/users/${id}`,
       method: 'DELETE',
     }),
@@ -337,20 +681,20 @@ export const usersApi = {
 
 // Dashboard
 export const dashboardApi = {
-  getStatistics: () => 
-    apiRequest<any>({
+  getStatistics: () =>
+    apiRequest<GeneralStatistics>({
       url: '/dashboard/statistics',
       method: 'GET',
     }),
-    
-  getUnitsStatus: () => 
-    apiRequest<any>({
+
+  getUnitsStatus: () =>
+    apiRequest<UnitStatusStatistics>({
       url: '/dashboard/units-status',
       method: 'GET',
     }),
-    
-  getServicesStatus: () => 
-    apiRequest<any>({
+
+  getServicesStatus: () =>
+    apiRequest<ServiceStatusStatistics>({
       url: '/dashboard/services-status',
       method: 'GET',
     }),

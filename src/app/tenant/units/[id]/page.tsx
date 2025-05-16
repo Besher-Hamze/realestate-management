@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Unit, Reservation, ServiceOrder } from '@/lib/types';
-import { unitsApi, reservationsApi, servicesApi } from '@/lib/api';
+import { Unit, Reservation, ServiceOrder, Payment } from '@/lib/types';
+import { unitsApi, reservationsApi, servicesApi, paymentsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Table, { TableColumn } from '@/components/ui/Table';
+import EnhancedPaymentList from '@/components/payments/EnhancedPaymentList';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface TenantUnitDetailPageProps {
@@ -24,15 +25,17 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
   const [unit, setUnit] = useState<Unit | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isServiceOrdersLoading, setIsServiceOrdersLoading] = useState(true);
+  const [isPaymentsLoading, setIsPaymentsLoading] = useState(true);
 
-  // جلب تفاصيل الوحدة عند تحميل المكون
+  // Fetch unit details on component mount
   useEffect(() => {
     fetchUnit();
   }, [id]);
 
-  // جلب بيانات الوحدة
+  // Fetch unit data
   const fetchUnit = async () => {
     try {
       setIsLoading(true);
@@ -54,31 +57,39 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
     }
   };
 
-  // جلب الحجز لهذه الوحدة
+  // Fetch reservation for this unit
   const fetchReservation = async () => {
     try {
       const myReservationsResponse = await reservationsApi.getMy();
 
       if (myReservationsResponse.success) {
-        // البحث عن الحجز النشط لهذه الوحدة
+        // Find the active reservation for this unit
         const unitReservation = myReservationsResponse.data.find(
-          res => res.unitId === parseInt(id) && res.status === 'active'
+          (res) => res.unitId === parseInt(id) && res.status === 'active'
         );
 
         if (unitReservation) {
           setReservation(unitReservation);
           fetchServiceOrders(unitReservation.id);
+          fetchPayments(unitReservation.id);
+        } else {
+          setPayments([]);
+          setIsPaymentsLoading(false);
         }
       } else {
         toast.error(myReservationsResponse.message || 'فشل في جلب تفاصيل الحجز');
+        setPayments([]);
+        setIsPaymentsLoading(false);
       }
     } catch (error) {
       console.error('خطأ في جلب الحجز:', error);
       toast.error('حدث خطأ أثناء جلب تفاصيل الحجز');
+      setPayments([]);
+      setIsPaymentsLoading(false);
     }
   };
 
-  // جلب طلبات الخدمة لهذا الحجز
+  // Fetch service orders for this reservation
   const fetchServiceOrders = async (reservationId: number) => {
     try {
       setIsServiceOrdersLoading(true);
@@ -97,7 +108,26 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
     }
   };
 
-  // تعريف أعمدة جدول طلبات الخدمة
+  // Fetch payments for this reservation
+  const fetchPayments = async (reservationId: number) => {
+    try {
+      setIsPaymentsLoading(true);
+      const response = await paymentsApi.getByReservationId(reservationId);
+
+      if (response.success) {
+        setPayments(response.data);
+      } else {
+        toast.error(response.message || 'فشل في جلب المدفوعات');
+      }
+    } catch (error) {
+      console.error('خطأ في جلب المدفوعات:', error);
+      toast.error('حدث خطأ أثناء جلب المدفوعات');
+    } finally {
+      setIsPaymentsLoading(false);
+    }
+  };
+
+  // Define columns for service orders table
   const serviceOrderColumns: TableColumn<ServiceOrder>[] = [
     {
       key: 'type',
@@ -154,7 +184,7 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
     },
   ];
 
-  // عرض حالة التحميل
+  // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -185,7 +215,7 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
     );
   }
 
-  // عرض حالة عدم العثور على الوحدة
+  // Show unit not found state
   if (!unit) {
     return (
       <div className="text-center py-12" dir="rtl">
@@ -200,7 +230,7 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
 
   return (
     <div className="space-y-6" dir="rtl">
-      {/* الرأس مع التنقل والإجراءات */}
+      {/* Header with navigation and actions */}
       <div className="flex flex-col space-y-4">
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2 flex-row-reverse">
@@ -237,9 +267,9 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
         </div>
       </div>
 
-      {/* تفاصيل الوحدة */}
+      {/* Unit details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* المعلومات الرئيسية */}
+        {/* Main information */}
         <Card className="lg:col-span-2">
           <div className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -307,7 +337,7 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
           </div>
         </Card>
 
-        {/* معلومات الإيجار */}
+        {/* Lease information */}
         <Card>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات الإيجار</h2>
@@ -375,7 +405,24 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
         </Card>
       </div>
 
-      {/* طلبات الخدمة */}
+      {/* Payments */}
+      {reservation && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">سجل المدفوعات</h2>
+          </div>
+          <Card>
+            <EnhancedPaymentList
+              payments={payments}
+              isLoading={isPaymentsLoading}
+              onRefresh={() => fetchPayments(reservation.id)} reservationId={reservation.id}
+              tenant={true}
+            />
+          </Card>
+        </div>
+      )}
+
+      {/* Service orders */}
       {reservation && (
         <div>
           <div className="flex justify-between items-center mb-4">
