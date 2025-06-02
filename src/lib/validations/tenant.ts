@@ -1,135 +1,196 @@
+import {
+  createRequiredRule,
+  createMinLengthRule,
+  createMaxLengthRule,
+  createEmailRule,
+  createPhoneRule,
+  createIdNumberRule,
+  createFileValidationRule,
+  FILE_TYPES,
+  FILE_SIZE_LIMITS,
+  VALIDATION_MESSAGES,
+} from './common';
+
 export const tenantValidation = {
-  // User account details
   username: {
-    required: 'اسم المستخدم مطلوب',
-    minLength: {
-      value: 3,
-      message: 'يجب أن يحتوي اسم المستخدم على 3 أحرف على الأقل'
-    }
+    ...createRequiredRule('اسم المستخدم مطلوب'),
+    ...createMinLengthRule(3, 'اسم المستخدم قصير جداً'),
+    ...createMaxLengthRule(50, 'اسم المستخدم طويل جداً'),
+    validate: {
+      validUsername: (value: string) => {
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        return usernameRegex.test(value) || 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام و _ فقط';
+      },
+    },
   },
+  
   password: {
-    required: 'كلمة المرور مطلوبة',
-    minLength: {
-      value: 6,
-      message: 'يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل'
-    }
+    ...createRequiredRule('كلمة المرور مطلوبة'),
+    ...createMinLengthRule(8, 'كلمة المرور قصيرة جداً (8 أحرف على الأقل)'),
+    validate: {
+      strongPassword: (value: string) => {
+        if (!/(?=.*[a-zA-Z])/.test(value)) {
+          return 'كلمة المرور يجب أن تحتوي على أحرف';
+        }
+        if (!/(?=.*\d)/.test(value)) {
+          return 'كلمة المرور يجب أن تحتوي على أرقام';
+        }
+        return true;
+      },
+    },
   },
   
-  // Personal information
   fullName: {
-    required: 'الاسم الكامل مطلوب',
-    minLength: {
-      value: 3,
-      message: 'يجب أن يحتوي الاسم الكامل على 3 أحرف على الأقل'
-    }
+    ...createRequiredRule('الاسم الكامل مطلوب'),
+    ...createMinLengthRule(2, 'الاسم الكامل قصير جداً'),
+    ...createMaxLengthRule(100, 'الاسم الكامل طويل جداً'),
   },
+  
   email: {
-    required: 'البريد الإلكتروني مطلوب',
-    pattern: {
-      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      message: 'البريد الإلكتروني غير صالح'
-    }
+    ...createRequiredRule('البريد الإلكتروني مطلوب'),
+    ...createEmailRule(),
   },
+  
   phone: {
-    required: 'رقم الهاتف مطلوب',
-    pattern: {
-      value: /^[0-9+\-\s()]{8,}$/,
-      message: 'رقم الهاتف غير صالح'
-    }
+    ...createRequiredRule('رقم الهاتف مطلوب'),
+    ...createPhoneRule(),
   },
+  
   whatsappNumber: {
-    pattern: {
-      value: /^[0-9+\-\s()]{8,}$/,
-      message: 'رقم الواتساب غير صالح'
-    }
+    ...createRequiredRule('رقم الواتساب مطلوب'),
+    ...createPhoneRule('رقم الواتساب غير صالح'),
   },
+  
   idNumber: {
-    required: 'رقم الهوية مطلوب',
-    minLength: {
-      value: 4,
-      message: 'يجب أن يحتوي رقم الهوية على 4 أحرف على الأقل'
-    }
+    ...createRequiredRule('رقم الهوية مطلوب'),
+    ...createIdNumberRule(),
   },
   
-  // Tenant type and business information
   tenantType: {
-    required: 'نوع المستأجر مطلوب'
-  },
-  businessActivities: {
-    maxLength: {
-      value: 500,
-      message: 'يجب أن لا تتجاوز الأنشطة التجارية 500 حرف'
-    }
-  },
-  contactPerson: {
-    maxLength: {
-      value: 100,
-      message: 'يجب أن لا يتجاوز اسم جهة الاتصال 100 حرف'
-    }
-  },
-  contactPosition: {
-    maxLength: {
-      value: 100,
-      message: 'يجب أن لا يتجاوز المنصب الوظيفي 100 حرف'
-    }
-  },
-  notes: {
-    maxLength: {
-      value: 1000,
-      message: 'يجب أن لا تتجاوز الملاحظات 1000 حرف'
-    }
+    ...createRequiredRule('نوع المستأجر مطلوب'),
+    validate: {
+      validType: (value: string) => {
+        const validTypes = [
+          'partnership',
+          'commercial_register',
+          'person',
+          'embassy',
+          'foreign_company',
+          'government',
+          'inheritance',
+          'civil_registry'
+        ];
+        return validTypes.includes(value) || 'نوع المستأجر غير صالح';
+      },
+    },
   },
   
-  // Document uploads
+  businessActivities: {
+    ...createMaxLengthRule(500, 'الأنشطة التجارية طويلة جداً'),
+  },
+  
+  contactPerson: {
+    ...createMaxLengthRule(100, 'اسم الشخص المسؤول طويل جداً'),
+  },
+  
+  contactPosition: {
+    ...createMaxLengthRule(100, 'منصب الشخص المسؤول طويل جداً'),
+  },
+  
+  notes: {
+    ...createMaxLengthRule(1000, 'الملاحظات طويلة جداً'),
+  },
+  
   identityImageFront: {
-    validate: {
-      acceptedFormats: (file: File | undefined) => {
-        if (!file) return true;
-        
-        const acceptedFormats = ['image/jpeg', 'image/png', 'image/gif'];
-        return acceptedFormats.includes(file.type) || 'يرجى تحميل صورة بتنسيق صالح (JPEG/PNG/GIF)';
-      },
-      fileSize: (file: File | undefined) => {
-        if (!file) return true;
-        
-        // Max size: 5MB
-        const maxSize = 5 * 1024 * 1024;
-        return file.size <= maxSize || 'حجم الملف كبير جدًا، الحد الأقصى هو 5 ميجابايت';
-      }
-    }
+    ...createRequiredRule('صورة الوجه الأمامي للهوية مطلوبة'),
+    ...createFileValidationRule(
+      FILE_TYPES.IMAGES,
+      FILE_SIZE_LIMITS.IMAGE,
+      'يرجى تحميل صورة واضحة للوجه الأمامي للهوية (JPEG, PNG فقط)'
+    ),
   },
+  
   identityImageBack: {
-    validate: {
-      acceptedFormats: (file: File | undefined) => {
-        if (!file) return true;
-        
-        const acceptedFormats = ['image/jpeg', 'image/png', 'image/gif'];
-        return acceptedFormats.includes(file.type) || 'يرجى تحميل صورة بتنسيق صالح (JPEG/PNG/GIF)';
-      },
-      fileSize: (file: File | undefined) => {
-        if (!file) return true;
-        
-        // Max size: 5MB
-        const maxSize = 5 * 1024 * 1024;
-        return file.size <= maxSize || 'حجم الملف كبير جدًا، الحد الأقصى هو 5 ميجابايت';
-      }
-    }
+    ...createRequiredRule('صورة الوجه الخلفي للهوية مطلوبة'),
+    ...createFileValidationRule(
+      FILE_TYPES.IMAGES,
+      FILE_SIZE_LIMITS.IMAGE,
+      'يرجى تحميل صورة واضحة للوجه الخلفي للهوية (JPEG, PNG فقط)'
+    ),
   },
+  
   commercialRegisterImage: {
-    validate: {
-      acceptedFormats: (file: File | undefined) => {
-        if (!file) return true;
-        
-        const acceptedFormats = ['image/jpeg', 'image/png', 'image/gif'];
-        return acceptedFormats.includes(file.type) || 'يرجى تحميل صورة بتنسيق صالح (JPEG/PNG/GIF)';
-      },
-      fileSize: (file: File | undefined) => {
-        if (!file) return true;
-        
-        // Max size: 5MB
-        const maxSize = 5 * 1024 * 1024;
-        return file.size <= maxSize || 'حجم الملف كبير جدًا، الحد الأقصى هو 5 ميجابايت';
-      }
-    }
-  }
+    ...createFileValidationRule(
+      FILE_TYPES.ALL_DOCUMENTS,
+      FILE_SIZE_LIMITS.DOCUMENT,
+      'يرجى تحميل صورة أو ملف السجل التجاري (PDF, JPEG, PNG)'
+    ),
+  },
 };
+
+// Helper function to validate complete tenant form
+export const validateTenantForm = (data: any): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  // Required field checks
+  if (!data.username?.trim()) {
+    errors.username = 'اسم المستخدم مطلوب';
+  }
+  
+  if (!data.password?.trim()) {
+    errors.password = 'كلمة المرور مطلوبة';
+  }
+  
+  if (!data.fullName?.trim()) {
+    errors.fullName = 'الاسم الكامل مطلوب';
+  }
+  
+  if (!data.email?.trim()) {
+    errors.email = 'البريد الإلكتروني مطلوب';
+  }
+  
+  if (!data.phone?.trim()) {
+    errors.phone = 'رقم الهاتف مطلوب';
+  }
+  
+  if (!data.whatsappNumber?.trim()) {
+    errors.whatsappNumber = 'رقم الواتساب مطلوب';
+  }
+  
+  if (!data.idNumber?.trim()) {
+    errors.idNumber = 'رقم الهوية مطلوب';
+  }
+  
+  if (!data.tenantType) {
+    errors.tenantType = 'نوع المستأجر مطلوب';
+  }
+
+  // File validation
+  if (!data.identityImageFront) {
+    errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
+  }
+  
+  if (!data.identityImageBack) {
+    errors.identityImageBack = 'صورة الوجه الخلفي للهوية مطلوبة';
+  }
+
+  // Conditional validation for commercial register
+  const businessTypes = ['partnership', 'commercial_register', 'foreign_company'];
+  if (businessTypes.includes(data.tenantType) && !data.commercialRegisterImage) {
+    errors.commercialRegisterImage = 'صورة السجل التجاري مطلوبة لهذا النوع من المستأجرين';
+  }
+
+  return errors;
+};
+
+// Tenant type options for dropdown
+export const TENANT_TYPE_OPTIONS = [
+  { value: 'person', label: 'شخص طبيعي' },
+  { value: 'partnership', label: 'شراكة' },
+  { value: 'commercial_register', label: 'سجل تجاري' },
+  { value: 'embassy', label: 'سفارة' },
+  { value: 'foreign_company', label: 'شركة أجنبية' },
+  { value: 'government', label: 'حكومية' },
+  { value: 'inheritance', label: 'ميراث' },
+  { value: 'civil_registry', label: 'سجل مدني' },
+];

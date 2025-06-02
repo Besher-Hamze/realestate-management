@@ -1,65 +1,139 @@
+import {
+  createRequiredRule,
+  createMinLengthRule,
+  createMaxLengthRule,
+  createEmailRule,
+  createPhoneRule,
+  createFileValidationRule,
+  FILE_TYPES,
+  FILE_SIZE_LIMITS,
+  VALIDATION_MESSAGES,
+} from './common';
+
 export const companyValidation = {
   name: {
-    required: 'اسم الشركة مطلوب',
-    minLength: {
-      value: 3,
-      message: 'يجب أن يحتوي اسم الشركة على 3 أحرف على الأقل'
-    }
+    ...createRequiredRule('اسم الشركة مطلوب'),
+    ...createMinLengthRule(2, 'يجب أن يحتوي اسم الشركة على حرفين على الأقل'),
+    ...createMaxLengthRule(100, 'اسم الشركة طويل جداً'),
   },
+  
+  companyType: {
+    ...createRequiredRule('نوع الشركة مطلوب'),
+  },
+  
   email: {
-    required: 'البريد الإلكتروني مطلوب',
-    pattern: {
-      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      message: 'البريد الإلكتروني غير صالح'
-    }
+    ...createRequiredRule('البريد الإلكتروني مطلوب'),
+    ...createEmailRule(),
   },
+  
   phone: {
-    required: 'رقم الهاتف مطلوب',
-    pattern: {
-      value: /^[0-9+\-\s()]{8,}$/,
-      message: 'رقم الهاتف غير صالح'
-    }
+    ...createRequiredRule('رقم الهاتف مطلوب'),
+    ...createPhoneRule(),
   },
+  
+  whatsappNumber: {
+    ...createPhoneRule('رقم الواتساب غير صالح'),
+  },
+  
+  secondaryPhone: {
+    ...createPhoneRule('رقم الهاتف الثانوي غير صالح'),
+  },
+  
   address: {
-    required: 'عنوان الشركة مطلوب',
-    minLength: {
-      value: 5,
-      message: 'يجب أن يحتوي العنوان على 5 أحرف على الأقل'
-    }
+    ...createRequiredRule('عنوان الشركة مطلوب'),
+    ...createMinLengthRule(5, 'يجب أن يحتوي العنوان على 5 أحرف على الأقل'),
+    ...createMaxLengthRule(255, 'العنوان طويل جداً'),
   },
+  
+  registrationNumber: {
+    ...createMinLengthRule(5, 'رقم التسجيل قصير جداً'),
+    ...createMaxLengthRule(50, 'رقم التسجيل طويل جداً'),
+  },
+  
+  delegateName: {
+    ...createMinLengthRule(2, 'اسم المفوض قصير جداً'),
+    ...createMaxLengthRule(100, 'اسم المفوض طويل جداً'),
+  },
+  
   managerFullName: {
-    minLength: {
-      value: 3,
-      message: 'يجب أن يحتوي اسم المدير على 3 أحرف على الأقل'
-    }
+    ...createMinLengthRule(2, 'اسم المدير قصير جداً'),
+    ...createMaxLengthRule(100, 'اسم المدير طويل جداً'),
   },
+  
   managerEmail: {
-    pattern: {
-      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      message: 'البريد الإلكتروني للمدير غير صالح'
-    }
+    ...createEmailRule('البريد الإلكتروني للمدير غير صالح'),
   },
+  
   managerPhone: {
-    pattern: {
-      value: /^[0-9+\-\s()]{8,}$/,
-      message: 'رقم هاتف المدير غير صالح'
-    }
+    ...createPhoneRule('رقم هاتف المدير غير صالح'),
   },
+  
   logoImage: {
-    validate: {
-      acceptedFormats: (file: File | undefined) => {
-        if (!file) return true;
-        
-        const acceptedFormats = ['image/jpeg', 'image/png', 'image/gif'];
-        return acceptedFormats.includes(file.type) || 'يرجى تحميل صورة بتنسيق صالح (JPEG/PNG/GIF)';
-      },
-      fileSize: (file: File | undefined) => {
-        if (!file) return true;
-        
-        // Max size: 5MB
-        const maxSize = 5 * 1024 * 1024;
-        return file.size <= maxSize || 'حجم الملف كبير جدًا، الحد الأقصى هو 5 ميجابايت';
-      }
+    ...createFileValidationRule(
+      FILE_TYPES.IMAGES,
+      FILE_SIZE_LIMITS.IMAGE,
+      'يرجى تحميل صورة شعار بتنسيق صالح (JPEG, PNG, GIF, WebP)'
+    ),
+  },
+  
+  identityImageFront: {
+    ...createFileValidationRule(
+      FILE_TYPES.IMAGES,
+      FILE_SIZE_LIMITS.IMAGE,
+      'يرجى تحميل صورة واضحة للوجه الأمامي للهوية (JPEG, PNG فقط)'
+    ),
+  },
+  
+  identityImageBack: {
+    ...createFileValidationRule(
+      FILE_TYPES.IMAGES,
+      FILE_SIZE_LIMITS.IMAGE,
+      'يرجى تحميل صورة واضحة للوجه الخلفي للهوية (JPEG, PNG فقط)'
+    ),
+  },
+};
+
+// Helper function to validate complete company form
+export const validateCompanyForm = (data: any): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  // Required field checks
+  if (!data.name?.trim()) {
+    errors.name = 'اسم الشركة مطلوب';
+  }
+  
+  if (!data.companyType) {
+    errors.companyType = 'نوع الشركة مطلوب';
+  }
+  
+  if (!data.email?.trim()) {
+    errors.email = 'البريد الإلكتروني مطلوب';
+  }
+  
+  if (!data.phone?.trim()) {
+    errors.phone = 'رقم الهاتف مطلوب';
+  }
+  
+  if (!data.address?.trim()) {
+    errors.address = 'عنوان الشركة مطلوب';
+  }
+
+  // Conditional validation for manager fields
+  const hasManagerInfo = data.managerFullName || data.managerEmail || data.managerPhone;
+  
+  if (hasManagerInfo) {
+    if (!data.managerFullName?.trim()) {
+      errors.managerFullName = 'اسم المدير مطلوب عند إضافة بيانات المدير';
+    }
+    
+    if (!data.managerEmail?.trim()) {
+      errors.managerEmail = 'البريد الإلكتروني للمدير مطلوب عند إضافة بيانات المدير';
+    }
+    
+    if (!data.managerPhone?.trim()) {
+      errors.managerPhone = 'رقم هاتف المدير مطلوب عند إضافة بيانات المدير';
     }
   }
+
+  return errors;
 };
