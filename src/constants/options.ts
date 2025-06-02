@@ -6,7 +6,7 @@ export const COMPANY_TYPE_OPTIONS = [
 export const BUILDING_TYPE_OPTIONS = [
   { value: 'residential', label: 'سكني' },
   { value: 'commercial', label: 'تجاري' },
-  { value: 'mixed', label: 'مختلط (سكني وتجاري)' }
+  { value: 'mixed', label: ' (سكني وتجاري)' }
 ];
 
 export const UNIT_TYPE_OPTIONS = [

@@ -25,7 +25,7 @@ const initialUnitData: CreateUnitFormData = {
     buildingId: 0,
     unitNumber: '',
     unitType: 'apartment',
-    unitLayout: '2bhk',
+    unitLayout: null,
     floor: '1',
     area: 0,
     bathrooms: 1,
@@ -48,7 +48,7 @@ export default function UnitForm({
             ? {
                 unitNumber: initialData.unitNumber,
                 unitType: initialData.unitType,
-                unitLayout: initialData.unitLayout || '2bhk',
+                unitLayout: initialData.unitLayout,
                 floor: initialData.floor,
                 area: initialData.area,
                 bathrooms: initialData.bathrooms,
@@ -69,7 +69,7 @@ export default function UnitForm({
             setFormData({
                 unitNumber: initialData.unitNumber,
                 unitType: initialData.unitType,
-                unitLayout: initialData.unitLayout || '2bhk',
+                unitLayout: initialData.unitLayout,
                 floor: initialData.floor,
                 area: initialData.area,
                 bathrooms: initialData.bathrooms,
@@ -116,7 +116,7 @@ export default function UnitForm({
     // التعامل مع إدخال الأرقام
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        const numericValue = value === '' ? 0 : parseFloat(value);
+        const numericValue = value === '' ? 1 : parseFloat(value);
         setFormData(prevData => ({ ...prevData, [name]: numericValue }));
     };
 
@@ -130,8 +130,14 @@ export default function UnitForm({
             let response;
 
             if (isEdit && initialData) {
+                if (formData.unitType != "apartment") {
+                    formData.unitLayout = null;
+                }
                 response = await unitsApi.update(initialData.id, formData as UpdateUnitFormData);
             } else {
+                if (formData.unitType != "apartment") {
+                    formData.unitLayout = null;
+                }
                 response = await unitsApi.create(formData as CreateUnitFormData);
             }
 
@@ -210,7 +216,7 @@ export default function UnitForm({
                         fullWidth
                     />
 
-                    <Select
+                    {formData.unitType == "apartment" && <Select
                         label="تخطيط الوحدة"
                         id="unitLayout"
                         name="unitLayout"
@@ -218,7 +224,7 @@ export default function UnitForm({
                         onChange={handleChange}
                         options={UNIT_LAYOUT_OPTIONS}
                         fullWidth
-                    />
+                    />}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -255,7 +261,7 @@ export default function UnitForm({
                         type="number"
                         value={formData.bathrooms.toString()}
                         onChange={handleNumberChange}
-                        min="0"
+                        min="1"
                         step="1"
                         required
                         fullWidth
