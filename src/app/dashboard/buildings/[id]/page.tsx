@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate } from '@/lib/utils';
+import { BUILDING_TYPE_OPTIONS } from '@/constants';
 
 interface BuildingDetailPageProps {
   params: Promise<{
@@ -254,7 +255,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
               <div>
                 <h3 className="text-sm font-medium text-gray-500">نوع المبنى</h3>
                 <p className="mt-1 text-base text-gray-900 capitalize">
-                  {building.buildingType === 'apartment' ? 'مبنى شقق' : 'فيلا'}
+                  {BUILDING_TYPE_OPTIONS.find(e => e.value == building.buildingType)?.label}
                 </p>
               </div>
 

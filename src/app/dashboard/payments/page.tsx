@@ -227,7 +227,7 @@ export default function PaymentsPage() {
         <EnhancedPaymentList
           payments={filteredPayments}
           isLoading={isLoading}
-          onRefresh={() => { }} reservationId={0} />
+          onRefresh={() => { fetchPayments() }} reservationId={0} />
       </div>
     </div>
   );

@@ -90,7 +90,7 @@ export default function BuildingForm({
     if (isEdit && initialData) {
       resetForm();
     }
-  }, [isEdit, initialData, resetForm]);
+  }, [initialData]);
 
   // جلب الشركات للقائمة المنسدلة
   useEffect(() => {

@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { buildingsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { BUILDING_TYPE_OPTIONS } from '@/constants';
 
 interface BuildingListProps {
   buildings: Building[];
@@ -50,7 +51,7 @@ export default function BuildingList({
       if (response.success) {
         toast.success('تم حذف المبنى بنجاح');
         setDeleteModalOpen(false);
-        
+
         // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedBuilding.id);
@@ -76,7 +77,7 @@ export default function BuildingList({
       cell: (building) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{building.name}</span>
-          <span className="text-xs text-gray-500">{building.buildingType}</span>
+          <span className="text-xs text-gray-500">{BUILDING_TYPE_OPTIONS.find(e => e.value == building.buildingType)?.label}</span>
         </div>
       ),
     },
@@ -128,7 +129,7 @@ export default function BuildingList({
         emptyMessage="لم يتم العثور على مباني"
         onRowClick={handleRowClick}
       />
-      
+
       {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}

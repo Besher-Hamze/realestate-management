@@ -484,6 +484,16 @@ export default function ReservationForm({
               {/* نموذج المستأجر الجديد */}
               <div className="space-y-4 p-4 bg-gray-50 rounded-md">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Select
+                    label="نوع المستأجر"
+                    id="tenantType"
+                    name="tenantType"
+                    value={formData.tenantType}
+                    onChange={handleChange}
+                    options={tenantTypeOptions}
+                    required
+                    fullWidth
+                  />
                   <Input
                     label="الاسم الكامل"
                     id="tenantFullName"
@@ -493,7 +503,6 @@ export default function ReservationForm({
                     required
                     fullWidth
                   />
-
                   <Input
                     label="البريد الإلكتروني"
                     id="tenantEmail"
@@ -511,6 +520,7 @@ export default function ReservationForm({
                     label="الهاتف"
                     id="tenantPhone"
                     name="tenantPhone"
+                    type='tel'
                     value={formData.tenantPhone || ''}
                     onChange={handleChange}
                     required
@@ -520,6 +530,7 @@ export default function ReservationForm({
                   <Input
                     label="رقم واتساب"
                     id="tenantWhatsappNumber"
+                    type='tel'
                     name="tenantWhatsappNumber"
                     value={formData.tenantWhatsappNumber || ''}
                     onChange={handleChange}
@@ -531,6 +542,7 @@ export default function ReservationForm({
                   <Input
                     label="رقم الهوية"
                     id="tenantIdNumber"
+                    type='number'
                     name="tenantIdNumber"
                     value={formData.tenantIdNumber || ''}
                     onChange={handleChange}
@@ -538,16 +550,7 @@ export default function ReservationForm({
                     fullWidth
                   />
 
-                  <Select
-                    label="نوع المستأجر"
-                    id="tenantType"
-                    name="tenantType"
-                    value={formData.tenantType}
-                    onChange={handleChange}
-                    options={tenantTypeOptions}
-                    required
-                    fullWidth
-                  />
+
                 </div>
 
                 {formData.tenantType && ['commercial_register', 'partnership', 'foreign_company'].includes(formData.tenantType) && (

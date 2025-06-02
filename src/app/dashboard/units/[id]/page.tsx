@@ -11,9 +11,9 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { 
-  getUnitTypeLabel, 
-  getUnitLayoutLabel, 
+import {
+  getUnitTypeLabel,
+  getUnitLayoutLabel,
   getUnitStatusLabel,
   getReservationStatusLabel
 } from '@/constants/options';
@@ -149,12 +149,12 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         <div className="flex flex-col">
           <span className="text-gray-900">{reservation.contractType === 'residential' ? 'سكني' : 'تجاري'}</span>
           <span className="text-xs text-gray-500">
-            {reservation.paymentMethod === 'cash' ? 'نقدي' : 'شيكات'} • 
-            {reservation.paymentSchedule === 'monthly' ? ' شهري' : 
-             reservation.paymentSchedule === 'quarterly' ? ' ربع سنوي' :
-             reservation.paymentSchedule === 'biannual' ? ' نصف سنوي' :
-             reservation.paymentSchedule === 'annual' ? ' سنوي' : 
-             reservation.paymentSchedule}
+            {reservation.paymentMethod === 'cash' ? 'نقدي' : 'شيكات'} •
+            {reservation.paymentSchedule === 'monthly' ? ' شهري' :
+              reservation.paymentSchedule === 'quarterly' ? ' ربع سنوي' :
+                reservation.paymentSchedule === 'biannual' ? ' نصف سنوي' :
+                  reservation.paymentSchedule === 'annual' ? ' سنوي' :
+                    reservation.paymentSchedule}
           </span>
         </div>
       ),
@@ -168,7 +168,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
           expired: 'bg-gray-100 text-gray-800',
           cancelled: 'bg-red-100 text-red-800',
         };
-        
+
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
@@ -376,14 +376,14 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 تعيين كمتاحة
               </Button>
 
-              <Button
+              {/* <Button
                 variant="info"
                 fullWidth
                 disabled={unit.status === 'rented'}
                 onClick={() => handleStatusChange('rented')}
               >
                 تعيين كمؤجرة
-              </Button>
+              </Button> */}
 
               <Button
                 variant="warning"

@@ -80,7 +80,7 @@ export default function Table<T>({
         className={cn(
           'min-w-full divide-y divide-gray-200',
           bordered && 'border border-gray-200',
-          compact ? 'table-fixed' : 'table-auto'
+          compact ? 'table-fixed' : 'table-auto',
         )}
       >
         {showHeader && (
@@ -91,7 +91,7 @@ export default function Table<T>({
                   key={column.key}
                   scope="col"
                   className={cn(
-                    'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
+                    'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider',
                     column.className
                   )}
                 >
