@@ -81,7 +81,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     }
   };
 
-  // جلب الحجوزات للمستأجر
+  // جلب المستأجرين  للمستأجر
   const fetchUserReservations = async (userId: number) => {
     try {
       setIsReservationsLoading(true);
@@ -93,7 +93,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         toast.error(response.message || 'فشل في جلب حجوزات المستخدم');
       }
     } catch (error) {
-      console.error('خطأ في جلب الحجوزات:', error);
+      console.error('خطأ في جلب المستأجرين :', error);
       toast.error('حدث خطأ أثناء جلب حجوزات المستخدم');
     } finally {
       setIsReservationsLoading(false);
@@ -177,7 +177,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // تحديد الأعمدة لجدول الحجوزات
+  // تحديد الأعمدة لجدول المستأجرين 
   const reservationColumns: TableColumn<Reservation>[] = [
     {
       key: 'unit',
@@ -224,9 +224,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-                reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                    'bg-red-100 text-red-800'
+              reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                  'bg-red-100 text-red-800'
               }`}
           >
             {statusText}
@@ -430,11 +430,11 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         </div>
       </Card>
 
-      {/* الحجوزات (للمستأجرين فقط) */}
+      {/* المستأجرين  (للمستأجرين فقط) */}
       {user.role === 'tenant' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">الحجوزات</h2>
+            <h2 className="text-xl font-semibold text-gray-900">المستأجرين </h2>
             <Link href={`/dashboard/reservations/create?userId=${user.id}`}>
               <Button
                 variant="primary"
@@ -445,7 +445,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </svg>
                 }
               >
-                إنشاء حجز
+                اضافة مستأجر
               </Button>
             </Link>
           </div>

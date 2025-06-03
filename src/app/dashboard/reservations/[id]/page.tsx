@@ -340,7 +340,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">لم يتم العثور على الحجز</h2>
         <p className="text-gray-600 mb-6">الحجز الذي تبحث عنه غير موجود أو ليس لديك صلاحية مشاهدته.</p>
         <Link href="/dashboard/reservations">
-          <Button>العودة إلى الحجوزات</Button>
+          <Button>العودة إلى المستأجرين </Button>
         </Link>
       </div>
     );
@@ -357,7 +357,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/reservations" className="hover:text-primary-600">الحجوزات</Link>
+              <Link href="/dashboard/reservations" className="hover:text-primary-600">المستأجرين </Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -455,6 +455,70 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               </div>
             )}
 
+            {reservation.contractPdfUrl && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-2"> PDF وثيقة العقد</h3>
+                <a
+                  href={reservation.contractPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            )}
+            {reservation.user && reservation.user.identityImageFrontUrl && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-2"> الوجه الأمامي للهوية</h3>
+                <a
+                  href={reservation.user.identityImageFrontUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            )}
+            {reservation.user && reservation.user.identityImageBackUrl && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-2"> الوجه الخلفي للهوية</h3>
+                <a
+                  href={reservation.user.identityImageBackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            )}
+            {reservation.commercialRegisterImageUrl && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-2"> صورة السجل التجاري</h3>
+                <a
+                  href={reservation.commercialRegisterImageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            )}
             {/* أزرار تحديث الحالة */}
             <div className="mt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">إجراءات الحجز</h3>

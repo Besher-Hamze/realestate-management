@@ -1,8 +1,9 @@
 import React, { forwardRef } from 'react';
+import { UseFormRegister, FieldError, Path, FieldValues } from 'react-hook-form';
 import { cn } from '@/lib/utils';
-import { FormError } from './FormValidation';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+// Legacy Input component for backward compatibility
+interface LegacyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helpText?: string;
@@ -12,7 +13,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   wrapperClassName?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
+const LegacyInput = forwardRef<HTMLInputElement, LegacyInputProps>(
   ({ 
     className, 
     label, 
@@ -75,13 +76,128 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <p className="text-xs text-gray-500">{helpText}</p>
         )}
         
-        <FormError error={error} />
+        {error && (
+          <div className="flex items-center gap-2 text-sm text-red-600 mt-1">
+            <svg
+              className="h-4 w-4 flex-shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
       </div>
     );
   }
 );
 
-Input.displayName = 'Input';
+LegacyInput.displayName = 'LegacyInput';
+
+// New React Hook Form Input component
+interface FormInputProps<T extends FieldValues> extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  register: UseFormRegister<T>;
+  name: Path<T>;
+  error?: FieldError;
+  helpText?: string;
+  required?: boolean;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+  wrapperClassName?: string;
+}
+
+function FormInput<T extends FieldValues>({
+  label,
+  register,
+  name,
+  error,
+  helpText,
+  required = false,
+  startIcon,
+  endIcon,
+  wrapperClassName,
+  type = 'text',
+  className,
+  ...props
+}: FormInputProps<T>) {
+  const inputId = React.useId();
+
+  return (
+    <div className={cn("space-y-1", wrapperClassName)}>
+      {label && (
+        <label 
+          htmlFor={inputId}
+          className="block text-sm font-medium text-gray-700"
+        >
+          {label}
+          {required && <span className="text-red-500 mr-1">*</span>}
+        </label>
+      )}
+      
+      <div className="relative">
+        {startIcon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="h-5 w-5 text-gray-400">
+              {startIcon}
+            </div>
+          </div>
+        )}
+        
+        <input
+          id={inputId}
+          type={type}
+          {...register(name)}
+          className={cn(
+            "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm",
+            error && "border-red-300 focus:ring-red-500 focus:border-red-500",
+            startIcon && "pl-10",
+            endIcon && "pr-10",
+            className
+          )}
+          {...props}
+        />
+        
+        {endIcon && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <div className="h-5 w-5 text-gray-400">
+              {endIcon}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {helpText && !error && (
+        <p className="text-xs text-gray-500">{helpText}</p>
+      )}
+      
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-red-600 mt-1">
+          <svg
+            className="h-4 w-4 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span>{error.message}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// For backward compatibility
+const Input = LegacyInput;
 
 interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;

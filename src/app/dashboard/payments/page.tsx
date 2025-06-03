@@ -24,8 +24,8 @@ export default function PaymentsPage() {
     { value: 'all', label: 'جميع الحالات' },
     { value: 'paid', label: 'مدفوع' },
     { value: 'pending', label: 'قيد الانتظار' },
-    { value: 'refunded', label: 'مسترجع' },
-    { value: 'failed', label: 'فاشل' },
+    { value: 'delayed', label: 'متأخر' },
+    { value: 'cancelled', label: 'ملغاة' },
   ];
 
   // خيارات تصفية طريقة الدفع

@@ -186,7 +186,7 @@ export default function TenantList({
             <span className="text-yellow-700 font-medium">تحذير</span>
           </div>
           <p className="text-yellow-600 mt-1 text-sm">
-            حذف المستأجر سيؤدي أيضًا إلى حذف حساب المستخدم المرتبط به وقد يؤثر على الحجوزات المرتبطة.
+            حذف المستأجر سيؤدي أيضًا إلى حذف حساب المستخدم المرتبط به وقد يؤثر على المستأجرين  المرتبطة.
           </p>
         </div>
       </Modal>

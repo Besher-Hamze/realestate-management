@@ -26,17 +26,17 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   // New tenant fields (conditional)
   tenantFullName: {
     ...createMinLengthRule(2, 'اسم المستأجر قصير جداً'),
     ...createMaxLengthRule(100, 'اسم المستأجر طويل جداً'),
   },
-  
+
   tenantEmail: {
     ...createEmailRule('البريد الإلكتروني للمستأجر غير صالح'),
   },
-  
+
   tenantPhone: {
     validate: {
       validPhone: (value: string) => {
@@ -48,7 +48,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   tenantWhatsappNumber: {
     validate: {
       validWhatsapp: (value: string) => {
@@ -60,7 +60,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   tenantIdNumber: {
     validate: {
       validId: (value: string) => {
@@ -70,7 +70,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   tenantType: {
     validate: {
       validType: (value: string) => {
@@ -89,7 +89,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   // Common reservation fields
   unitId: {
     ...createRequiredRule('الوحدة مطلوبة'),
@@ -100,7 +100,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   contractType: {
     ...createRequiredRule('نوع العقد مطلوب'),
     validate: {
@@ -110,7 +110,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   startDate: {
     ...createRequiredRule('تاريخ بداية العقد مطلوب'),
     validate: {
@@ -120,25 +120,25 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   endDate: {
     ...createRequiredRule('تاريخ نهاية العقد مطلوب'),
     validate: {
       validDate: (value: string, formValues: any) => {
         if (!validateDate(value)) return 'تاريخ النهاية غير صالح';
-        
+
         const startDate = new Date(formValues.startDate);
         const endDate = new Date(value);
-        
+
         if (endDate <= startDate) {
           return 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية';
         }
-        
+
         return true;
       },
     },
   },
-  
+
   paymentMethod: {
     ...createRequiredRule('طريقة الدفع مطلوبة'),
     validate: {
@@ -148,7 +148,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   paymentSchedule: {
     ...createRequiredRule('جدولة الدفع مطلوبة'),
     validate: {
@@ -158,7 +158,7 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   includesDeposit: {
     validate: {
       validBoolean: (value: any) => {
@@ -166,61 +166,61 @@ export const reservationValidation = {
       },
     },
   },
-  
+
   depositAmount: {
     validate: {
       validAmount: (value: any, formValues: any) => {
         if (!formValues.includesDeposit) return true; // Not required if no deposit
-        
+
         const num = Number(value);
         if (!value || isNaN(num)) return 'مبلغ التأمين مطلوب عند تحديد وجود تأمين';
         if (num <= 0) return 'مبلغ التأمين يجب أن يكون أكبر من صفر';
         if (num > 1000000000) return 'مبلغ التأمين كبير جداً';
-        
+
         return true;
       },
     },
   },
-  
+
   notes: {
     ...createMaxLengthRule(1000, 'الملاحظات طويلة جداً'),
   },
-  
+
   contractImage: {
     ...createFileValidationRule(
-      FILE_TYPES.IMAGES,
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
       FILE_SIZE_LIMITS.IMAGE,
       'يرجى تحميل صورة العقد (JPEG, PNG فقط)'
     ),
   },
-  
+
   contractPdf: {
     ...createFileValidationRule(
-      FILE_TYPES.DOCUMENTS,
+      ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
       FILE_SIZE_LIMITS.DOCUMENT,
       'يرجى تحميل ملف العقد (PDF, DOC, DOCX فقط)'
     ),
   },
-  
+
   identityImageFront: {
     ...createFileValidationRule(
-      FILE_TYPES.IMAGES,
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
       FILE_SIZE_LIMITS.IMAGE,
       'يرجى تحميل صورة الوجه الأمامي للهوية (JPEG, PNG فقط)'
     ),
   },
-  
+
   identityImageBack: {
     ...createFileValidationRule(
-      FILE_TYPES.IMAGES,
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
       FILE_SIZE_LIMITS.IMAGE,
       'يرجى تحميل صورة الوجه الخلفي للهوية (JPEG, PNG فقط)'
     ),
   },
-  
+
   commercialRegisterImage: {
     ...createFileValidationRule(
-      FILE_TYPES.ALL_DOCUMENTS,
+      ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png'],
       FILE_SIZE_LIMITS.DOCUMENT,
       'يرجى تحميل صورة أو ملف السجل التجاري (PDF, JPEG, PNG)'
     ),
@@ -233,42 +233,42 @@ export const validateReservationForm = (data: any): Record<string, string> => {
 
   // Check if using existing tenant or creating new one
   const isCreatingNewTenant = !data.userId || data.userId === '';
-  
+
   if (isCreatingNewTenant) {
     // Validate new tenant fields
     if (!data.tenantFullName?.trim()) {
       errors.tenantFullName = 'اسم المستأجر مطلوب';
     }
-    
+
     if (!data.tenantEmail?.trim()) {
       errors.tenantEmail = 'البريد الإلكتروني للمستأجر مطلوب';
     }
-    
+
     if (!data.tenantPhone?.trim()) {
       errors.tenantPhone = 'رقم هاتف المستأجر مطلوب';
     }
-    
+
     if (!data.tenantWhatsappNumber?.trim()) {
       errors.tenantWhatsappNumber = 'رقم واتساب المستأجر مطلوب';
     }
-    
+
     if (!data.tenantIdNumber?.trim()) {
       errors.tenantIdNumber = 'رقم هوية المستأجر مطلوب';
     }
-    
+
     if (!data.tenantType) {
       errors.tenantType = 'نوع المستأجر مطلوب';
     }
-    
+
     // File validation for new tenant
     if (!data.identityImageFront) {
       errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
     }
-    
+
     if (!data.identityImageBack) {
       errors.identityImageBack = 'صورة الوجه الخلفي للهوية مطلوبة';
     }
-    
+
     // Commercial register for business types
     const businessTypes = ['partnership', 'commercial_register', 'foreign_company'];
     if (businessTypes.includes(data.tenantType) && !data.commercialRegisterImage) {
@@ -285,37 +285,37 @@ export const validateReservationForm = (data: any): Record<string, string> => {
   if (!data.unitId || Number(data.unitId) <= 0) {
     errors.unitId = 'يرجى اختيار وحدة صالحة';
   }
-  
+
   if (!data.contractType) {
     errors.contractType = 'نوع العقد مطلوب';
   }
-  
+
   if (!data.startDate) {
     errors.startDate = 'تاريخ بداية العقد مطلوب';
   }
-  
+
   if (!data.endDate) {
     errors.endDate = 'تاريخ نهاية العقد مطلوب';
   }
-  
+
   // Date comparison validation
   if (data.startDate && data.endDate) {
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
-    
+
     if (endDate <= startDate) {
       errors.endDate = 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية';
     }
   }
-  
+
   if (!data.paymentMethod) {
     errors.paymentMethod = 'طريقة الدفع مطلوبة';
   }
-  
+
   if (!data.paymentSchedule) {
     errors.paymentSchedule = 'جدولة الدفع مطلوبة';
   }
-  
+
   // Deposit validation
   if (data.includesDeposit) {
     const depositAmount = Number(data.depositAmount);

@@ -39,17 +39,17 @@ export default function TenantForm({
   const [formData, setFormData] = useState<CreateTenantFormData | UpdateTenantFormData>(
     isEdit && initialData && initialData.user
       ? {
-          fullName: initialData.user.fullName,
-          email: initialData.user.email,
-          phone: initialData.user.phone,
-          whatsappNumber: initialData.user.whatsappNumber || '',
-          idNumber: initialData.user.idNumber || '',
-          tenantType: initialData.tenantType,
-          businessActivities: initialData.businessActivities || '',
-          contactPerson: initialData.contactPerson || '',
-          contactPosition: initialData.contactPosition || '',
-          notes: initialData.notes || '',
-        }
+        fullName: initialData.user.fullName,
+        email: initialData.user.email,
+        phone: initialData.user.phone,
+        whatsappNumber: initialData.user.whatsappNumber || '',
+        idNumber: initialData.user.idNumber || '',
+        tenantType: initialData.tenantType,
+        businessActivities: initialData.businessActivities || '',
+        contactPerson: initialData.contactPerson || '',
+        contactPosition: initialData.contactPosition || '',
+        notes: initialData.notes || '',
+      }
       : initialTenantData
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,13 +91,13 @@ export default function TenantForm({
     try {
       // إعداد البيانات للإرسال
       const submitData = { ...formData };
-      
+
       // إضافة الملفات إن وجدت
       const files: Record<string, File | undefined> = {};
       if (identityFrontFile) files.identityImageFront = identityFrontFile;
       if (identityBackFile) files.identityImageBack = identityBackFile;
       if (commRegisterFile) files.commercialRegisterImage = commRegisterFile;
-      
+
       let response;
       if (isEdit && initialData) {
         response = await tenantsApi.update(initialData.id, submitData as UpdateTenantFormData);
@@ -214,6 +214,7 @@ export default function TenantForm({
               label="رقم الواتساب"
               id="whatsappNumber"
               name="whatsappNumber"
+              type="tel"
               value={formData.whatsappNumber}
               onChange={handleChange}
               fullWidth
@@ -221,6 +222,7 @@ export default function TenantForm({
 
             <Input
               label="رقم الهوية"
+              type="number"
               id="idNumber"
               name="idNumber"
               value={formData.idNumber}

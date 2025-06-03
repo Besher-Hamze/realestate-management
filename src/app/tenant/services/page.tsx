@@ -59,11 +59,11 @@ export default function TenantServicesPage() {
           setIsLoading(false);
         }
       } else {
-        toast.error(response.message || 'فشل في التحقق من الحجوزات');
+        toast.error(response.message || 'فشل في التحقق من المستأجرين ');
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('خطأ في التحقق من الحجوزات:', error);
+      console.error('خطأ في التحقق من المستأجرين :', error);
       toast.error('حدث خطأ أثناء التحقق من حجوزاتك');
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function TenantServicesPage() {
           setServices([]);
         }
       } else {
-        toast.error(reservationsResponse.message || 'فشل في جلب الحجوزات');
+        toast.error(reservationsResponse.message || 'فشل في جلب المستأجرين ');
       }
     } catch (error) {
       console.error('خطأ في جلب الخدمات:', error);
@@ -242,9 +242,9 @@ export default function TenantServicesPage() {
       </div>
 
       {/* المرشحات المتقدمة */}
-      <ServiceListFilter 
-        services={services} 
-        onFilterChange={handleFilteredServicesChange} 
+      <ServiceListFilter
+        services={services}
+        onFilterChange={handleFilteredServicesChange}
       />
 
       {/* قائمة الخدمات */}

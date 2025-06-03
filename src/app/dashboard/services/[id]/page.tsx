@@ -10,15 +10,17 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { formatDate } from '@/lib/utils';
+import React from 'react';
 
 interface ServiceDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
-  const id = params.id;
+  // Use React.use() to unwrap the params Promise
+  const { id } = React.use(params);
   const router = useRouter();
 
   const [service, setService] = useState<ServiceOrder | null>(null);
@@ -88,7 +90,9 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
     try {
       setIsUpdatingStatus(true);
       const response = await servicesApi.update(service.id, {
-        ...service,
+        serviceType: service.serviceType,
+        serviceSubtype: service.serviceSubtype,
+        description: service.description,
         status: newStatus,
       });
 
@@ -98,12 +102,13 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           case 'pending': statusText = 'قيد الانتظار'; break;
           case 'in-progress': statusText = 'قيد التنفيذ'; break;
           case 'completed': statusText = 'مكتمل'; break;
-          case 'cancelled': statusText = 'ملغي'; break;
+          case 'rejected': statusText = 'ملغي'; break;
           default: statusText = newStatus.replace('-', ' ');
         }
         toast.success(`تم تحديث حالة طلب الخدمة إلى ${statusText}`);
         setStatusUpdateModalOpen(false);
-        setService(response.data);
+        // Refresh the service data to show updated status
+        await fetchService();
       } else {
         toast.error(response.message || 'فشل في تحديث حالة طلب الخدمة');
       }
@@ -165,7 +170,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       case 'pending': return 'قيد الانتظار';
       case 'in-progress': return 'قيد التنفيذ';
       case 'completed': return 'مكتمل';
-      case 'cancelled': return 'ملغي';
+      case 'rejected': return 'ملغي';
       default: return status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   };
@@ -349,7 +354,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   className="border-red-500 text-red-700 hover:bg-red-50"
                   fullWidth
                   disabled={service.status === 'rejected'}
-                  onClick={() => openStatusUpdateModal('cancelled')}
+                  onClick={() => openStatusUpdateModal('rejected')}
                 >
                   تحديد كملغي
                 </Button>
@@ -509,7 +514,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           </span>
           ؟
         </p>
-        {newStatus === 'cancelled' && (
+        {newStatus === 'rejected' && (
           <p className="mt-2 text-red-600 text-sm">
             ملاحظة: إلغاء طلب الخدمة سيؤدي إلى إخطار المستأجر بأن طلبه لن تتم معالجته.
           </p>

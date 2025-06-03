@@ -12,7 +12,7 @@ import { companiesApi } from '@/lib/api';
 
 export default function ManagerProfilePage() {
   const { user, checkAuth } = useAuth();
-  
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,7 +38,7 @@ export default function ManagerProfilePage() {
           setIsLoadingCompany(false);
         }
       };
-      
+
       fetchCompany();
     }
   }, [user]);
@@ -57,22 +57,22 @@ export default function ManagerProfilePage() {
   // التعامل مع تغيير كلمة المرور
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // التحقق من كلمات المرور
     if (newPassword !== confirmPassword) {
       toast.error('كلمات المرور الجديدة غير متطابقة');
       return;
     }
-    
+
     if (newPassword.length < 6) {
       toast.error('يجب أن تكون كلمة المرور الجديدة على الأقل 6 أحرف');
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       const response = await authApi.changePassword(currentPassword, newPassword);
-      
+
       if (response.success) {
         toast.success('تم تغيير كلمة المرور بنجاح');
         // مسح النموذج
@@ -93,13 +93,13 @@ export default function ManagerProfilePage() {
   // التعامل مع تحديث الملف الشخصي
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) return;
-    
+
     try {
       setIsSubmitting(true);
       const response = await usersApi.update(user.id, profileData);
-      
+
       if (response.success) {
         toast.success('تم تحديث الملف الشخصي بنجاح');
         setIsEditing(false);
@@ -165,12 +165,12 @@ export default function ManagerProfilePage() {
           </Button>
         )}
       </div>
-      
+
       {/* معلومات الملف الشخصي */}
       <Card>
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات الحساب</h2>
-          
+
           {isEditing ? (
             <form onSubmit={handleProfileUpdate} className="space-y-4">
               <Input
@@ -182,7 +182,7 @@ export default function ManagerProfilePage() {
                 required
                 fullWidth
               />
-              
+
               <Input
                 label="البريد الإلكتروني"
                 id="email"
@@ -193,7 +193,7 @@ export default function ManagerProfilePage() {
                 required
                 fullWidth
               />
-              
+
               <Input
                 label="الهاتف"
                 id="phone"
@@ -203,7 +203,7 @@ export default function ManagerProfilePage() {
                 required
                 fullWidth
               />
-              
+
               <div className="flex space-x-3 pt-2">
                 <Button
                   type="submit"
@@ -234,29 +234,29 @@ export default function ManagerProfilePage() {
                 <h3 className="text-sm font-medium text-gray-500">الاسم الكامل</h3>
                 <p className="mt-1 text-base text-gray-900">{user.fullName}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">اسم المستخدم</h3>
                 <p className="mt-1 text-base text-gray-900">{user.username}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
                 <p className="mt-1 text-base text-gray-900">{user.email}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">الهاتف</h3>
                 <p className="mt-1 text-base text-gray-900">{user.phone}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">الدور</h3>
                 <p className="mt-1 text-base text-gray-900 capitalize">
                   {user.role === 'manager' ? 'مدير' : user.role === 'admin' ? 'مسؤول' : user.role}
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-500">تاريخ الانضمام</h3>
                 <p className="mt-1 text-base text-gray-900">
@@ -267,13 +267,13 @@ export default function ManagerProfilePage() {
           )}
         </div>
       </Card>
-      
+
       {/* معلومات الشركة (للمديرين) */}
       {user.role === 'manager' && (
         <Card>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات الشركة</h2>
-            
+
             {isLoadingCompany ? (
               <div className="flex justify-center py-4">
                 <svg
@@ -303,17 +303,17 @@ export default function ManagerProfilePage() {
                   <h3 className="text-sm font-medium text-gray-500">اسم الشركة</h3>
                   <p className="mt-1 text-base text-gray-900">{company.name}</p>
                 </div>
-                
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني للشركة</h3>
                   <p className="mt-1 text-base text-gray-900">{company.email}</p>
                 </div>
-                
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">هاتف الشركة</h3>
                   <p className="mt-1 text-base text-gray-900">{company.phone}</p>
                 </div>
-                
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">عنوان الشركة</h3>
                   <p className="mt-1 text-base text-gray-900">{company.address}</p>
@@ -325,12 +325,12 @@ export default function ManagerProfilePage() {
           </div>
         </Card>
       )}
-      
+
       {/* تغيير كلمة المرور */}
       <Card>
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">تغيير كلمة المرور</h2>
-          
+
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <Input
               label="كلمة المرور الحالية"
@@ -342,7 +342,7 @@ export default function ManagerProfilePage() {
               required
               fullWidth
             />
-            
+
             <Input
               label="كلمة المرور الجديدة"
               id="newPassword"
@@ -354,7 +354,7 @@ export default function ManagerProfilePage() {
               fullWidth
               helpText="يجب أن تكون كلمة المرور على الأقل 6 أحرف"
             />
-            
+
             <Input
               label="تأكيد كلمة المرور الجديدة"
               id="confirmPassword"
@@ -365,7 +365,7 @@ export default function ManagerProfilePage() {
               required
               fullWidth
             />
-            
+
             <div className="pt-2">
               <Button
                 type="submit"
@@ -378,7 +378,7 @@ export default function ManagerProfilePage() {
           </form>
         </div>
       </Card>
-      
+
       {/* معلومات الوصول */}
       <Card>
         <div className="p-6">
@@ -388,7 +388,7 @@ export default function ManagerProfilePage() {
           </p>
           <ul className="list-disc pr-5 text-gray-600 space-y-2">
             <li>إدارة المباني والوحدات لشركتك</li>
-            <li>التعامل مع طلبات المستأجرين والحجوزات</li>
+            <li>التعامل مع طلبات المستأجرين والمستأجرين </li>
             <li>معالجة المدفوعات وإدارة السجلات المالية</li>
             <li>إدارة طلبات الخدمة والصيانة</li>
             <li>إنشاء تقارير لمحفظة العقارات الخاصة بك</li>

@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { companiesApi } from '@/lib/api';
 import { Company } from '@/lib/types';
-import CompanyForm from '@/components/companies/CopmpanyForm';
+import CompanyForm from '@/components/companies/CompanyFormYup';
 
 export default function EditCompanyPage() {
     const router = useRouter();

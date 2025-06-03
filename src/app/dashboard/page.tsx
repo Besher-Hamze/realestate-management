@@ -265,7 +265,7 @@ export default function DashboardPage() {
           />
 
           <StatCard
-            title="الحجوزات النشطة"
+            title="المستأجرين  النشطة"
             value={generalStats?.totalReservations || 0}
             icon={
               <svg className="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

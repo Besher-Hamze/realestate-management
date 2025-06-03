@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import PaymentForm from '@/components/payments/PaymentForm';
 import { reservationsApi } from '@/lib/api';
+import PaymentForm from '@/components/payments/PaymentFormYup';
 
 export default function CreatePaymentPage() {
   const searchParams = useSearchParams();

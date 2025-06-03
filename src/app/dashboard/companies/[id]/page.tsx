@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Table from '@/components/ui/Table';
 import { formatDate, cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { BUILDING_TYPE_OPTIONS } from '@/constants';
 
 interface CompanyDetailPageProps {
   params: {
@@ -179,7 +180,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{building.name}</span>
           <span className="text-xs text-gray-500 capitalize">
-            {building.buildingType === 'apartment' ? 'مبنى شقق' : 'فيلا'}
+            {BUILDING_TYPE_OPTIONS.find(e => e.value == building.buildingType)?.label}
           </span>
         </div>
       ),

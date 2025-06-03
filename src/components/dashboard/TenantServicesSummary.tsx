@@ -48,7 +48,7 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
           );
 
           // Sort by newest first
-          allServices.sort((a, b) => 
+          allServices.sort((a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
 
@@ -69,7 +69,7 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
           setServices([]);
         }
       } else {
-        toast.error(reservationsResponse.message || 'فشل في جلب الحجوزات');
+        toast.error(reservationsResponse.message || 'فشل في جلب المستأجرين ');
       }
     } catch (error) {
       console.error('خطأ في جلب الخدمات:', error);
@@ -166,17 +166,17 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
             <div className="text-2xl font-bold text-primary-700">{statistics.total}</div>
             <div className="text-sm text-primary-600">إجمالي الطلبات</div>
           </div>
-          
+
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
             <div className="text-2xl font-bold text-yellow-700">{statistics.pending}</div>
             <div className="text-sm text-yellow-600">قيد الانتظار</div>
           </div>
-          
+
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
             <div className="text-2xl font-bold text-blue-700">{statistics.inProgress}</div>
             <div className="text-sm text-blue-600">قيد التنفيذ</div>
           </div>
-          
+
           <div className="bg-green-50 rounded-lg p-4 border border-green-100">
             <div className="text-2xl font-bold text-green-700">{statistics.completed}</div>
             <div className="text-sm text-green-600">مكتملة</div>
@@ -188,27 +188,27 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
           <div className="mb-6">
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div className="flex h-full">
-                <div 
-                  className="bg-yellow-400" 
-                  style={{ 
-                    width: `${(statistics.pending / statistics.total) * 100}%` 
+                <div
+                  className="bg-yellow-400"
+                  style={{
+                    width: `${(statistics.pending / statistics.total) * 100}%`
                   }}
                 ></div>
-                <div 
-                  className="bg-blue-500" 
-                  style={{ 
-                    width: `${(statistics.inProgress / statistics.total) * 100}%` 
+                <div
+                  className="bg-blue-500"
+                  style={{
+                    width: `${(statistics.inProgress / statistics.total) * 100}%`
                   }}
                 ></div>
-                <div 
-                  className="bg-green-500" 
-                  style={{ 
-                    width: `${(statistics.completed / statistics.total) * 100}%` 
+                <div
+                  className="bg-green-500"
+                  style={{
+                    width: `${(statistics.completed / statistics.total) * 100}%`
                   }}
                 ></div>
               </div>
             </div>
-            
+
             <div className="flex justify-between text-xs text-gray-600 mt-1">
               <div>قيد الانتظار: {Math.round((statistics.pending / statistics.total) * 100)}%</div>
               <div>قيد التنفيذ: {Math.round((statistics.inProgress / statistics.total) * 100)}%</div>
@@ -220,7 +220,7 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
         {/* Recent Services */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-3">أحدث طلبات الخدمة</h3>
-          
+
           {services.length === 0 ? (
             <div className="text-center py-4 text-gray-500">
               <p>لا توجد طلبات خدمة حتى الآن.</p>
@@ -233,8 +233,8 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
           ) : (
             <div className="space-y-3">
               {services.slice(0, limit).map((service) => (
-                <div 
-                  key={service.id} 
+                <div
+                  key={service.id}
                   className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => router.push(`/tenant/services/${service.id}`)}
                 >
@@ -260,7 +260,7 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
                   </div>
                 </div>
               ))}
-              
+
               {services.length > limit && (
                 <div className="text-center mt-4">
                   <Link href="/tenant/services">
@@ -273,7 +273,7 @@ export default function TenantServicesSummary({ limit = 3 }: TenantServicesSumma
             </div>
           )}
         </div>
-        
+
         {/* Quick Action Button */}
         <div className="text-center mt-6">
           <Link href="/tenant/services/create">

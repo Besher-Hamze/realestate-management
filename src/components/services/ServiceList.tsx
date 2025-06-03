@@ -60,8 +60,8 @@ export default function ServiceList({
         </svg>
         <h3 className="text-lg font-medium text-gray-900 mb-1">لا توجد طلبات خدمة</h3>
         <p className="text-gray-500 mb-4">
-          {forTenant 
-            ? 'لم تقم بتقديم أي طلبات خدمة بعد. يمكنك تقديم طلب جديد عند الحاجة.' 
+          {forTenant
+            ? 'لم تقم بتقديم أي طلبات خدمة بعد. يمكنك تقديم طلب جديد عند الحاجة.'
             : 'لا توجد طلبات خدمة مطابقة للفلاتر الحالية.'}
         </p>
         {forTenant && (
@@ -97,15 +97,28 @@ export default function ServiceList({
   // ترجمة النوع الفرعي للخدمة
   const translateServiceSubtype = (subtype: string) => {
     switch (subtype) {
+      // Maintenance category
       case 'electrical': return 'كهربائي';
       case 'plumbing': return 'سباكة';
       case 'hvac': return 'تكييف وتدفئة';
       case 'appliance': return 'أجهزة منزلية';
       case 'structural': return 'هيكلي';
-      case 'general': return 'عام';
+      case 'general': return 'عام'; // Prioritizing 'عام' for general maintenance; 'تنظيف عام' is context-specific
       case 'deep': return 'تنظيف عميق';
       case 'windows': return 'تنظيف نوافذ';
       case 'carpets': return 'تنظيف سجاد';
+      // Financial category
+      case 'postpone_payment': return 'تأجيل دفعة';
+      case 'advance_payment': return 'تقديم دفعة';
+      case 'replace_check': return 'استبدال شيك';
+      case 'other_financial': return 'أخرى (مالية)';
+      // Administrative category
+      case 'cancel_contract': return 'إلغاء عقد';
+      case 'renew_contract': return 'تجديد عقد';
+      case 'change_unit': return 'استبدال وحدة';
+      case 'eviction': return 'إخلاء';
+      case 'other_administrative': return 'أخرى (إدارية)';
+      // Existing extra keys (not in serviceSubtypeOptions, preserved as is)
       case 'locksmith': return 'أقفال';
       case 'camera': return 'كاميرات أمنية';
       case 'alarm': return 'نظام إنذار';
@@ -168,8 +181,8 @@ export default function ServiceList({
               </td>
               <td className="px-6 py-4 text-right">
                 <div className="text-sm text-gray-900 truncate max-w-xs">
-                  {service.description.length > 50 
-                    ? `${service.description.substring(0, 50)}...` 
+                  {service.description.length > 50
+                    ? `${service.description.substring(0, 50)}...`
                     : service.description}
                 </div>
               </td>

@@ -39,18 +39,23 @@ const serviceSubtypeOptions: Record<ServiceType, { value: string; label: string 
     { value: 'appliance', label: 'أجهزة منزلية' },
     { value: 'structural', label: 'هيكلي' },
     { value: 'general', label: 'عام' },
-  ],
-  financial: [
     { value: 'general', label: 'تنظيف عام' },
     { value: 'deep', label: 'تنظيف عميق' },
     { value: 'windows', label: 'تنظيف نوافذ' },
     { value: 'carpets', label: 'تنظيف سجاد' },
   ],
+  financial: [
+    { value: 'postpone_payment', label: 'تأجيل دفعة' },
+    { value: 'advance_payment', label: 'تقديم دفعة' },
+    { value: 'replace_check', label: 'استبدال شيك' },
+    { value: 'other_financial', label: 'أخرى (مالية)' },
+  ],
   administrative: [
-    { value: 'locksmith', label: 'أقفال' },
-    { value: 'camera', label: 'كاميرات أمنية' },
-    { value: 'alarm', label: 'نظام إنذار' },
-    { value: 'general', label: 'أمن عام' },
+    { value: 'cancel_contract', label: 'إلغاء عقد' },
+    { value: 'renew_contract', label: 'تجديد عقد' },
+    { value: 'change_unit', label: 'استبدال وحدة' },
+    { value: 'eviction', label: 'إخلاء' },
+    { value: 'other_administrative', label: 'أخرى (إدارية)' },
   ],
 };
 
@@ -93,7 +98,7 @@ export default function ServiceForm({
   } = useForm<ServiceOrderFormData, ServiceOrder>(
     async (data) => {
       if (isEdit && initialData) {
-        return servicesApi.update(initialData.id, { 
+        return servicesApi.update(initialData.id, {
           serviceType: data.serviceType,
           serviceSubtype: data.serviceSubtype,
           description: data.description,
@@ -153,8 +158,8 @@ export default function ServiceForm({
     }
   }, [isEdit, initialData, preSelectedReservationId, resetForm, updateFormData]);
 
-  // جلب الحجوزات بناءً على الشروط
-  // جلب الحجوزات بناءً على الشروط
+  // جلب المستأجرين  بناءً على الشروط
+  // جلب المستأجرين  بناءً على الشروط
   useEffect(() => {
     const fetchReservationsData = async () => {
       try {
@@ -165,12 +170,12 @@ export default function ServiceForm({
           // المستأجر يمكنه رؤية حجوزاته فقط
           response = await reservationsApi.getMy();
         } else {
-          // المشرفون/المديرون يمكنهم رؤية جميع الحجوزات
+          // المشرفون/المديرون يمكنهم رؤية جميع المستأجرين 
           response = await reservationsApi.getAll();
         }
 
         if (response.success) {
-          // تصفية الحجوزات النشطة
+          // تصفية المستأجرين  النشطة
           const activeReservations = response.data.filter(res => res.status === 'active');
 
           // إذا تم توفير معرف وحدة محدد مسبقًا، تصفية حسب تلك الوحدة
@@ -180,9 +185,9 @@ export default function ServiceForm({
 
           setReservations(filteredReservations);
 
-          // استخراج الوحدات من الحجوزات للقائمة المنسدلة
+          // استخراج الوحدات من المستأجرين  للقائمة المنسدلة
           const extractedUnits = filteredReservations
-            .filter(res => res.unit) // تصفية الحجوزات بدون بيانات الوحدة
+            .filter(res => res.unit) // تصفية المستأجرين  بدون بيانات الوحدة
             .map(res => res.unit as Unit); // استخراج بيانات الوحدة
 
           setUnits(extractedUnits);
@@ -195,7 +200,7 @@ export default function ServiceForm({
             updateFormData({ reservationId: singleReservationId });
           }
 
-          // إذا تم توفير معرف حجز محدد مسبقًا ولكن لم يتم العثور عليه في الحجوزات النشطة، أظهر تحذيرًا
+          // إذا تم توفير معرف حجز محدد مسبقًا ولكن لم يتم العثور عليه في المستأجرين  النشطة، أظهر تحذيرًا
           if (
             preSelectedReservationId &&
             !filteredReservations.some(res => res.id === preSelectedReservationId)
@@ -203,11 +208,11 @@ export default function ServiceForm({
             toast.warning('الحجز المحدد غير نشط أو غير موجود');
           }
         } else {
-          toast.error(response.message || 'فشل في تحميل الحجوزات');
+          toast.error(response.message || 'فشل في تحميل المستأجرين ');
         }
       } catch (error) {
-        console.error('خطأ في جلب الحجوزات:', error);
-        toast.error('حدث خطأ أثناء تحميل الحجوزات');
+        console.error('خطأ في جلب المستأجرين :', error);
+        toast.error('حدث خطأ أثناء تحميل المستأجرين ');
       } finally {
         setIsLoadingReservations(false);
       }

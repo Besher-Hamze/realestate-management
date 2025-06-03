@@ -25,44 +25,44 @@ export default function ReservationsPage() {
     { value: 'cancelled', label: 'ملغي' },
   ];
 
-  // جلب الحجوزات عند تحميل المكون
+  // جلب المستأجرين  عند تحميل المكون
   useEffect(() => {
     fetchReservations();
   }, []);
 
-  // تطبيق التصفية عند تغيير الحجوزات أو مرشح الحالة
+  // تطبيق التصفية عند تغيير المستأجرين  أو مرشح الحالة
   useEffect(() => {
     applyFilters();
   }, [reservations, statusFilter]);
 
-  // جلب بيانات الحجوزات
+  // جلب بيانات المستأجرين 
   const fetchReservations = async () => {
     try {
       setIsLoading(true);
       const response = await reservationsApi.getAll();
-      
+
       if (response.success) {
         setReservations(response.data);
       } else {
-        toast.error(response.message || 'فشل في جلب الحجوزات');
+        toast.error(response.message || 'فشل في جلب المستأجرين ');
       }
     } catch (error) {
-      console.error('خطأ في جلب الحجوزات:', error);
-      toast.error('حدث خطأ أثناء جلب الحجوزات');
+      console.error('خطأ في جلب المستأجرين :', error);
+      toast.error('حدث خطأ أثناء جلب المستأجرين ');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // تطبيق المرشحات على الحجوزات
+  // تطبيق المرشحات على المستأجرين 
   const applyFilters = () => {
     let filtered = [...reservations];
-    
+
     // تطبيق مرشح الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((reservation) => reservation.status === statusFilter);
     }
-    
+
     setFilteredReservations(filtered);
   };
 
@@ -85,7 +85,7 @@ export default function ReservationsPage() {
     <div className="space-y-6">
       {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">الحجوزات</h1>
+        <h1 className="text-2xl font-bold text-gray-900">المستأجرين </h1>
         <Link href="/dashboard/reservations/create">
           <Button
             variant="primary"
@@ -95,11 +95,11 @@ export default function ReservationsPage() {
               </svg>
             }
           >
-            إنشاء حجز
+            اضافة مستأجر
           </Button>
         </Link>
       </div>
-      
+
       {/* بطاقات ملخص الحالة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-green-50 border-green-200">
@@ -117,7 +117,7 @@ export default function ReservationsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-yellow-50 border-yellow-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -133,7 +133,7 @@ export default function ReservationsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-gray-50 border-gray-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -149,7 +149,7 @@ export default function ReservationsPage() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="bg-red-50 border-red-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -166,7 +166,7 @@ export default function ReservationsPage() {
           </div>
         </Card>
       </div>
-      
+
       {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -183,8 +183,8 @@ export default function ReservationsPage() {
           </div>
         </div>
       </div>
-      
-      {/* قائمة الحجوزات */}
+
+      {/* قائمة المستأجرين  */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ReservationList
           reservations={filteredReservations}

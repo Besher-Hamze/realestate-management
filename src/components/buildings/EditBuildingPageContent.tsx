@@ -7,8 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { Building } from '@/lib/types';
 import { buildingsApi } from '@/lib/api';
-import BuildingForm from '@/components/buildings/BuildingForm';
-
+import BuildingForm from './BuildingFormYup';
 interface EditBuildingProps {
   id: string;
 }
@@ -122,7 +121,7 @@ export default function EditBuildingPageContent({ id }: EditBuildingProps) {
       <BuildingForm
         isEdit
         initialData={building}
-        onSuccess={(updatedBuilding) => {
+        onSuccess={(updatedBuilding: any) => {
           router.push(`/dashboard/buildings/${updatedBuilding.id}`);
         }}
       />

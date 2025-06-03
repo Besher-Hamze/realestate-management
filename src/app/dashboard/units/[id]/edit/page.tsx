@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { RealEstateUnit } from '@/lib/types';
 import { unitsApi } from '@/lib/api';
-import UnitForm from '@/components/units/UnitForm';
+import UnitForm from '@/components/units/UnitFormYup';
 
 interface EditUnitPageProps {
   params: Promise<{

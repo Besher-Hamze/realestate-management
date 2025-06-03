@@ -3,38 +3,27 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Building, BuildingFormData, Company } from '@/lib/types';
+import { Building, Company } from '@/lib/types';
 import { buildingsApi, companiesApi } from '@/lib/api';
-import { 
-  validateBuildingForm,
-  UNIT_TYPE_OPTIONS 
-} from '@/lib/validations';
-import { 
-  FormSection, 
-  ValidationSummary, 
-  FormActions,
-  useFormValidation 
-} from '@/components/ui/FormValidation';
-import { 
-  Input, 
-  Select, 
-  TextArea 
-} from '@/components/ui/FormInput';
+import { buildingSchema, BuildingFormData } from '@/lib/validations/schemas';
+import { useAsyncForm } from '@/hooks/useYupForm';
+import {
+  FormInput,
+  FormTextArea,
+  FormSelect
+} from '@/components/ui/FormInputs';
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { BUILDING_TYPE_OPTIONS } from '@/constants';
 
-interface BuildingFormProps {
+interface BuildingFormYupProps {
   isEdit?: boolean;
   initialData?: Building;
   onSuccess?: (building: Building) => void;
 }
 
-const BUILDING_TYPE_OPTIONS = [
-  { value: 'residential', label: 'سكني' },
-  { value: 'commercial', label: 'تجاري' },
-  { value: 'mixed', label: 'مختلط' },
-];
 
-const initialBuildingData: BuildingFormData = {
+const initialBuildingData: Partial<BuildingFormData> = {
   companyId: 0,
   buildingNumber: '',
   name: '',
@@ -50,15 +39,33 @@ export default function BuildingForm({
   isEdit = false,
   initialData,
   onSuccess,
-}: BuildingFormProps) {
+}: BuildingFormYupProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<BuildingFormData>(initialBuildingData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
 
-  // Validation hook
-  const { errors, validate, clearErrors, hasErrors } = useFormValidation(validateBuildingForm);
+  // Initialize form with validation schema
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+    watch,
+  } = useAsyncForm<BuildingFormData>(
+    buildingSchema,
+    isEdit && initialData ? {
+      companyId: initialData.companyId,
+      buildingNumber: initialData.buildingNumber,
+      name: initialData.name,
+      address: initialData.address,
+      buildingType: initialData.buildingType,
+      totalUnits: initialData.totalUnits,
+      totalFloors: initialData.totalFloors,
+      internalParkingSpaces: initialData.internalParkingSpaces || 0,
+      description: initialData.description || '',
+    } : initialBuildingData
+  );
 
   // Load companies on component mount
   useEffect(() => {
@@ -81,10 +88,10 @@ export default function BuildingForm({
     loadCompanies();
   }, []);
 
-  // Initialize form data for edit mode
+  // Reset form when editing data changes
   useEffect(() => {
     if (isEdit && initialData) {
-      setFormData({
+      reset({
         companyId: initialData.companyId,
         buildingNumber: initialData.buildingNumber,
         name: initialData.name,
@@ -92,49 +99,21 @@ export default function BuildingForm({
         buildingType: initialData.buildingType,
         totalUnits: initialData.totalUnits,
         totalFloors: initialData.totalFloors,
-        internalParkingSpaces: initialData.internalParkingSpaces,
-        description: initialData.description,
+        internalParkingSpaces: initialData.internalParkingSpaces || 0,
+        description: initialData.description || '',
       });
     }
-  }, [isEdit, initialData]);
+  }, [isEdit, initialData, reset]);
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    
-    // Handle number inputs
-    if (type === 'number') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value === '' ? 0 : parseInt(value, 10),
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  // Form submission
-  const handleSubmit = async () => {
-    // Clear previous errors
-    clearErrors();
-
-    // Validate form
-    if (!validate(formData)) {
-      toast.error('يرجى تصحيح الأخطاء في النموذج');
-      return;
-    }
-
-    setIsSubmitting(true);
-
+  // Form submission handler
+  const onSubmit = async (data: BuildingFormData) => {
     try {
       let response;
+
       if (isEdit && initialData) {
-        response = await buildingsApi.update(initialData.id, formData);
+        response = await buildingsApi.update(initialData.id, data);
       } else {
-        response = await buildingsApi.create(formData);
+        response = await buildingsApi.create(data);
       }
 
       if (response.success) {
@@ -154,8 +133,7 @@ export default function BuildingForm({
     } catch (error: any) {
       console.error('Building form submission error:', error);
       toast.error(error.message || 'حدث خطأ في الإرسال');
-    } finally {
-      setIsSubmitting(false);
+      throw error;
     }
   };
 
@@ -167,145 +145,136 @@ export default function BuildingForm({
 
   return (
     <Card>
-      <div className="space-y-8">
-        {/* Validation Summary */}
-        {hasErrors && (
-          <ValidationSummary errors={errors} />
-        )}
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Building Information Section */}
-        <FormSection 
-          title="معلومات المبنى الأساسية"
-          description="يرجى إدخال المعلومات الأساسية للمبنى"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Select
-              label="الشركة المالكة"
-              name="companyId"
-              value={formData.companyId.toString()}
-              onChange={handleChange}
-              options={companyOptions}
-              error={errors.companyId}
-              required
-              placeholder={loadingCompanies ? "جاري التحميل..." : "اختر الشركة"}
-              disabled={loadingCompanies}
-            />
+        <div className="space-y-6">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-medium text-gray-900">معلومات المبنى الأساسية</h3>
+            <p className="text-sm text-gray-500 mt-1">يرجى إدخال المعلومات الأساسية للمبنى</p>
+          </div>
 
-            <Input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <FormInput
               label="رقم المبنى"
+              register={register}
               name="buildingNumber"
-              value={formData.buildingNumber}
-              onChange={handleChange}
               error={errors.buildingNumber}
               required
               helpText="رقم تعريف المبنى الفريد"
             />
 
-            <Input
+            <FormInput
               label="اسم المبنى"
+              register={register}
               name="name"
-              value={formData.name}
-              onChange={handleChange}
               error={errors.name}
               required
               helpText="الاسم التجاري أو الشائع للمبنى"
             />
 
-            <Select
+            <FormSelect
               label="نوع المبنى"
+              register={register}
               name="buildingType"
-              value={formData.buildingType}
-              onChange={handleChange}
-              options={BUILDING_TYPE_OPTIONS}
               error={errors.buildingType}
+              options={BUILDING_TYPE_OPTIONS}
               required
               placeholder="اختر نوع المبنى"
             />
           </div>
 
-          <Input
+          <FormInput
             label="عنوان المبنى"
+            register={register}
             name="address"
-            value={formData.address}
-            onChange={handleChange}
             error={errors.address}
             required
             helpText="العنوان الكامل للمبنى"
           />
-        </FormSection>
+        </div>
 
         {/* Building Specifications Section */}
-        <FormSection 
-          title="مواصفات المبنى"
-          description="تفاصيل المبنى والوحدات"
-        >
+        <div className="space-y-6">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-medium text-gray-900">مواصفات المبنى</h3>
+            <p className="text-sm text-gray-500 mt-1">تفاصيل المبنى والوحدات</p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input
+            <FormInput
               label="إجمالي الوحدات"
+              register={register}
               name="totalUnits"
               type="number"
               min="1"
               max="1000"
-              value={formData.totalUnits.toString()}
-              onChange={handleChange}
               error={errors.totalUnits}
               required
               helpText="العدد الكلي للوحدات في المبنى"
             />
 
-            <Input
+            <FormInput
               label="إجمالي الطوابق"
+              register={register}
               name="totalFloors"
               type="number"
               min="1"
               max="200"
-              value={formData.totalFloors.toString()}
-              onChange={handleChange}
               error={errors.totalFloors}
               required
               helpText="عدد الطوابق في المبنى"
             />
 
-            <Input
+            <FormInput
               label="مواقف السيارات الداخلية"
+              register={register}
               name="internalParkingSpaces"
               type="number"
               min="0"
               max="10000"
-              value={formData.internalParkingSpaces.toString()}
-              onChange={handleChange}
               error={errors.internalParkingSpaces}
               helpText="عدد مواقف السيارات (اختياري)"
             />
           </div>
-        </FormSection>
+        </div>
 
         {/* Additional Information Section */}
-        <FormSection 
-          title="معلومات إضافية"
-          description="وصف وتفاصيل إضافية حول المبنى"
-        >
-          <TextArea
+        <div className="space-y-6">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-medium text-gray-900">معلومات إضافية</h3>
+            <p className="text-sm text-gray-500 mt-1">وصف وتفاصيل إضافية حول المبنى</p>
+          </div>
+
+          <FormTextArea
             label="وصف المبنى"
+            register={register}
             name="description"
             rows={4}
-            value={formData.description}
-            onChange={handleChange}
             error={errors.description}
             helpText="وصف تفصيلي للمبنى ومرافقه (اختياري)"
           />
-        </FormSection>
+        </div>
 
         {/* Form Actions */}
-        <FormActions
-          onSubmit={handleSubmit}
-          onCancel={() => router.back()}
-          submitText={isEdit ? 'تحديث المبنى' : 'إنشاء المبنى'}
-          cancelText="إلغاء"
-          isLoading={isSubmitting}
-          disabled={isSubmitting || loadingCompanies}
-        />
-      </div>
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            إلغاء
+          </Button>
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={isSubmitting || loadingCompanies}
+          >
+            {isEdit ? 'تحديث المبنى' : 'إنشاء المبنى'}
+          </Button>
+        </div>
+      </form>
     </Card>
   );
 }

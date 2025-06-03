@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import BuildingForm from '@/components/buildings/BuildingForm';
+import BuildingForm from '@/components/buildings/BuildingFormYup';
 
 export default function CreateBuildingPage() {
   return (
@@ -26,7 +26,7 @@ export default function CreateBuildingPage() {
         <h1 className="text-2xl font-bold text-gray-900">إنشاء مبنى جديد</h1>
         <p className="text-gray-600">أضف مبنى جديدًا إلى محفظة العقارات الخاصة بك.</p>
       </div>
-      
+
       {/* نموذج المبنى */}
       <BuildingForm />
     </div>

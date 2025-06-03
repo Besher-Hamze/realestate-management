@@ -3,32 +3,22 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Company, CompanyFormData } from '@/lib/types';
+import { Controller } from 'react-hook-form';
+import { Company } from '@/lib/types';
 import { companiesApi } from '@/lib/api';
-import { 
-  validateCompanyForm,
-  companyValidation,
-  FILE_TYPES,
-  FILE_SIZE_LIMITS 
-} from '@/lib/validations';
-import { 
-  FormField, 
-  FormSection, 
-  ValidationSummary, 
-  FormActions,
-  useFormValidation 
-} from '@/components/ui/FormValidation';
-import { 
-  Input, 
-  Select, 
-  FileInput,
-  TextArea 
-} from '@/components/ui/FormInput';
+import { companySchema, CompanyFormData } from '@/lib/validations/schemas';
+import { useAsyncForm, useFileForm } from '@/hooks/useYupForm';
+import {
+  FormInput,
+  FormTextArea,
+  FormSelect,
+  FormFileInput
+} from '@/components/ui/FormInputs';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 
-interface CompanyFormProps {
+interface CompanyFormYupProps {
   isEdit?: boolean;
   initialData?: Company;
   onSuccess?: (company: Company) => void;
@@ -49,7 +39,7 @@ const COMPANY_TYPE_OPTIONS = [
   { value: 'agency', label: 'وكالة' },
 ];
 
-const initialCompanyData: CompanyFormData = {
+const initialCompanyData: Partial<CompanyFormData> = {
   name: '',
   companyType: 'agency',
   email: '',
@@ -68,25 +58,49 @@ export default function CompanyForm({
   isEdit = false,
   initialData,
   onSuccess,
-}: CompanyFormProps) {
+}: CompanyFormYupProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<CompanyFormData>(initialCompanyData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [managerCredentials, setManagerCredentials] = useState<ManagerCredentials | null>(null);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-  
-  // File states
-  const [logoImage, setLogoImage] = useState<FileList | null>(null);
-  const [identityImageFront, setIdentityImageFront] = useState<FileList | null>(null);
-  const [identityImageBack, setIdentityImageBack] = useState<FileList | null>(null);
 
-  // Validation hook
-  const { errors, validate, clearErrors, hasErrors } = useFormValidation(validateCompanyForm);
+  // Initialize form with validation schema
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+    watch,
+    submitAsync,
+  } = useFileForm<CompanyFormData>(
+    companySchema,
+    isEdit && initialData ? {
+      name: initialData.name,
+      companyType: initialData.companyType,
+      email: initialData.email,
+      phone: initialData.phone,
+      whatsappNumber: initialData.whatsappNumber || '',
+      secondaryPhone: initialData.secondaryPhone || '',
+      registrationNumber: initialData.registrationNumber || '',
+      delegateName: initialData.delegateName || '',
+      address: initialData.address,
+      managerFullName: '',
+      managerEmail: '',
+      managerPhone: '',
+    } : initialCompanyData,
+    { isCreating: !isEdit } // Context for conditional validation
+  );
 
-  // Initialize form data for edit mode
+  // Watch file fields for preview
+  const watchedLogoImage = watch('logoImage');
+  const watchedIdentityImageFront = watch('identityImageFront');
+  const watchedIdentityImageBack = watch('identityImageBack');
+
+  // Reset form when editing data changes
   useEffect(() => {
     if (isEdit && initialData) {
-      setFormData({
+      reset({
         name: initialData.name,
         companyType: initialData.companyType,
         email: initialData.email,
@@ -101,64 +115,17 @@ export default function CompanyForm({
         managerPhone: '',
       });
     }
-  }, [isEdit, initialData]);
+  }, [isEdit, initialData, reset]);
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Handle file uploads
-  const handleLogoChange = (files: FileList | null) => {
-    setLogoImage(files);
-  };
-
-  const handleIdentityFrontChange = (files: FileList | null) => {
-    setIdentityImageFront(files);
-  };
-
-  const handleIdentityBackChange = (files: FileList | null) => {
-    setIdentityImageBack(files);
-  };
-
-  // Form submission
-  const handleSubmit = async () => {
-    // Clear previous errors
-    clearErrors();
-
-    // Prepare form data for validation including files
-    const validationData = {
-      ...formData,
-      logoImage: logoImage?.[0],
-      identityImageFront: identityImageFront?.[0],
-      identityImageBack: identityImageBack?.[0],
-    };
-
-    // Validate form
-    if (!validate(validationData)) {
-      toast.error('يرجى تصحيح الأخطاء في النموذج');
-      return;
-    }
-
-    setIsSubmitting(true);
-
+  // Form submission handler
+  const onSubmit = async (data: CompanyFormData) => {
     try {
-      const submitData: CompanyFormData = {
-        ...formData,
-        logoImage: logoImage?.[0],
-        identityImageFront: identityImageFront?.[0],
-        identityImageBack: identityImageBack?.[0],
-      };
-
       let response;
+
       if (isEdit && initialData) {
-        response = await companiesApi.update(initialData.id, submitData);
+        response = await companiesApi.update(initialData.id, data);
       } else {
-        response = await companiesApi.create(submitData);
+        response = await companiesApi.create(data);
       }
 
       if (response.success) {
@@ -173,9 +140,9 @@ export default function CompanyForm({
           setShowCredentialsModal(true);
         } else {
           if (onSuccess) {
-            onSuccess(response.data.company);
+            onSuccess(response.data.company || response.data);
           } else {
-            router.push(`/dashboard/companies/${response.data.company.id}`);
+            router.push(`/dashboard/companies/${(response.data.company || response.data).id}`);
           }
         }
       } else {
@@ -184,9 +151,14 @@ export default function CompanyForm({
     } catch (error: any) {
       console.error('Company form submission error:', error);
       toast.error(error.message || 'حدث خطأ في الإرسال');
-    } finally {
-      setIsSubmitting(false);
+      throw error;
     }
+  };
+
+  // Handle file changes
+  const handleFileChange = (fieldName: keyof CompanyFormData) => (files: FileList | null) => {
+    const file = files?.[0] || null;
+    setValue(fieldName, file as any, { shouldValidate: true, shouldDirty: true });
   };
 
   // Handle modal close
@@ -211,206 +183,251 @@ export default function CompanyForm({
 الدور: ${managerCredentials.role === 'manager' ? 'مدير' : managerCredentials.role}
     `;
 
-    navigator.clipboard.writeText(credentials.trim())
-      .then(() => toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!'))
-      .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(credentials.trim())
+        .then(() => toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!'))
+        .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
+    } else {
+      // Fallback for non-secure contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = credentials.trim();
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!');
+      } catch (err) {
+        toast.error('فشل نسخ بيانات الاعتماد');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   return (
     <>
       <Card>
-        <div className="space-y-8">
-          {/* Validation Summary */}
-          {hasErrors && (
-            <ValidationSummary errors={errors} />
-          )}
-
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Company Information Section */}
-          <FormSection 
-            title="معلومات الشركة الأساسية"
-            description="يرجى إدخال المعلومات الأساسية للشركة"
-          >
+          <div className="space-y-6">
+            <div className="border-b border-gray-200 pb-4">
+              <h3 className="text-lg font-medium text-gray-900">معلومات الشركة الأساسية</h3>
+              <p className="text-sm text-gray-500 mt-1">يرجى إدخال المعلومات الأساسية للشركة</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
+              <FormInput
                 label="اسم الشركة"
+                register={register}
                 name="name"
-                value={formData.name}
-                onChange={handleChange}
                 error={errors.name}
                 required
                 helpText="أدخل الاسم الكامل للشركة"
               />
 
-              <Select
+              <FormSelect
                 label="نوع الشركة"
+                register={register}
                 name="companyType"
-                value={formData.companyType}
-                onChange={handleChange}
-                options={COMPANY_TYPE_OPTIONS}
                 error={errors.companyType}
+                options={COMPANY_TYPE_OPTIONS}
                 required
                 placeholder="اختر نوع الشركة"
               />
 
-              <Input
+              <FormInput
                 label="البريد الإلكتروني"
+                register={register}
                 name="email"
                 type="email"
-                value={formData.email}
-                onChange={handleChange}
                 error={errors.email}
                 required
                 helpText="البريد الإلكتروني الرسمي للشركة"
               />
 
-              <Input
+              <FormInput
                 label="رقم الهاتف"
+                register={register}
                 name="phone"
                 type="tel"
-                value={formData.phone}
-                onChange={handleChange}
                 error={errors.phone}
                 required
                 helpText="رقم الهاتف الأساسي للشركة"
               />
 
-              <Input
+              <FormInput
                 label="رقم الواتساب"
+                register={register}
                 name="whatsappNumber"
                 type="tel"
-                value={formData.whatsappNumber}
-                onChange={handleChange}
                 error={errors.whatsappNumber}
                 helpText="رقم الواتساب للتواصل (اختياري)"
               />
 
-              <Input
+              <FormInput
                 label="رقم الهاتف الثانوي"
+                register={register}
                 name="secondaryPhone"
                 type="tel"
-                value={formData.secondaryPhone}
-                onChange={handleChange}
                 error={errors.secondaryPhone}
                 helpText="رقم هاتف إضافي (اختياري)"
               />
 
-              <Input
+              <FormInput
                 label="رقم السجل التجاري"
+                register={register}
                 name="registrationNumber"
-                value={formData.registrationNumber}
-                onChange={handleChange}
                 error={errors.registrationNumber}
                 helpText="رقم السجل التجاري للشركة (اختياري)"
               />
 
-              <Input
+              <FormInput
                 label="اسم المفوض"
+                register={register}
                 name="delegateName"
-                value={formData.delegateName}
-                onChange={handleChange}
                 error={errors.delegateName}
                 helpText="اسم الشخص المفوض عن الشركة (اختياري)"
               />
             </div>
 
-            <Input
+            <FormInput
               label="عنوان الشركة"
+              register={register}
               name="address"
-              value={formData.address}
-              onChange={handleChange}
               error={errors.address}
               required
               helpText="العنوان الكامل للشركة"
             />
-          </FormSection>
+          </div>
 
           {/* Documents and Images Section */}
-          <FormSection 
-            title="الوثائق والصور"
-            description="يرجى رفع الوثائق والصور المطلوبة"
-          >
+          <div className="space-y-6">
+            <div className="border-b border-gray-200 pb-4">
+              <h3 className="text-lg font-medium text-gray-900">الوثائق والصور</h3>
+              <p className="text-sm text-gray-500 mt-1">يرجى رفع الوثائق والصور المطلوبة</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FileInput
-                label="صورة الهوية (الوجه الأمامي)"
-                accept={FILE_TYPES.IMAGES.join(',')}
-                onChange={handleIdentityFrontChange}
-                error={errors.identityImageFront}
-                helpText="صورة واضحة للوجه الأمامي للهوية (JPEG, PNG)"
-                currentFile={isEdit ? initialData?.identityImageFrontUrl : undefined}
+              <Controller
+                name="identityImageFront"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormFileInput
+                    label="صورة الهوية (الوجه الأمامي)"
+                    name="identityImageFront"
+                    accept="image/jpeg,image/png,image/jpg"
+                    onChange={handleFileChange('identityImageFront')}
+                    error={fieldState.error}
+                    helpText="صورة واضحة للوجه الأمامي للهوية (JPEG, PNG)"
+                    required={!isEdit}
+                    currentFile={isEdit ? initialData?.identityImageFrontUrl : undefined}
+                    selectedFile={watchedIdentityImageFront}
+                  />
+                )}
               />
 
-              <FileInput
-                label="صورة الهوية (الوجه الخلفي)"
-                accept={FILE_TYPES.IMAGES.join(',')}
-                onChange={handleIdentityBackChange}
-                error={errors.identityImageBack}
-                helpText="صورة واضحة للوجه الخلفي للهوية (JPEG, PNG)"
-                currentFile={isEdit ? initialData?.identityImageBackUrl : undefined}
+              <Controller
+                name="identityImageBack"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormFileInput
+                    label="صورة الهوية (الوجه الخلفي)"
+                    name="identityImageBack"
+                    accept="image/jpeg,image/png,image/jpg"
+                    onChange={handleFileChange('identityImageBack')}
+                    error={fieldState.error}
+                    helpText="صورة واضحة للوجه الخلفي للهوية (JPEG, PNG)"
+                    required={!isEdit}
+                    currentFile={isEdit ? initialData?.identityImageBackUrl : undefined}
+                    selectedFile={watchedIdentityImageBack}
+                  />
+                )}
               />
 
-              <FileInput
-                label="شعار الشركة"
-                accept={FILE_TYPES.IMAGES.join(',')}
-                onChange={handleLogoChange}
-                error={errors.logoImage}
-                helpText="شعار الشركة (اختياري) - JPEG, PNG, GIF"
-                currentFile={isEdit ? initialData?.logoImageUrl : undefined}
+              <Controller
+                name="logoImage"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormFileInput
+                    label="شعار الشركة"
+                    name="logoImage"
+                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                    onChange={handleFileChange('logoImage')}
+                    error={fieldState.error}
+                    helpText="شعار الشركة (اختياري) - JPEG, PNG, GIF, WebP"
+                    currentFile={isEdit ? initialData?.logoImageUrl : undefined}
+                    selectedFile={watchedLogoImage}
+                  />
+                )}
               />
             </div>
-          </FormSection>
+          </div>
 
           {/* Manager Information Section - Only for new companies */}
           {!isEdit && (
-            <FormSection 
-              title="معلومات المدير"
-              description="سيتم إنشاء حساب مدير جديد للشركة"
-            >
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-medium text-gray-900">معلومات المدير</h3>
+                <p className="text-sm text-gray-500 mt-1">سيتم إنشاء حساب مدير جديد للشركة</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
+                <FormInput
                   label="الاسم الكامل للمدير"
+                  register={register}
                   name="managerFullName"
-                  value={formData.managerFullName || ''}
-                  onChange={handleChange}
                   error={errors.managerFullName}
                   required
                   helpText="الاسم الكامل لمدير الشركة"
                 />
 
-                <Input
+                <FormInput
                   label="البريد الإلكتروني للمدير"
+                  register={register}
                   name="managerEmail"
                   type="email"
-                  value={formData.managerEmail || ''}
-                  onChange={handleChange}
                   error={errors.managerEmail}
                   required
                   helpText="البريد الإلكتروني لحساب المدير"
                 />
 
-                <Input
+                <FormInput
                   label="رقم هاتف المدير"
+                  register={register}
                   name="managerPhone"
                   type="tel"
-                  value={formData.managerPhone || ''}
-                  onChange={handleChange}
                   error={errors.managerPhone}
                   required
                   helpText="رقم هاتف المدير"
                 />
               </div>
-            </FormSection>
+            </div>
           )}
 
           {/* Form Actions */}
-          <FormActions
-            onSubmit={handleSubmit}
-            onCancel={() => router.back()}
-            submitText={isEdit ? 'تحديث الشركة' : 'إنشاء الشركة'}
-            cancelText="إلغاء"
-            isLoading={isSubmitting}
-            disabled={isSubmitting}
-          />
-        </div>
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={isSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="submit"
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              {isEdit ? 'تحديث الشركة' : 'إنشاء الشركة'}
+            </Button>
+          </div>
+        </form>
       </Card>
 
       {/* Manager Credentials Modal */}
@@ -425,7 +442,7 @@ export default function CompanyForm({
             <>
               <div className="mb-4">
                 <p className="text-gray-700 mb-4">
-                  تم إنشاء حساب مدير جديد لـ <span className="font-semibold">{formData.name}</span>.
+                  تم إنشاء حساب مدير جديد لـ <span className="font-semibold">{watch('name')}</span>.
                   يرجى حفظ بيانات الاعتماد هذه في مكان آمن:
                 </p>
 

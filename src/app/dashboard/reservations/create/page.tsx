@@ -11,18 +11,18 @@ export default function CreateReservationPage() {
   const [unitId, setUnitId] = useState<number | undefined>(undefined);
   const [userId, setUserId] = useState<number | undefined>(undefined);
   const [step, setStep] = useState<'select-unit' | 'reservation-details'>('select-unit');
-  
+
   useEffect(() => {
     const unitIdParam = searchParams.get('unitId');
     const userIdParam = searchParams.get('userId');
-    
+
     if (unitIdParam) {
       const parsedUnitId = parseInt(unitIdParam, 10);
       setUnitId(parsedUnitId);
       // If unit is already selected from URL param, go directly to reservation details
       setStep('reservation-details');
     }
-    
+
     if (userIdParam) {
       setUserId(parseInt(userIdParam, 10));
     }
@@ -44,7 +44,7 @@ export default function CreateReservationPage() {
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/reservations" className="hover:text-primary-600">الحجوزات</Link>
+              <Link href="/dashboard/reservations" className="hover:text-primary-600">المستأجرين </Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -52,14 +52,14 @@ export default function CreateReservationPage() {
             </li>
           </ol>
         </nav>
-        <h1 className="text-2xl font-bold text-gray-900">إنشاء حجز جديد</h1>
+        <h1 className="text-2xl font-bold text-gray-900">اضافة مستأجر  جديد</h1>
         <p className="text-gray-600">
-          {step === 'select-unit' 
+          {step === 'select-unit'
             ? 'اختر المبنى والوحدة التي ترغب في حجزها.'
             : 'أكمل تفاصيل الحجز للوحدة المختارة.'}
         </p>
       </div>
-      
+
       {/* خطوات الحجز */}
       <div className="mb-8">
         <ol className="flex items-center">
@@ -78,19 +78,19 @@ export default function CreateReservationPage() {
           </li>
         </ol>
       </div>
-      
+
       {/* Step 1: Building and Unit Selection */}
       {step === 'select-unit' && (
-        <BuildingUnitSelector 
+        <BuildingUnitSelector
           onUnitSelected={handleUnitSelected}
           preSelectedUnitId={unitId}
         />
       )}
-      
+
       {/* Step 2: Reservation Form */}
       {step === 'reservation-details' && unitId && (
-        <ReservationForm 
-          preSelectedUnitId={unitId} 
+        <ReservationForm
+          preSelectedUnitId={unitId}
           preSelectedUserId={userId}
         />
       )}

@@ -60,7 +60,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     }
   };
 
-  // جلب الحجوزات لهذه الوحدة
+  // جلب المستأجرين  لهذه الوحدة
   const fetchReservations = async () => {
     try {
       setIsReservationsLoading(true);
@@ -72,7 +72,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         toast.error(response.message || 'فشل في جلب حجوزات الوحدة');
       }
     } catch (error) {
-      console.error('خطأ في جلب الحجوزات:', error);
+      console.error('خطأ في جلب المستأجرين :', error);
       toast.error('حدث خطأ أثناء جلب حجوزات الوحدة');
     } finally {
       setIsReservationsLoading(false);
@@ -120,7 +120,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     }
   };
 
-  // تحديد الأعمدة لجدول الحجوزات
+  // تحديد الأعمدة لجدول المستأجرين 
   const reservationColumns: TableColumn<Reservation>[] = [
     {
       key: 'tenant',
@@ -275,7 +275,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                   </svg>
                 }
               >
-                إنشاء حجز
+                اضافة مستأجر
               </Button>
             </Link>
             <Link href={`/dashboard/units/${unit.id}/edit`}>
@@ -400,7 +400,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <div className="space-y-3">
                 <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
                   <Button variant="primary" fullWidth>
-                    إنشاء حجز جديد
+                    اضافة مستأجر  جديد
                   </Button>
                 </Link>
                 {unit.building && (
@@ -416,10 +416,10 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         </Card>
       </div>
 
-      {/* سجل الحجوزات */}
+      {/* سجل المستأجرين  */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">سجل الحجوزات</h2>
+          <h2 className="text-xl font-semibold text-gray-900">سجل المستأجرين </h2>
           <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
             <Button
               variant="primary"
@@ -430,7 +430,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 </svg>
               }
             >
-              إنشاء حجز
+              اضافة مستأجر
             </Button>
           </Link>
         </div>
@@ -484,7 +484,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <span className="text-yellow-700 font-medium">تحذير</span>
             </div>
             <p className="text-yellow-600 mt-1 text-sm">
-              هذه الوحدة لديها {reservations.length} حجز. حذف الوحدة قد يؤثر على هذه الحجوزات.
+              هذه الوحدة لديها {reservations.length} حجز. حذف الوحدة قد يؤثر على هذه المستأجرين .
             </p>
           </div>
         )}

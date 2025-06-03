@@ -265,6 +265,13 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
                   {building.totalUnits}
                 </p>
               </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">عدد المواقف الداخلية</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {building.internalParkingSpaces}
+                </p>
+              </div>
+
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500">العنوان</h3>

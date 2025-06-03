@@ -517,11 +517,7 @@ export const servicesApi = {
       return formDataRequest<ServiceOrder>(
         `/services/${id}`,
         'PUT',
-        {
-          serviceType: data.serviceType,
-          serviceSubtype: data.serviceSubtype,
-          description: data.description,
-        },
+        data,
         data.attachmentFile ? { attachmentFile: data.attachmentFile } : undefined
       );
     } catch (error) {

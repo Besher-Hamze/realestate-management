@@ -278,6 +278,7 @@ export interface ServiceOrderFormData {
   serviceSubtype: string;
   description: string;
   attachmentFile?: File;
+  status: any
 }
 
 // Payment Types

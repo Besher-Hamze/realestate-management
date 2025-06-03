@@ -17,7 +17,7 @@ export default function TenantUnitsPage() {
     fetchReservations();
   }, []);
 
-  // جلب بيانات الحجوزات
+  // جلب بيانات المستأجرين 
   const fetchReservations = async () => {
     try {
       setIsLoading(true);
@@ -26,9 +26,9 @@ export default function TenantUnitsPage() {
       if (response.success) {
         setReservations(response.data);
 
-        // استخراج الوحدات من الحجوزات
+        // استخراج الوحدات من المستأجرين 
         const extractedUnits = response.data
-          .filter(reservation => reservation.unit) // تصفية الحجوزات التي لا تحتوي على بيانات الوحدة
+          .filter(reservation => reservation.unit) // تصفية المستأجرين  التي لا تحتوي على بيانات الوحدة
           .map(reservation => reservation.unit as any); // استخراج بيانات الوحدة
 
         setUnits(extractedUnits);
@@ -36,7 +36,7 @@ export default function TenantUnitsPage() {
         toast.error(response.message || 'فشل في جلب الوحدات الخاصة بك');
       }
     } catch (error) {
-      console.error('خطأ في جلب الحجوزات:', error);
+      console.error('خطأ في جلب المستأجرين :', error);
       toast.error('حدث خطأ أثناء جلب الوحدات الخاصة بك');
     } finally {
       setIsLoading(false);
@@ -50,7 +50,7 @@ export default function TenantUnitsPage() {
         <h1 className="text-2xl font-bold text-gray-900">وحداتي المستأجرة</h1>
       </div>
 
-      {/* ملخص الحجوزات النشطة */}
+      {/* ملخص المستأجرين  النشطة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="bg-green-50 border-green-200">
           <div className="p-4">

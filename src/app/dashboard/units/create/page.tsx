@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import UnitForm from '@/components/units/UnitForm';
+import UnitForm from '@/components/units/UnitFormYup';
 
 export default function CreateUnitPage() {
   const searchParams = useSearchParams();

@@ -32,57 +32,57 @@ export default function HomePage() {
             </svg>
             <h1 className="text-2xl font-bold text-primary-600">نظام إدارة العقارات</h1>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {!isAuthenticated && !isLoading && (
               <Link href="/login">
-<Button variant="primary" className="px-6">تسجيل الدخول</Button>
+                <Button variant="primary" className="px-6">تسجيل الدخول</Button>
               </Link>
             )}
-            
+
             {isAuthenticated && !isLoading && (
               <Link href={user?.role === 'tenant' ? '/tenant' : '/dashboard'}>
-<Button variant="primary">لوحة التحكم</Button>
+                <Button variant="primary">لوحة التحكم</Button>
               </Link>
             )}
           </div>
         </div>
       </header>
-      
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-  إدارة العقارات المبسطة
-</h2>
+                <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+                  إدارة العقارات المبسطة
+                </h2>
                 <div className="h-1 w-20 bg-white mt-6"></div>
               </div>
-              
+
               <p className="text-xl">
-  حل متكامل لملاك العقارات والمستأجرين لإدارة
-  العقارات، والحجوزات، وطلبات الخدمة.
-</p>
-              
+                حل متكامل لملاك العقارات والمستأجرين لإدارة
+                العقارات، والمستأجرين ، وطلبات الخدمة.
+              </p>
+
               <div className="flex flex-col sm:flex-row gap-4">
                 {!isAuthenticated && !isLoading ? (
                   <Link href="/login">
                     <Button size="lg" className="bg-white text-primary-600 border-white hover:bg-gray-100 px-8 py-3">
-                    ابدأ الآن
+                      ابدأ الآن
                     </Button>
                   </Link>
                 ) : (
                   <Link href={user?.role === 'tenant' ? '/tenant' : '/dashboard'}>
                     <Button size="lg" className="bg-white text-primary-600 border-white hover:bg-gray-100 px-8 py-3">
-                    الذهاب إلى لوحة التحكم
+                      الذهاب إلى لوحة التحكم
                     </Button>
                   </Link>
                 )}
               </div>
             </div>
-            
+
             <div className="hidden md:block">
               <div className="bg-white rounded-lg shadow-2xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
                 <div className="p-5 bg-gray-50">
@@ -91,7 +91,7 @@ export default function HomePage() {
                     <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
                     <div className="h-3 w-3 rounded-full bg-green-400"></div>
                   </div>
-                  
+
                   <div className="rounded-lg overflow-hidden shadow-inner bg-white p-4">
                     <div className="flex justify-between items-center mb-6 pb-4 border-b">
                       <div className="flex items-center">
@@ -103,26 +103,26 @@ export default function HomePage() {
                         <h3 className="ml-3 font-semibold text-gray-800">لوحة إدارة العقارات</h3>
                       </div>
                       <div className="text-xs bg-green-100 text-green-800 py-1 px-2 rounded-full">
-                      3 طلبات جديدة
+                        3 طلبات جديدة
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-blue-50 p-3 rounded border border-blue-100">
-                        <div className="text-sm text-blue-700 font-medium">إجمالي الوحدات</div>
+                          <div className="text-sm text-blue-700 font-medium">إجمالي الوحدات</div>
                           <div className="text-2xl font-bold text-blue-900">91</div>
                         </div>
                         <div className="bg-green-50 p-3 rounded border border-green-100">
-                        <div className="text-sm text-green-700 font-medium">المؤجرة</div>
+                          <div className="text-sm text-green-700 font-medium">المؤجرة</div>
                           <div className="text-2xl font-bold text-green-900">80</div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">النشاطات الأخيرة</span>
-                        <span className="text-xs text-primary-600">عرض الكل</span>
+                          <span className="text-sm font-medium text-gray-700">النشاطات الأخيرة</span>
+                          <span className="text-xs text-primary-600">عرض الكل</span>
                         </div>
                         <div className="space-y-3">
                           <div className="flex items-center text-sm">
@@ -145,18 +145,18 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
+
       {/* Features Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">الميزات الرئيسية</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">الميزات الرئيسية</h2>
             <div className="h-1 w-20 bg-primary-500 mx-auto"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mt-6">
-            يقدم نظامنا مجموعة واسعة من الميزات لكل من ملاك العقارات والمستأجرين.
+              يقدم نظامنا مجموعة واسعة من الميزات لكل من ملاك العقارات والمستأجرين.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {/* Feature 1 */}
             <div className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -166,9 +166,9 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-3 text-gray-900">إدارة العقارات</h3>
-<p className="text-gray-600 mb-4">
-  إدارة المباني، والوحدات، والمستأجرين بسهولة في منصة مركزية واحدة مع تتبع وتقارير مفصلة.
-</p>
+              <p className="text-gray-600 mb-4">
+                إدارة المباني، والوحدات، والمستأجرين بسهولة في منصة مركزية واحدة مع تتبع وتقارير مفصلة.
+              </p>
 
               <ul className="space-y-2">
                 <li className="flex items-center text-gray-700">
@@ -183,7 +183,7 @@ export default function HomePage() {
                   تتبع مخزون الوحدات                </li>
               </ul>
             </div>
-            
+
             {/* Feature 2 */}
             <div className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="rounded-full bg-primary-100 w-16 h-16 flex items-center justify-center text-primary-600 mb-6">
@@ -191,9 +191,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">نظام الحجوزات</h3>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">نظام المستأجرين </h3>
               <p className="text-gray-600 mb-4">
-              إنشاء وإدارة حجوزات العقارات مع تتبع مفصل، وتخزين العقود، ودمج المدفوعات.
+                إنشاء وإدارة حجوزات العقارات مع تتبع مفصل، وتخزين العقود، ودمج المدفوعات.
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center text-gray-700">
@@ -208,7 +208,7 @@ export default function HomePage() {
                   تتبع المدفوعات                </li>
               </ul>
             </div>
-            
+
             {/* Feature 3 */}
             <div className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="rounded-full bg-primary-100 w-16 h-16 flex items-center justify-center text-primary-600 mb-6">
@@ -218,7 +218,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-gray-900">طلبات الخدمة</h3>
               <p className="text-gray-600 mb-4">
-              تقديم وتتبع طلبات الصيانة وأوامر الخدمة بكفاءة مع تحديثات في الوقت الفعلي.
+                تقديم وتتبع طلبات الصيانة وأوامر الخدمة بكفاءة مع تحديثات في الوقت الفعلي.
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center text-gray-700">
@@ -236,7 +236,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
+
       {/* Stats Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -256,22 +256,22 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
+
       {/* CTA Section */}
       <section className="py-16 bg-primary-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">هل أنت مستعد لتبسيط إدارة عقاراتك؟</h2>
           <p className="text-xl mb-8 text-primary-100">
-          انضم إلى آلاف مديري العقارات والمستأجرين الذين يستخدمون منصتنا بالفعل.
+            انضم إلى آلاف مديري العقارات والمستأجرين الذين يستخدمون منصتنا بالفعل.
           </p>
           <Link href="/login">
             <Button size="lg" className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-3">
-            ابدأ اليوم
+              ابدأ اليوم
             </Button>
           </Link>
         </div>
       </section>
-      
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -284,35 +284,35 @@ export default function HomePage() {
                 <h3 className="text-xl font-semibold">نظام إدارة العقارات</h3>
               </div>
               <p className="text-gray-400">
-              تبسيط إدارة العقارات للمالكين والمستأجرين من خلال منصتنا الشاملة.
+                تبسيط إدارة العقارات للمالكين والمستأجرين من خلال منصتنا الشاملة.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4 text-primary-200">Quick Links</h3>
               <ul className="space-y-3">
                 <li>
                   <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-                  الرئيسية
+                    الرئيسية
                   </Link>
                 </li>
                 <li>
                   <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
-                  تسجيل الدخول
+                    تسجيل الدخول
                   </Link>
                 </li>
                 <li>
                   <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-                  من نحن                  </Link>
+                    من نحن                  </Link>
                 </li>
                 <li>
                   <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-                  اتصل بنا
+                    اتصل بنا
                   </Link>
                 </li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4 text-primary-200">اتصل بنا</h3>
               <ul className="space-y-3 text-gray-400">
@@ -338,9 +338,9 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} نظام إدارة العقارات. جميع الحقوق محفوظة.</p>
+            <p>&copy; {new Date().getFullYear()} نظام إدارة العقارات. جميع الحقوق محفوظة.</p>
           </div>
         </div>
       </footer>
