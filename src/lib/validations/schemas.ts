@@ -430,30 +430,30 @@ export const reservationSchema = yup.object({
     .nullable()
     .max(1000, 'الملاحظات طويلة جداً'),
 
-  contractPdf: yup
-    .mixed()
-    .nullable()
-    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
-    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
-
-  contractImage: yup
-    .mixed()
-    .nullable()
-    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
-    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
-  identityImageFront: yup
-    .mixed()
-    .nullable()
-    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
-    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
-
-  identityImageBack: yup
-    .mixed()
-    .nullable()
-    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
-    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
-
-
+  contractImage: yup.mixed<File>().required('صورة العقد مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+    }),
+  contractPdf: yup.mixed<File>().required('ملف PDF للعقد مطلوب')
+    .test('fileType', 'يجب أن يكون ملف PDF', (value) => {
+      return value ? value.type === 'application/pdf' : false;
+    }),
+  identityImageFront: yup.mixed<File>().required('صورة الوجه الأمامي للهوية مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+    }),
+  identityImageBack: yup.mixed<File>().required('صورة الوجه الخلفي للهوية مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+    }),
+  commercialRegisterImage: yup.mixed<File>().when('tenantType', {
+    is: (value: string) => ['commercial_register', 'partnership', 'foreign_company'].includes(value),
+    then: (schema) => schema.required('صورة السجل التجاري مطلوبة')
+      .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+        return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+      }),
+    otherwise: (schema) => schema.optional(),
+  }),
 });
 
 // ===== PAYMENT VALIDATION SCHEMA =====
