@@ -291,7 +291,7 @@ export default function UnitForm({
             />
           </div>
 
-          {isEdit && <FormSelect
+          {/* {isEdit && <FormSelect
             label="حالة الوحدة"
             register={register}
             name="status"
@@ -299,7 +299,7 @@ export default function UnitForm({
             options={UNIT_STATUS_OPTIONS}
             required
             placeholder="اختر حالة الوحدة"
-          />}
+          />} */}
         </div>
 
         {/* Additional Information Section */}
