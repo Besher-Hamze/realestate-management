@@ -26,7 +26,7 @@ export default function CreateCompanyPage() {
       if (isEditMode && user?.role === 'admin') {
         try {
           const companyId = Number(params.id);
-          const data = await companiesApi.getById(companyId);
+          const data = await companiesApi.getById(companyId) as any;
           setInitialData(data);
         } catch (error) {
           toast.error('فشل في جلب بيانات الشركة');

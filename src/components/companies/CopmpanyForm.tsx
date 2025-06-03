@@ -147,9 +147,35 @@ export default function CompanyForm({
 الدور: ${managerCredentials.role === 'manager' ? 'مدير' : managerCredentials.role}
     `;
 
-    navigator.clipboard.writeText(credentials.trim())
-      .then(() => toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!'))
-      .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
+    // Check if Clipboard API is available
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(credentials.trim())
+        .then(() => toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!'))
+        .catch(() => toast.error('فشل نسخ بيانات الاعتماد'));
+    } else {
+      // Fallback for non-secure contexts
+      fallbackCopyToClipboard(credentials.trim());
+    }
+  };
+
+  const fallbackCopyToClipboard = (text: any) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand('copy');
+      toast.success('تم نسخ بيانات اعتماد المدير إلى الحافظة!');
+    } catch (err) {
+      toast.error('فشل نسخ بيانات الاعتماد');
+    } finally {
+      document.body.removeChild(textArea);
+    }
   };
 
   return (
