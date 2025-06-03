@@ -287,7 +287,7 @@ export default function UnitForm({
               error={errors.price}
               required
               helpText="سعر الإيجار للوحدة"
-              startIcon={<span className="text-gray-500">ر.س</span>}
+              startIcon={<span className="text-gray-500">OMR</span>}
             />
           </div>
 

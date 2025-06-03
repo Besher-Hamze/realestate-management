@@ -68,10 +68,12 @@ export function formatDateForInput(date: string | Date): string {
 /**
  * Format currency with proper locale
  */
-export function formatCurrency(amount: number, locale: string = 'en-US', currency: string = 'USD'): string {
+export function formatCurrency(amount: number, locale: string = 'ar-AR', currency: string = 'OMR'): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: currency
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

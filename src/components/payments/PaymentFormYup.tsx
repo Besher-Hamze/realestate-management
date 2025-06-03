@@ -242,7 +242,7 @@ export default function PaymentForm({
               error={errors.amount}
               required
               helpText="المبلغ المدفوع بالريال السعودي"
-              startIcon={<span className="text-gray-500">ر.س</span>}
+              startIcon={<span className="text-gray-500">OMR</span>}
             />
 
             <FormInput
@@ -351,7 +351,7 @@ export default function PaymentForm({
                   step="0.01"
                   error={errors.lateFee}
                   helpText="رسوم التأخير المطبقة (اختياري)"
-                  startIcon={<span className="text-gray-500">ر.س</span>}
+                  startIcon={<span className="text-gray-500">OMR</span>}
                 />
               )}
 

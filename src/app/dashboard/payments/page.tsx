@@ -113,7 +113,7 @@ export default function PaymentsPage() {
       {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">المدفوعات</h1>
-        <Link href="/dashboard/payments/create">
+        {/* <Link href="/dashboard/payments/create">
           <Button
             variant="primary"
             leftIcon={
@@ -124,7 +124,7 @@ export default function PaymentsPage() {
           >
             إضافة مدفوعة
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
       {/* بطاقات ملخص المدفوعات */}

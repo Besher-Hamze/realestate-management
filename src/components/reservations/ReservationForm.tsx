@@ -407,10 +407,10 @@ export default function ReservationForm({
               register={register}
               name="endDate"
               type="date"
-              min={getMinEndDate()}
+              // min={getMinEndDate()}
               error={errors.endDate}
               required
-              helpText="تاريخ انتهاء العقد (الحد الأدنى سنة واحدة)"
+              helpText="تاريخ انتهاء العقد "
             />
           </div>
 
@@ -467,7 +467,7 @@ export default function ReservationForm({
                   error={errors.depositAmount}
                   required={watchedIncludesDeposit}
                   helpText="مبلغ التأمين المطلوب"
-                  startIcon={<span className="text-gray-500">ر.س</span>}
+                  startIcon={<span className="text-gray-500">OMR</span>}
                 />
               )}
             </div>

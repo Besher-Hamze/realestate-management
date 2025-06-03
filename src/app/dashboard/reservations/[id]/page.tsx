@@ -388,7 +388,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               <h2 className="text-lg font-semibold text-gray-900">تفاصيل الحجز</h2>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-                  reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  reservation.status === 'cancelled' ? 'bg-yellow-100 text-yellow-800' :
                     reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
                       'bg-red-100 text-red-800'
                   }`}
@@ -425,6 +425,14 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   {formatDate(reservation.createdAt)}
                 </p>
               </div>
+
+              {reservation.depositAmount && <div>
+                <h3 className="text-sm font-medium text-gray-500">مبلغ التأمين</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {formatCurrency(reservation.depositAmount)}
+                </p>
+              </div>}
+
             </div>
 
             {/* الملاحظات */}
@@ -623,7 +631,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">سجل المدفوعات</h2>
-          <Link href={`/dashboard/payments/create?reservationId=${reservation.id}`}>
+          {/* <Link href={`/dashboard/payments/create?reservationId=${reservation.id}`}>
             <Button
               variant="primary"
               size="sm"
@@ -635,7 +643,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             >
               إضافة مدفوعة
             </Button>
-          </Link>
+          </Link> */}
         </div>
 
         <Card>
