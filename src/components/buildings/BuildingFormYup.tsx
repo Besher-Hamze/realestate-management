@@ -15,6 +15,7 @@ import {
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { BUILDING_TYPE_OPTIONS } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BuildingFormYupProps {
   isEdit?: boolean;
@@ -55,7 +56,6 @@ export default function BuildingForm({
   } = useAsyncForm<BuildingFormData>(
     buildingSchema,
     isEdit && initialData ? {
-      companyId: initialData.companyId,
       buildingNumber: initialData.buildingNumber,
       name: initialData.name,
       address: initialData.address,
@@ -92,7 +92,6 @@ export default function BuildingForm({
   useEffect(() => {
     if (isEdit && initialData) {
       reset({
-        companyId: initialData.companyId,
         buildingNumber: initialData.buildingNumber,
         name: initialData.name,
         address: initialData.address,

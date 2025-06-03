@@ -28,7 +28,9 @@ export default function CreateBuildingPage() {
       </div>
 
       {/* نموذج المبنى */}
-      <BuildingForm />
+      <BuildingForm
+
+      />
     </div>
   );
 }

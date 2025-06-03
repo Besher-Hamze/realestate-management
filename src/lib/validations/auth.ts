@@ -14,12 +14,12 @@ export const authValidation = {
     ...createRequiredRule('اسم المستخدم مطلوب'),
     ...createMinLengthRule(3, 'اسم المستخدم قصير جداً'),
   },
-  
+
   password: {
     ...createRequiredRule('كلمة المرور مطلوبة'),
     ...createMinLengthRule(6, 'كلمة المرور قصيرة جداً'),
   },
-  
+
   // Registration validation
   fullName: {
     ...createRequiredRule('الاسم الكامل مطلوب'),
@@ -32,17 +32,17 @@ export const authValidation = {
       },
     },
   },
-  
+
   email: {
     ...createRequiredRule('البريد الإلكتروني مطلوب'),
     ...createEmailRule(),
   },
-  
+
   phone: {
     ...createRequiredRule('رقم الهاتف مطلوب'),
     ...createPhoneRule(),
   },
-  
+
   // Registration username with stronger validation
   registrationUsername: {
     ...createRequiredRule('اسم المستخدم مطلوب'),
@@ -55,29 +55,29 @@ export const authValidation = {
       },
     },
   },
-  
+
   // Registration password with stronger validation
   registrationPassword: {
     ...createRequiredRule('كلمة المرور مطلوبة'),
     ...createPasswordRule(),
   },
-  
+
   // Password confirmation
   confirmPassword: {
     ...createRequiredRule('تأكيد كلمة المرور مطلوب'),
     validate: {
       passwordMatch: (value: string, formValues: any) => {
-        return value === formValues.password || value === formValues.registrationPassword || 
-               VALIDATION_MESSAGES.PASSWORDS_DONT_MATCH;
+        return value === formValues.password || value === formValues.registrationPassword ||
+          VALIDATION_MESSAGES.PASSWORDS_DONT_MATCH;
       },
     },
   },
-  
+
   // Change password validation
   currentPassword: {
     ...createRequiredRule('كلمة المرور الحالية مطلوبة'),
   },
-  
+
   newPassword: {
     ...createRequiredRule('كلمة المرور الجديدة مطلوبة'),
     ...createPasswordRule(),
@@ -87,7 +87,7 @@ export const authValidation = {
       },
     },
   },
-  
+
   confirmNewPassword: {
     ...createRequiredRule('تأكيد كلمة المرور الجديدة مطلوب'),
     validate: {
@@ -105,7 +105,7 @@ export const validateLoginForm = (data: any): Record<string, string> => {
   if (!data.username?.trim()) {
     errors.username = 'اسم المستخدم مطلوب';
   }
-  
+
   if (!data.password?.trim()) {
     errors.password = 'كلمة المرور مطلوبة';
   }
@@ -129,7 +129,7 @@ export const validateRegistrationForm = (data: any): Record<string, string> => {
       errors.username = 'اسم المستخدم قصير جداً (3 أحرف على الأقل)';
     }
   }
-  
+
   if (!data.password?.trim()) {
     errors.password = 'كلمة المرور مطلوبة';
   } else {
@@ -142,13 +142,13 @@ export const validateRegistrationForm = (data: any): Record<string, string> => {
       errors.password = 'كلمة المرور يجب أن تحتوي على أرقام';
     }
   }
-  
+
   if (!data.confirmPassword?.trim()) {
     errors.confirmPassword = 'تأكيد كلمة المرور مطلوب';
   } else if (data.password !== data.confirmPassword) {
     errors.confirmPassword = 'كلمات المرور غير متطابقة';
   }
-  
+
   if (!data.fullName?.trim()) {
     errors.fullName = 'الاسم الكامل مطلوب';
   } else {
@@ -157,7 +157,7 @@ export const validateRegistrationForm = (data: any): Record<string, string> => {
       errors.fullName = 'الاسم يجب أن يحتوي على أحرف عربية أو إنجليزية فقط';
     }
   }
-  
+
   if (!data.email?.trim()) {
     errors.email = 'البريد الإلكتروني مطلوب';
   } else {
@@ -166,15 +166,14 @@ export const validateRegistrationForm = (data: any): Record<string, string> => {
       errors.email = 'البريد الإلكتروني غير صالح';
     }
   }
-  
+
   if (!data.phone?.trim()) {
     errors.phone = 'رقم الهاتف مطلوب';
   } else {
-    const omanPhoneRegex = /^(\+968|968|00968)?[2-9]\d{7}$/;
-    const internationalPhoneRegex = /^(\+\d{1,3}[- ]?)?\d{8,15}$/;
+    const generalPhoneRegex = /^\+?[\d\s()-]{7,15}$/;
     const cleanPhone = data.phone.replace(/[\s\-\(\)]/g, '');
-    
-    if (!omanPhoneRegex.test(cleanPhone) && !internationalPhoneRegex.test(cleanPhone)) {
+
+    if (!generalPhoneRegex.test(cleanPhone) && !generalPhoneRegex.test(cleanPhone)) {
       errors.phone = 'رقم الهاتف غير صالح';
     }
   }
@@ -189,7 +188,7 @@ export const validateChangePasswordForm = (data: any): Record<string, string> =>
   if (!data.currentPassword?.trim()) {
     errors.currentPassword = 'كلمة المرور الحالية مطلوبة';
   }
-  
+
   if (!data.newPassword?.trim()) {
     errors.newPassword = 'كلمة المرور الجديدة مطلوبة';
   } else {
@@ -204,7 +203,7 @@ export const validateChangePasswordForm = (data: any): Record<string, string> =>
       errors.newPassword = 'كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية';
     }
   }
-  
+
   if (!data.confirmNewPassword?.trim()) {
     errors.confirmNewPassword = 'تأكيد كلمة المرور الجديدة مطلوب';
   } else if (data.newPassword !== data.confirmNewPassword) {

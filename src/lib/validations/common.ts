@@ -40,12 +40,10 @@ export const validateEmail = (email: string): boolean => {
 };
 
 export const validatePhone = (phone: string): boolean => {
-  // Oman phone number patterns
-  const omanPhoneRegex = /^(\+968|968|00968)?[2-9]\d{7}$/;
-  const internationalPhoneRegex = /^(\+\d{1,3}[- ]?)?\d{8,15}$/;
-  
+  // Clean the phone number
   const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-  return omanPhoneRegex.test(cleanPhone) || internationalPhoneRegex.test(cleanPhone);
+  // Accept any non-empty cleaned phone number
+  return !!cleanPhone;
 };
 
 export const validateIdNumber = (idNumber: string): boolean => {
@@ -134,7 +132,7 @@ export const createEmailRule = (message?: string) => ({
 
 export const createPhoneRule = (message?: string) => ({
   validate: {
-    validPhone: (value: string) => 
+    validPhone: (value: string) =>
       !value || validatePhone(value) || (message || VALIDATION_MESSAGES.INVALID_PHONE),
   },
 });
@@ -159,16 +157,16 @@ export const createFileValidationRule = (
   validate: {
     fileType: (file: File | undefined) => {
       if (!file) return true;
-      const typeNames = allowedTypes.includes('image/jpeg') ? 'الصور' : 
-                       allowedTypes.includes('application/pdf') ? 'ملفات PDF' : 'الملفات المدعومة';
-      return validateFileType(file, allowedTypes) || 
-             customMessage || 
-             `${VALIDATION_MESSAGES.INVALID_FILE_TYPE}. الأنواع المدعومة: ${typeNames}`;
+      const typeNames = allowedTypes.includes('image/jpeg') ? 'الصور' :
+        allowedTypes.includes('application/pdf') ? 'ملفات PDF' : 'الملفات المدعومة';
+      return validateFileType(file, allowedTypes) ||
+        customMessage ||
+        `${VALIDATION_MESSAGES.INVALID_FILE_TYPE}. الأنواع المدعومة: ${typeNames}`;
     },
     fileSize: (file: File | undefined) => {
       if (!file) return true;
-      return validateFileSize(file, maxSize) || 
-             VALIDATION_MESSAGES.FILE_SIZE_TOO_LARGE(formatFileSize(maxSize));
+      return validateFileSize(file, maxSize) ||
+        VALIDATION_MESSAGES.FILE_SIZE_TOO_LARGE(formatFileSize(maxSize));
     },
   },
 });
@@ -192,15 +190,15 @@ export const createDateRule = (type: 'future' | 'past' | 'any' = 'any', message?
     validDate: (value: string) => {
       if (!value) return true;
       if (!validateDate(value)) return message || VALIDATION_MESSAGES.INVALID_DATE;
-      
+
       if (type === 'future' && !validateFutureDate(value)) {
         return message || VALIDATION_MESSAGES.FUTURE_DATE_REQUIRED;
       }
-      
+
       if (type === 'past' && !validatePastDate(value)) {
         return message || VALIDATION_MESSAGES.PAST_DATE_REQUIRED;
       }
-      
+
       return true;
     },
   },

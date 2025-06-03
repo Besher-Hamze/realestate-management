@@ -23,7 +23,7 @@ export const tenantValidation = {
       },
     },
   },
-  
+
   password: {
     ...createRequiredRule('كلمة المرور مطلوبة'),
     ...createMinLengthRule(8, 'كلمة المرور قصيرة جداً (8 أحرف على الأقل)'),
@@ -39,33 +39,33 @@ export const tenantValidation = {
       },
     },
   },
-  
+
   fullName: {
     ...createRequiredRule('الاسم الكامل مطلوب'),
     ...createMinLengthRule(2, 'الاسم الكامل قصير جداً'),
     ...createMaxLengthRule(100, 'الاسم الكامل طويل جداً'),
   },
-  
+
   email: {
     ...createRequiredRule('البريد الإلكتروني مطلوب'),
     ...createEmailRule(),
   },
-  
+
   phone: {
     ...createRequiredRule('رقم الهاتف مطلوب'),
     ...createPhoneRule(),
   },
-  
+
   whatsappNumber: {
     ...createRequiredRule('رقم الواتساب مطلوب'),
     ...createPhoneRule('رقم الواتساب غير صالح'),
   },
-  
+
   idNumber: {
     ...createRequiredRule('رقم الهوية مطلوب'),
     ...createIdNumberRule(),
   },
-  
+
   tenantType: {
     ...createRequiredRule('نوع المستأجر مطلوب'),
     validate: {
@@ -84,23 +84,23 @@ export const tenantValidation = {
       },
     },
   },
-  
+
   businessActivities: {
     ...createMaxLengthRule(500, 'الأنشطة التجارية طويلة جداً'),
   },
-  
+
   contactPerson: {
     ...createMaxLengthRule(100, 'اسم الشخص المسؤول طويل جداً'),
   },
-  
+
   contactPosition: {
     ...createMaxLengthRule(100, 'منصب الشخص المسؤول طويل جداً'),
   },
-  
+
   notes: {
     ...createMaxLengthRule(1000, 'الملاحظات طويلة جداً'),
   },
-  
+
   identityImageFront: {
     ...createRequiredRule('صورة الوجه الأمامي للهوية مطلوبة'),
     ...createFileValidationRule(
@@ -109,7 +109,7 @@ export const tenantValidation = {
       'يرجى تحميل صورة واضحة للوجه الأمامي للهوية (JPEG, PNG فقط)'
     ),
   },
-  
+
   identityImageBack: {
     ...createRequiredRule('صورة الوجه الخلفي للهوية مطلوبة'),
     ...createFileValidationRule(
@@ -118,7 +118,7 @@ export const tenantValidation = {
       'يرجى تحميل صورة واضحة للوجه الخلفي للهوية (JPEG, PNG فقط)'
     ),
   },
-  
+
   commercialRegisterImage: {
     ...createFileValidationRule(
       FILE_TYPES.ALL_DOCUMENTS,
@@ -136,31 +136,31 @@ export const validateTenantForm = (data: any): Record<string, string> => {
   if (!data.username?.trim()) {
     errors.username = 'اسم المستخدم مطلوب';
   }
-  
+
   if (!data.password?.trim()) {
     errors.password = 'كلمة المرور مطلوبة';
   }
-  
+
   if (!data.fullName?.trim()) {
     errors.fullName = 'الاسم الكامل مطلوب';
   }
-  
+
   if (!data.email?.trim()) {
     errors.email = 'البريد الإلكتروني مطلوب';
   }
-  
+
   if (!data.phone?.trim()) {
     errors.phone = 'رقم الهاتف مطلوب';
   }
-  
+
   if (!data.whatsappNumber?.trim()) {
     errors.whatsappNumber = 'رقم الواتساب مطلوب';
   }
-  
+
   if (!data.idNumber?.trim()) {
     errors.idNumber = 'رقم الهوية مطلوب';
   }
-  
+
   if (!data.tenantType) {
     errors.tenantType = 'نوع المستأجر مطلوب';
   }
@@ -169,7 +169,7 @@ export const validateTenantForm = (data: any): Record<string, string> => {
   if (!data.identityImageFront) {
     errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
   }
-  
+
   if (!data.identityImageBack) {
     errors.identityImageBack = 'صورة الوجه الخلفي للهوية مطلوبة';
   }

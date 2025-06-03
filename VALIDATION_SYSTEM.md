@@ -108,9 +108,7 @@ export const companySchema = yup.object({
 
   phone: yup
     .string()
-    .required('رقم الهاتف مطلوب')
-    .saudiPhone(),
-
+    .required('رقم الهاتف مطلوب'),
   // File validations
   logoImage: yup
     .mixed()

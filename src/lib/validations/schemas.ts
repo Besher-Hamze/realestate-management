@@ -3,7 +3,7 @@ import * as yup from 'yup';
 // Common validation patterns
 const arabicTextRegex = /^[\u0600-\u06FF\s\w\d\-_().]+$/;
 const phoneRegex = /^[+]?[0-9\s\-()]{7,20}$/;
-const saudiPhoneRegex = /^((\+966)|0)?[5][0-9]{8}$/;
+const generalPhoneRegex = /^\+?[\d\s()-]{7,15}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // File validation
@@ -16,8 +16,11 @@ yup.addMethod(yup.string, 'arabicText', function (message = 'النص يجب أ�
   return this.matches(arabicTextRegex, { message, excludeEmptyString: true });
 });
 
-yup.addMethod(yup.string, 'saudiPhone', function (message = 'رقم الهاتف غير صالح') {
-  return this.matches(saudiPhoneRegex, { message, excludeEmptyString: true });
+yup.addMethod(yup.string, 'anyPhone', function (message = 'Invalid phone number') {
+  return this.matches(generalPhoneRegex, {
+    message,
+    excludeEmptyString: true
+  });
 });
 
 yup.addMethod(yup.mixed, 'fileSize', function (maxSize: number, message = 'حجم الملف كبير جداً') {
@@ -74,14 +77,10 @@ export const companySchema = yup.object({
 
   phone: yup
     .string()
-    .required('رقم الهاتف مطلوب')
-    .saudiPhone(),
-
+    .required('رقم الهاتف مطلوب'),
   whatsappNumber: yup
     .string()
-    .nullable()
-    .saudiPhone(),
-
+    .nullable(),
   secondaryPhone: yup
     .string()
     .nullable()
@@ -153,9 +152,7 @@ export const companySchema = yup.object({
     .when('$isCreating', {
       is: true,
       then: (schema) => schema
-        .required('رقم هاتف المدير مطلوب')
-        .saudiPhone(),
-      otherwise: (schema) => schema.nullable()
+        .required('رقم هاتف المدير مطلوب'), otherwise: (schema) => schema.nullable()
     }),
 });
 
@@ -170,11 +167,6 @@ export type ReservationFormData = yup.InferType<typeof reservationSchema>;
 
 // ===== BUILDING VALIDATION SCHEMA =====
 export const buildingSchema = yup.object({
-  companyId: yup
-    .number()
-    .required('الشركة مطلوبة')
-    .positive('يرجى اختيار شركة صالحة')
-    .integer('معرف الشركة غير صالح'),
 
   buildingNumber: yup
     .string()
@@ -361,14 +353,11 @@ export const userSchema = yup.object({
 
   phone: yup
     .string()
-    .required('رقم الهاتف مطلوب')
-    .saudiPhone(),
+    .required('رقم الهاتف مطلوب'),
 
   whatsappNumber: yup
     .string()
-    .nullable()
-    .saudiPhone(),
-
+    .nullable(),
   idNumber: yup
     .string()
     .required('رقم الهوية مطلوب')
@@ -440,6 +429,31 @@ export const reservationSchema = yup.object({
     .string()
     .nullable()
     .max(1000, 'الملاحظات طويلة جداً'),
+
+  contractPdf: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
+    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
+
+  contractImage: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
+    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
+  identityImageFront: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
+    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
+
+  identityImageBack: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الصورة  كبير جداً')
+    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون الصورة بصيغة صورة صحيحة'),
+
+
 });
 
 // ===== PAYMENT VALIDATION SCHEMA =====
