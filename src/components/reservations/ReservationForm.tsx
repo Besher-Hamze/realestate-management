@@ -624,6 +624,7 @@ export default function ReservationForm({
                     helpText="صورة واضحة للعقد (JPEG, PNG)"
                     currentFile={isEdit ? initialData?.contractImageUrl : undefined}
                     selectedFile={watchedContractImage}
+                    required
                   />
                 )}
               />
@@ -641,6 +642,7 @@ export default function ReservationForm({
                     helpText="ملف PDF للعقد (اختياري)"
                     currentFile={isEdit ? initialData?.contractPdfUrl : undefined}
                     selectedFile={watchedContractPdf}
+                    required
                   />
                 )}
               />
@@ -660,8 +662,7 @@ export default function ReservationForm({
                       onChange={handleFileChange('identityImageFront')}
                       error={fieldState.error}
                       helpText="صورة واضحة للوجه الأمامي للهوية"
-                      required={createNewTenant}
-                      selectedFile={watchedIdentityImageFront}
+                      required={true} selectedFile={watchedIdentityImageFront}
                     />
                   )}
                 />
@@ -677,7 +678,7 @@ export default function ReservationForm({
                       onChange={handleFileChange('identityImageBack')}
                       error={fieldState.error}
                       helpText="صورة واضحة للوجه الخلفي للهوية"
-                      required={createNewTenant}
+                      required={true}
                       selectedFile={watchedIdentityImageBack}
                     />
                   )}
