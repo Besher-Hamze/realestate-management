@@ -43,16 +43,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100" >
       <Sidebar />
-      
+
       <div className={cn("md:ml-64 min-h-screen flex flex-col")}>
         <Navbar />
-        
+
         <main className="flex-1 p-4 md:p-6 lg:p-8">
           {children}
         </main>
-        
+
         <footer className="border-t border-gray-200 py-4 px-6 text-center text-sm text-gray-500">
           <p>&copy; {new Date().getFullYear()} Real Estate Management System. All rights reserved.</p>
         </footer>

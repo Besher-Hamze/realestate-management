@@ -116,7 +116,7 @@ export default function UnitForm({
     // التعامل مع إدخال الأرقام
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        const numericValue = value === '' ? 1 : parseFloat(value);
+        const numericValue = value === '' ? "1" : parseFloat(value);
         setFormData(prevData => ({ ...prevData, [name]: numericValue }));
     };
 
@@ -243,11 +243,8 @@ export default function UnitForm({
                         label="المساحة (م²)"
                         id="area"
                         name="area"
-                        type="number"
                         value={formData.area.toString()}
                         onChange={handleNumberChange}
-                        step="0.01"
-                        min="0"
                         required
                         fullWidth
                     />
@@ -258,11 +255,8 @@ export default function UnitForm({
                         label="عدد الحمامات"
                         id="bathrooms"
                         name="bathrooms"
-                        type="number"
                         value={formData.bathrooms.toString()}
                         onChange={handleNumberChange}
-                        min="1"
-                        step="1"
                         required
                         fullWidth
                     />
@@ -273,11 +267,8 @@ export default function UnitForm({
                         label="السعر"
                         id="price"
                         name="price"
-                        type="number"
                         value={formData.price.toString()}
                         onChange={handleNumberChange}
-                        step="0.01"
-                        min="0"
                         required
                         fullWidth
                         leftIcon={
