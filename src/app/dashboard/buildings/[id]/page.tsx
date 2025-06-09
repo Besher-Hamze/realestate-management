@@ -114,11 +114,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
       header: 'المساحة (م²)',
       cell: (unit) => <span className="text-gray-700">{unit.area}</span>,
     },
-    {
-      key: 'bedrooms',
-      header: 'غرف النوم',
-      cell: (unit) => <span className="text-gray-700">{unit.bedrooms}</span>,
-    },
+
     {
       key: 'bathrooms',
       header: 'الحمامات',

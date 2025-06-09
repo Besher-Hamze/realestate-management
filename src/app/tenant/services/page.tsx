@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import ServiceList from '@/components/services/ServiceList';
-import ServiceListFilter from '@/components/services/ServiceListFilter';
+import { ServiceListFilter } from '@/components/services/ServiceListFilter';
 
 export default function TenantServicesPage() {
   const [services, setServices] = useState<ServiceOrder[]>([]);
@@ -241,14 +241,8 @@ export default function TenantServicesPage() {
         </Card>
       </div>
 
-      {/* المرشحات المتقدمة */}
-      <ServiceListFilter
-        services={services}
-        onFilterChange={handleFilteredServicesChange}
-      />
-
       {/* قائمة الخدمات */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 p-4">
         <ServiceList
           services={filteredServices}
           isLoading={isLoading}

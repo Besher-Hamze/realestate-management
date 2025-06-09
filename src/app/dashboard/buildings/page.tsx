@@ -7,10 +7,14 @@ import { Building } from '@/lib/types';
 import { buildingsApi } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import BuildingList from '@/components/buildings/BuildingList';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BuildingsPage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { user } = useAuth();
+  const canEdit = user?.role === 'admin' || user?.role === 'manager';
 
   useEffect(() => {
     fetchBuildings();
@@ -20,7 +24,7 @@ export default function BuildingsPage() {
     try {
       setIsLoading(true);
       const response = await buildingsApi.getAll();
-      
+
       if (response.data) {
         setBuildings(response.data);
       } else {
@@ -44,7 +48,7 @@ export default function BuildingsPage() {
       {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">المباني</h1>
-        <Link href="/dashboard/buildings/create">
+        {canEdit && <Link href="/dashboard/buildings/create">
           <Button
             variant="primary"
             leftIcon={
@@ -55,9 +59,9 @@ export default function BuildingsPage() {
           >
             إضافة مبنى
           </Button>
-        </Link>
+        </Link>}
       </div>
-      
+
       {/* قائمة المباني */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <BuildingList

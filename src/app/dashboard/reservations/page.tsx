@@ -118,21 +118,7 @@ export default function ReservationsPage() {
           </div>
         </Card>
 
-        <Card className="bg-yellow-50 border-yellow-200">
-          <div className="p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="mr-4">
-                <h3 className="font-medium text-yellow-800">قيد الانتظار</h3>
-                <p className="text-2xl font-bold text-yellow-900">{getStatusCount('pending')}</p>
-              </div>
-            </div>
-          </div>
-        </Card>
+
 
         <Card className="bg-gray-50 border-gray-200">
           <div className="p-4">

@@ -228,6 +228,8 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
     );
   }
 
+  console.log(unit);
+
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header with navigation and actions */}
@@ -310,13 +312,6 @@ export default function TenantUnitDetailPage({ params }: TenantUnitDetailPagePro
                 <h3 className="text-sm font-medium text-gray-500">الإيجار</h3>
                 <p className="mt-1 text-base text-gray-900 font-medium">
                   {formatCurrency(unit.price)} / شهرياً
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">غرف النوم</h3>
-                <p className="mt-1 text-base text-gray-900">
-                  {unit.bedrooms}
                 </p>
               </div>
 

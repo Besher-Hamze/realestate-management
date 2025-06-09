@@ -8,10 +8,11 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { unitsApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { 
+import { useAuth } from '@/contexts/AuthContext';
+import {
   getUnitTypeLabel,
-  getUnitLayoutLabel,  
-  getUnitStatusLabel 
+  getUnitLayoutLabel,
+  getUnitStatusLabel
 } from '@/constants/options';
 
 interface UnitListProps {
@@ -20,6 +21,7 @@ interface UnitListProps {
   onDelete?: (id: number) => void;
   refetch: () => void;
   forTenant?: boolean;
+  showOwnerInfo?: boolean;
 }
 
 export default function UnitList({
@@ -28,18 +30,25 @@ export default function UnitList({
   onDelete,
   refetch,
   forTenant = false,
+  showOwnerInfo = false,
 }: UnitListProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<RealEstateUnit | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check user permissions
+  const canEdit = user?.role === 'admin' || user?.role === 'manager';
+  const canDelete = user?.role === 'admin';
 
   // التعامل مع النقر على الصف
   const handleRowClick = (unit: RealEstateUnit) => {
     if (forTenant) {
       router.push(`/tenant/units/${unit.id}`);
     } else {
-      router.push(`/dashboard/units/${unit.id}`);
+      if (canEdit)
+        router.push(`/dashboard/units/${unit.id}`);
     }
   };
 
@@ -79,23 +88,35 @@ export default function UnitList({
     }
   };
 
+  // Navigate to create reservation
+  const handleCreateReservation = (unit: RealEstateUnit, e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/dashboard/reservations/create?unitId=${unit.id}`);
+  };
+
   // تحديد الأعمدة للجدول
   const baseColumns: TableColumn<RealEstateUnit>[] = [
     {
       key: 'unitNumber',
-      header: 'رقم الوحدة',
+      header: 'معلومات الوحدة',
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{unit.unitNumber}</span>
-          <span className="text-xs text-gray-500">
-            المبنى: {unit.building?.name || 'غير متوفر'}
-          </span>
+          <div className="flex items-center space-x-2 text-xs text-gray-500">
+            <span>المبنى: {unit.building?.name || 'غير متوفر'}</span>
+            {unit.building?.buildingNumber && (
+              <>
+                <span>•</span>
+                <span>رقم: {unit.building.buildingNumber}</span>
+              </>
+            )}
+          </div>
         </div>
       ),
     },
     {
       key: 'unitType',
-      header: 'نوع الوحدة',
+      header: 'النوع والتخطيط',
       cell: (unit) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">
@@ -127,9 +148,12 @@ export default function UnitList({
       key: 'price',
       header: 'السعر',
       cell: (unit) => (
-        <span className="font-medium text-gray-900">
-          {formatCurrency(unit.price)}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">
+            {formatCurrency(unit.price)}
+          </span>
+          <span className="text-xs text-gray-500">شهرياً</span>
+        </div>
       ),
     },
     {
@@ -137,14 +161,14 @@ export default function UnitList({
       header: 'الحالة',
       cell: (unit) => {
         const statusClasses = {
-          available: 'bg-green-100 text-green-800',
-          rented: 'bg-blue-100 text-blue-800',
-          maintenance: 'bg-yellow-100 text-yellow-800',
+          available: 'bg-green-100 text-green-800 border-green-200',
+          rented: 'bg-blue-100 text-blue-800 border-blue-200',
+          maintenance: 'bg-yellow-100 text-yellow-800 border-yellow-200',
         };
-        
+
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
             ${statusClasses[unit.status]}`}
           >
             {getUnitStatusLabel(unit.status)}
@@ -154,6 +178,26 @@ export default function UnitList({
     },
   ];
 
+  // Add owner column if requested
+  if (showOwnerInfo) {
+    baseColumns.splice(-1, 0, {
+      key: 'owner',
+      header: 'المالك',
+      cell: (unit) => (
+        <div className="flex flex-col">
+          <span className="text-gray-700">
+            {unit.owner?.fullName || 'غير محدد'}
+          </span>
+          {unit.owner?.username && (
+            <span className="text-xs text-gray-500">
+              @{unit.owner.username}
+            </span>
+          )}
+        </div>
+      ),
+    });
+  }
+
   // أعمدة خاصة بالمشرف/المدير مع الإجراءات
   const adminColumns: TableColumn<RealEstateUnit>[] = [
     ...baseColumns,
@@ -161,20 +205,39 @@ export default function UnitList({
       key: 'actions',
       header: 'الإجراءات',
       cell: (unit) => (
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-1">
           <Link href={`/dashboard/units/${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">عرض</Button>
+            <Button size="xs" variant="outline">عرض</Button>
           </Link>
-          <Link href={`/dashboard/units/${unit.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">تعديل</Button>
-          </Link>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={(e) => openDeleteModal(unit, e)}
-          >
-            حذف
-          </Button>
+
+          {canEdit && (
+            <>
+              <Link href={`/dashboard/units/${unit.id}/edit`} onClick={(e) => e.stopPropagation()}>
+                <Button size="xs" variant="outline">تعديل</Button>
+              </Link>
+
+              {unit.status === 'available' && (
+                <Button
+                  size="xs"
+                  variant="primary"
+                  onClick={(e) => handleCreateReservation(unit, e)}
+                  title="إنشاء حجز جديد"
+                >
+                  حجز
+                </Button>
+              )}
+            </>
+          )}
+
+          {canDelete && (
+            <Button
+              size="xs"
+              variant="danger"
+              onClick={(e) => openDeleteModal(unit, e)}
+            >
+              حذف
+            </Button>
+          )}
         </div>
       ),
     },
@@ -187,12 +250,12 @@ export default function UnitList({
       key: 'actions',
       header: 'الإجراءات',
       cell: (unit) => (
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-1">
           <Link href={`/tenant/units/${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline">عرض التفاصيل</Button>
+            <Button size="xs" variant="outline">عرض التفاصيل</Button>
           </Link>
           <Link href={`/tenant/services/create?unitId=${unit.id}`} onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="primary">طلب خدمة</Button>
+            <Button size="xs" variant="primary">طلب خدمة</Button>
           </Link>
         </div>
       ),
@@ -239,9 +302,47 @@ export default function UnitList({
             </div>
           }
         >
-          <p className="text-gray-600">
-            هل أنت متأكد من أنك تريد حذف الوحدة "{selectedUnit?.unitNumber}"؟ لا يمكن التراجع عن هذا الإجراء.
-          </p>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              هل أنت متأكد من أنك تريد حذف الوحدة "{selectedUnit?.unitNumber}"؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            {selectedUnit && selectedUnit.status === 'rented' && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">تحذير</h3>
+                    <div className="mt-1 text-sm text-red-700">
+                      <p>هذه الوحدة مؤجرة حالياً. حذفها سيؤثر على الحجوزات والمدفوعات المرتبطة بها.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedUnit && selectedUnit.status === 'maintenance' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">ملاحظة</h3>
+                    <div className="mt-1 text-sm text-yellow-700">
+                      <p>هذه الوحدة قيد الصيانة حالياً. تأكد من إنهاء أعمال الصيانة قبل الحذف.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </Modal>
       )}
     </>

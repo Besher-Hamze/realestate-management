@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { RealEstateUnit, Building } from '@/lib/types';
-import { unitsApi, buildingsApi } from '@/lib/api';
+import { RealEstateUnit, Building, User } from '@/lib/types';
+import { unitsApi, buildingsApi, usersApi } from '@/lib/api';
 import { unitSchema, UnitFormData } from '@/lib/validations/schemas';
 import { useAsyncForm } from '@/hooks/useYupForm';
 import {
@@ -14,21 +14,20 @@ import {
 } from '@/components/ui/FormInputs';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import Select from '@/components/ui/Select';
 import { FLOOR_OPTIONS, UNIT_LAYOUT_OPTIONS, UNIT_STATUS_OPTIONS, UNIT_TYPE_OPTIONS } from '@/constants';
 
 interface UnitFormYupProps {
   isEdit?: boolean;
   initialData?: RealEstateUnit;
   preSelectedBuildingId?: number;
+  preSelectedOwnerId?: number;
   onSuccess?: (unit: RealEstateUnit) => void;
 }
 
-
-
-
-
 const initialUnitData: Partial<UnitFormData> = {
   buildingId: 0,
+  ownerId: 0, // Add ownerId field
   unitNumber: '',
   unitType: 'apartment',
   unitLayout: null,
@@ -44,11 +43,15 @@ export default function UnitForm({
   isEdit = false,
   initialData,
   preSelectedBuildingId,
+  preSelectedOwnerId,
   onSuccess,
 }: UnitFormYupProps) {
   const router = useRouter();
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState(true);
+  const [owners, setOwners] = useState<User[]>([]);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number | undefined>(preSelectedOwnerId);
+  const [isLoadingOwners, setIsLoadingOwners] = useState(false);
 
   // Initialize form with validation schema
   const {
@@ -62,6 +65,7 @@ export default function UnitForm({
     unitSchema,
     isEdit && initialData ? {
       buildingId: initialData.buildingId,
+      ownerId: initialData.ownerId || 0,
       unitNumber: initialData.unitNumber,
       unitType: initialData.unitType,
       unitLayout: initialData.unitLayout,
@@ -71,16 +75,55 @@ export default function UnitForm({
       price: initialData.price,
       status: initialData.status,
       description: initialData.description || '',
-    } : preSelectedBuildingId ? {
+    } : {
       ...initialUnitData,
-      buildingId: preSelectedBuildingId,
-    } : initialUnitData
+      buildingId: preSelectedBuildingId || 0,
+      ownerId: preSelectedOwnerId || 0,
+    }
   );
 
   // Watch unit type to conditionally show layout field
   const watchedUnitType = watch('unitType');
 
-  // Load buildings on component mount
+  // Fetch owners function
+  const fetchOwners = async () => {
+    try {
+      setIsLoadingOwners(true);
+      const response = await usersApi.getAll();
+
+      if (response.success) {
+        // تصفية المستخدمين للحصول على الملاك فقط
+        const ownerUsers = response.data.filter(user => user.role === 'owner');
+        setOwners(ownerUsers);
+      } else {
+        toast.error(response.message || 'فشل في جلب قائمة الملاك');
+      }
+    } catch (error) {
+      console.error('خطأ في جلب الملاك:', error);
+      toast.error('حدث خطأ أثناء جلب قائمة الملاك');
+    } finally {
+      setIsLoadingOwners(false);
+    }
+  };
+
+  // تحويل قائمة الملاك إلى خيارات للقائمة المنسدلة
+  const ownerOptions = [
+    { value: '', label: 'اختر المالك' },
+    ...owners.map(owner => ({
+      value: owner.id.toString(),
+      label: `${owner.fullName} (${owner.username})`
+    }))
+  ];
+
+  // التعامل مع تغيير المالك المحدد
+  const handleOwnerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const ownerId = value ? parseInt(value, 10) : undefined;
+    setSelectedOwnerId(ownerId);
+    setValue('ownerId', ownerId || 0);
+  };
+
+  // Load buildings and owners on component mount
   useEffect(() => {
     const loadBuildings = async () => {
       try {
@@ -99,13 +142,23 @@ export default function UnitForm({
     };
 
     loadBuildings();
+    fetchOwners();
   }, []);
+
+  // Update selectedOwnerId when preSelectedOwnerId changes
+  useEffect(() => {
+    if (preSelectedOwnerId) {
+      setSelectedOwnerId(preSelectedOwnerId);
+      setValue('ownerId', preSelectedOwnerId);
+    }
+  }, [preSelectedOwnerId, setValue]);
 
   // Reset form when editing data changes
   useEffect(() => {
     if (isEdit && initialData) {
       reset({
         buildingId: initialData.buildingId,
+        ownerId: initialData.ownerId || 0,
         unitNumber: initialData.unitNumber,
         unitType: initialData.unitType,
         unitLayout: initialData.unitLayout,
@@ -116,13 +169,15 @@ export default function UnitForm({
         status: initialData.status,
         description: initialData.description || '',
       });
+      setSelectedOwnerId(initialData.ownerId);
     } else if (preSelectedBuildingId) {
       reset({
         ...initialUnitData,
         buildingId: preSelectedBuildingId,
+        ownerId: preSelectedOwnerId || 0,
       });
     }
-  }, [isEdit, initialData, preSelectedBuildingId, reset]);
+  }, [isEdit, initialData, preSelectedBuildingId, preSelectedOwnerId, reset]);
 
   // Clear layout when unit type is not apartment
   useEffect(() => {
@@ -134,17 +189,29 @@ export default function UnitForm({
   // Form submission handler
   const onSubmit = async (data: UnitFormData) => {
     try {
+      // Validate owner selection
+      if (!selectedOwnerId) {
+        toast.error('يرجى اختيار المالك');
+        return;
+      }
+
       // Clear layout if not apartment
       if (data.unitType !== 'apartment') {
         data.unitLayout = null;
       }
 
+      // Include ownerId in submission data
+      const submitData = {
+        ...data,
+        ownerId: selectedOwnerId,
+      };
+
       let response;
 
       if (isEdit && initialData) {
-        response = await unitsApi.update(initialData.id, data);
+        response = await unitsApi.update(initialData.id, submitData);
       } else {
-        response = await unitsApi.create(data);
+        response = await unitsApi.create(submitData);
       }
 
       if (response.success) {
@@ -177,6 +244,39 @@ export default function UnitForm({
   return (
     <Card>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Owner Selection Section */}
+        <div className="space-y-6">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-medium text-gray-900">معلومات الملكية</h3>
+            <p className="text-sm text-gray-500 mt-1">اختيار المالك المسؤول عن هذه الوحدة</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Select
+                label="المالك"
+                id="ownerId"
+                name="ownerId"
+                value={selectedOwnerId?.toString() || ''}
+                onChange={handleOwnerChange}
+                options={ownerOptions}
+                required
+                disabled={isLoadingOwners}
+                fullWidth
+              />
+              {isLoadingOwners && (
+                <p className="text-sm text-gray-500 mt-1">جاري تحميل قائمة الملاك...</p>
+              )}
+              {!isLoadingOwners && owners.length === 0 && (
+                <p className="text-sm text-red-500 mt-1">لا يوجد ملاك متاحون. يرجى إضافة مالك أولاً.</p>
+              )}
+              {!selectedOwnerId && (
+                <p className="text-sm text-red-500 mt-1">يرجى اختيار المالك</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Unit Information Section */}
         <div className="space-y-6">
           <div className="border-b border-gray-200 pb-4">
@@ -291,15 +391,17 @@ export default function UnitForm({
             />
           </div>
 
-          {/* {isEdit && <FormSelect
-            label="حالة الوحدة"
-            register={register}
-            name="status"
-            error={errors.status}
-            options={UNIT_STATUS_OPTIONS}
-            required
-            placeholder="اختر حالة الوحدة"
-          />} */}
+          {isEdit && (
+            <FormSelect
+              label="حالة الوحدة"
+              register={register}
+              name="status"
+              error={errors.status}
+              options={UNIT_STATUS_OPTIONS}
+              required
+              placeholder="اختر حالة الوحدة"
+            />
+          )}
         </div>
 
         {/* Additional Information Section */}
@@ -332,7 +434,7 @@ export default function UnitForm({
           <Button
             type="submit"
             isLoading={isSubmitting}
-            disabled={isSubmitting || loadingBuildings}
+            disabled={isSubmitting || loadingBuildings || !selectedOwnerId}
           >
             {isEdit ? 'تحديث الوحدة' : 'إنشاء الوحدة'}
           </Button>

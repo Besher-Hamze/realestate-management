@@ -14,6 +14,8 @@ import Select from '@/components/ui/Select';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
+type UserRole = 'admin' | 'manager' | 'accountant' | 'maintenance' | 'owner' | 'tenant';
+
 export default function UsersPage() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
@@ -27,18 +29,150 @@ export default function UsersPage() {
 
   // حالات النافذة المنبثقة لإنشاء المستخدمين
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createRole, setCreateRole] = useState<'admin' | 'manager'>('manager');
+  const [createRole, setCreateRole] = useState<UserRole>('manager');
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // خيارات تصفية الأدوار
-  const roleOptions = [
-    { value: 'all', label: 'جميع الأدوار' },
-    { value: 'admin', label: 'المشرف' },
-    { value: 'manager', label: 'المدير' },
-    { value: 'tenant', label: 'المستأجر' },
-  ];
+  // Get available roles based on current user
+  const getAvailableRoles = (): UserRole[] => {
+    if (currentUser?.role === 'admin') {
+      return ['admin', 'manager'];
+    } else if (currentUser?.role === 'manager') {
+      return ['accountant', 'maintenance', 'owner'];
+    }
+    return [];
+  };
+
+  // Get role options for filter
+  const getRoleFilterOptions = () => {
+    const baseOptions = [{ value: 'all', label: 'جميع الأدوار' }];
+
+    if (currentUser?.role === 'admin') {
+      return [
+        ...baseOptions,
+        { value: 'admin', label: 'المشرف' },
+        { value: 'manager', label: 'المدير' },
+        { value: 'tenant', label: 'المستأجر' },
+      ];
+    } else if (currentUser?.role === 'manager') {
+      return [
+        ...baseOptions,
+        { value: 'accountant', label: 'المحاسب' },
+        { value: 'maintenance', label: 'الصيانة' },
+        { value: 'owner', label: 'المالك' },
+        { value: 'tenant', label: 'المستأجر' },
+      ];
+    }
+
+    return baseOptions;
+  };
+
+  // Get role statistics
+  const getRoleStatistics = () => {
+    if (currentUser?.role === 'admin') {
+      return [
+        {
+          role: 'admin',
+          label: 'المشرفون',
+          count: users.filter(user => user.role === 'admin').length,
+          color: 'red',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          )
+        },
+        {
+          role: 'manager',
+          label: 'المديرون',
+          count: users.filter(user => user.role === 'manager').length,
+          color: 'blue',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          )
+        },
+        {
+          role: 'tenant',
+          label: 'المستأجرون',
+          count: users.filter(user => user.role === 'tenant').length,
+          color: 'green',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          )
+        }
+      ];
+    } else if (currentUser?.role === 'manager') {
+      return [
+        {
+          role: 'accountant',
+          label: 'المحاسبون',
+          count: users.filter(user => user.role === 'accountant').length,
+          color: 'purple',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          )
+        },
+        {
+          role: 'maintenance',
+          label: 'فريق الصيانة',
+          count: users.filter(user => user.role === 'maintenance').length,
+          color: 'orange',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          )
+        },
+        {
+          role: 'owner',
+          label: 'الملاك',
+          count: users.filter(user => user.role === 'owner').length,
+          color: 'indigo',
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          )
+        }
+      ];
+    }
+
+    return [];
+  };
+
+  // Translate role to Arabic
+  const translateRole = (role: string): string => {
+    switch (role) {
+      case 'admin': return 'مشرف';
+      case 'manager': return 'مدير';
+      case 'accountant': return 'محاسب';
+      case 'maintenance': return 'صيانة';
+      case 'owner': return 'مالك';
+      case 'tenant': return 'مستأجر';
+      default: return role;
+    }
+  };
+
+  // Get role badge color
+  const getRoleBadgeColor = (role: string): string => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'manager': return 'bg-blue-100 text-blue-800';
+      case 'accountant': return 'bg-purple-100 text-purple-800';
+      case 'maintenance': return 'bg-orange-100 text-orange-800';
+      case 'owner': return 'bg-indigo-100 text-indigo-800';
+      case 'tenant': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   // بيانات النموذج لإنشاء مستخدمين جدد
   const [formData, setFormData] = useState({
@@ -167,14 +301,28 @@ export default function UsersPage() {
     try {
       let response;
 
-      if (createRole === 'admin') {
-        response = await authApi.registerAdmin(formData);
-      } else {
-        response = await authApi.registerManager(formData);
+      switch (createRole) {
+        case 'admin':
+          response = await authApi.registerAdmin(formData);
+          break;
+        case 'manager':
+          response = await authApi.registerManager(formData);
+          break;
+        case 'accountant':
+          response = await authApi.registerAccountant(formData);
+          break;
+        case 'maintenance':
+          response = await authApi.registerMaintenance(formData);
+          break;
+        case 'owner':
+          response = await authApi.registerOwner(formData);
+          break;
+        default:
+          throw new Error('نوع المستخدم غير مدعوم');
       }
 
       if (response.success) {
-        toast.success(`تم إنشاء ${createRole === 'admin' ? 'المشرف' : 'المدير'} بنجاح`);
+        toast.success(`تم إنشاء ${translateRole(createRole)} بنجاح`);
         setCreateModalOpen(false);
         fetchUsers(); // إعادة جلب المستخدمين بعد الإنشاء
 
@@ -187,7 +335,7 @@ export default function UsersPage() {
           phone: '',
         });
       } else {
-        toast.error(response.message || `فشل في إنشاء ${createRole === 'admin' ? 'المشرف' : 'المدير'}`);
+        toast.error(response.message || `فشل في إنشاء ${translateRole(createRole)}`);
       }
     } catch (error) {
       console.error('خطأ في إنشاء المستخدم:', error);
@@ -227,13 +375,8 @@ export default function UsersPage() {
       key: 'role',
       header: 'الدور',
       cell: (user) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
-            user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-              'bg-green-100 text-green-800'
-            }`}
-        >
-          {user.role === 'admin' ? 'مشرف' : user.role === 'manager' ? 'مدير' : 'مستأجر'}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+          {translateRole(user.role)}
         </span>
       ),
     },
@@ -275,82 +418,58 @@ export default function UsersPage() {
     },
   ];
 
+  const availableRoles = getAvailableRoles();
+  const roleStatistics = getRoleStatistics();
+
   return (
     <div className="space-y-6">
       {/* الترويسة مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">المستخدمون</h1>
 
-        {/* يمكن للمشرفين فقط إنشاء مستخدمين جدد مشرفين/مديرين */}
-        {currentUser?.role === 'admin' && (
-          <div className=" flex  gap-4">
-            <Button
-              variant="primary"
-              onClick={() => {
-                setCreateRole('admin');
-                setCreateModalOpen(true);
-              }}
-            >
-              إضافة مشرف
-            </Button>
+        {/* أزرار إضافة المستخدمين حسب الصلاحيات */}
+        {availableRoles.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {availableRoles.map((role) => (
+              <Button
+                key={role}
+                variant="primary"
+                onClick={() => {
+                  setCreateRole(role);
+                  setCreateModalOpen(true);
+                }}
+              >
+                إضافة {translateRole(role)}
+              </Button>
+            ))}
           </div>
         )}
       </div>
 
       {/* بطاقات إحصائيات المستخدمين */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-red-50 border-red-200">
-          <div className="p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+      {roleStatistics.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {roleStatistics.map((stat) => (
+            <Card key={stat.role} className={`bg-${stat.color}-50 border-${stat.color}-200`}>
+              <div className="p-4">
+                <div className="flex items-center">
+                  <div className={`flex-shrink-0 bg-${stat.color}-100 rounded-md p-3`}>
+                    <div className={`text-${stat.color}-600`}>
+                      {stat.icon}
+                    </div>
+                  </div>
+                  <div className="mr-4">
+                    <h3 className={`font-medium text-${stat.color}-800`}>{stat.label}</h3>
+                    <p className={`text-2xl font-bold text-${stat.color}-900`}>
+                      {stat.count}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="mr-4">
-                <h3 className="font-medium text-red-800">المشرفون</h3>
-                <p className="text-2xl font-bold text-red-900">
-                  {users.filter(user => user.role === 'admin').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-blue-50 border-blue-200">
-          <div className="p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div className="mr-4">
-                <h3 className="font-medium text-blue-800">المديرون</h3>
-                <p className="text-2xl font-bold text-blue-900">
-                  {users.filter(user => user.role === 'manager').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-green-50 border-green-200">
-          <div className="p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div className="mr-4">
-                <h3 className="font-medium text-green-800">المستأجرون</h3>
-                <p className="text-2xl font-bold text-green-900">
-                  {users.filter(user => user.role === 'tenant').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* المرشحات */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -362,7 +481,7 @@ export default function UsersPage() {
               name="roleFilter"
               value={roleFilter}
               onChange={handleRoleFilterChange}
-              options={roleOptions}
+              options={getRoleFilterOptions()}
               fullWidth
             />
           </div>
@@ -385,7 +504,7 @@ export default function UsersPage() {
       <Modal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title={`إنشاء ${createRole === 'admin' ? 'مشرف' : 'مدير'} جديد`}
+        title={`إنشاء ${translateRole(createRole)} جديد`}
         footer={
           <div className="flex justify-end space-x-3">
             <Button
@@ -499,80 +618,8 @@ export default function UsersPage() {
         <p className="text-gray-600 mb-4">
           هل أنت متأكد من أنك تريد حذف {selectedUser?.fullName}؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
-
-        {selectedUser?.role === 'tenant' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">تحذير</p>
-            <p className="text-sm">حذف هذا المستأجر سيؤدي أيضًا إلى إزالة وصوله إلى جميع الوحدات وطلبات الخدمة المرتبطة به.</p>
-          </div>
-        )}
-
-        {selectedUser?.role === 'manager' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-            <p className="text-sm font-medium">تحذير</p>
-            <p className="text-sm">حذف هذا المدير سيؤدي إلى إزالة وصوله إلى النظام. ضع في اعتبارك إعادة تعيين ممتلكاته أولاً.</p>
-          </div>
-        )}
       </Modal>
 
-      {/* نافذة إعادة تعيين كلمة المرور */}
-      <Modal
-        isOpen={resetPasswordModalOpen}
-        onClose={() => setResetPasswordModalOpen(false)}
-        title="إعادة تعيين كلمة مرور المدير"
-        footer={
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setResetPasswordModalOpen(false)}
-              disabled={isResettingPassword}
-            >
-              إلغاء
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleResetPassword}
-              isLoading={isResettingPassword}
-              disabled={isResettingPassword}
-            >
-              إعادة تعيين كلمة المرور
-            </Button>
-          </div>
-        }
-      >
-        <p className="text-gray-600 mb-4">
-          هل أنت متأكد من أنك تريد إعادة تعيين كلمة المرور لـ {selectedUser?.fullName}؟
-        </p>
-
-        <div className="mb-4">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">كلمة المرور الجديدة</label>
-          <div className="mt-1 flex items-center">
-            <input
-              type="text"
-              id="newPassword"
-              className="block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="ml-2"
-              onClick={() => {
-                // إنشاء كلمة مرور عشوائية
-                const randomPassword = Math.random().toString(36).slice(-8);
-                setNewPassword(randomPassword);
-              }}
-            >
-              توليد
-            </Button>
-          </div>
-          <p className="mt-1 text-sm text-gray-500">
-            سيحتاج المدير إلى استخدام كلمة المرور هذه لتسجيل الدخول التالي.
-          </p>
-        </div>
-      </Modal>
     </div>
   );
 }

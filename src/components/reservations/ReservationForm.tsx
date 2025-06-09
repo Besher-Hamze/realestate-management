@@ -395,7 +395,6 @@ export default function ReservationForm({
                 register={register}
                 name="startDate"
                 type="date"
-                min={getCurrentDate()}
                 error={errors.startDate}
                 required
                 helpText="تاريخ بدء سريان العقد"

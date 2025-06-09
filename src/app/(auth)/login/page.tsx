@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateLoginForm, checkPasswordStrength } from '@/lib/validations';
-import { 
-  ValidationSummary, 
+import {
+  ValidationSummary,
   FormActions,
-  useFormValidation 
+  useFormValidation
 } from '@/components/ui/FormValidation';
 import { Input } from '@/components/ui/FormInput';
 import Button from '@/components/ui/Button';
@@ -38,10 +38,27 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === 'tenant') {
-        router.push('/tenant');
-      } else {
-        router.push('/dashboard');
+      switch (user.role) {
+        case 'admin':
+          router.push('/dashboard');
+          break;
+        case "manager":
+          router.push('/dashboard');
+          break;
+        case "tenant":
+          router.push('/tenant');
+          break;
+        case "accountant":
+          router.push('/dashboard/payments');
+          break;
+        case "maintenance":
+          router.push('/dashboard/services');
+          break;
+        case "owner":
+          router.push('/dashboard/buildings');
+          break;
+        default:
+          break;
       }
     }
   }, [isAuthenticated, user, router]);
@@ -63,7 +80,7 @@ export default function LoginPage() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     clearErrors();
 
@@ -77,7 +94,7 @@ export default function LoginPage() {
 
     try {
       const success = await login(formData.username, formData.password);
-      
+
       if (success) {
         toast.success('تم تسجيل الدخول بنجاح');
         // Redirect will be handled by useEffect above
@@ -134,10 +151,10 @@ export default function LoginPage() {
         {/* Logo and Title */}
         <div className="flex justify-center">
           <div className="flex items-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 text-white mr-3" 
-              viewBox="0 0 20 20" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 text-white mr-3"
+              viewBox="0 0 20 20"
               fill="currentColor"
             >
               <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -234,8 +251,8 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="font-medium text-primary-600 hover:text-primary-500"
                 >
                   نسيت كلمة المرور؟
@@ -297,8 +314,8 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 ليس لديك حساب؟{' '}
-                <Link 
-                  href="/register" 
+                <Link
+                  href="/register"
                   className="font-medium text-primary-600 hover:text-primary-500"
                 >
                   إنشاء حساب جديد
@@ -325,7 +342,7 @@ export default function LoginPage() {
                 <h3 className="text-sm font-medium text-yellow-800">تنبيه أمني</h3>
                 <div className="mt-1 text-sm text-yellow-700">
                   <p>
-                    تأكد من أنك تدخل بياناتك في الموقع الصحيح. 
+                    تأكد من أنك تدخل بياناتك في الموقع الصحيح.
                     لا تشارك معلومات تسجيل الدخول مع أي شخص آخر.
                   </p>
                 </div>

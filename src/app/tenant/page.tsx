@@ -226,9 +226,9 @@ export default function TenantDashboardPage() {
                       </p>
                     </div>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-                        reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                            'bg-red-100 text-red-800'
+                      reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                          'bg-red-100 text-red-800'
                       }`}>
                       {translateReservationStatus(reservation.status)}
                     </span>
@@ -249,10 +249,7 @@ export default function TenantDashboardPage() {
                     {reservation.unit && (
                       <div className="mt-2 border-t border-gray-100 pt-2">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                          <div>
-                            <span className="text-gray-500">غرف النوم:</span>
-                            <p className="font-medium">{reservation.unit.bedrooms}</p>
-                          </div>
+
                           <div>
                             <span className="text-gray-500">الحمامات:</span>
                             <p className="font-medium">{reservation.unit.bathrooms}</p>

@@ -74,6 +74,46 @@ export const authApi = {
       data,
     }),
 
+
+  registerAccountant: (data: {
+    username: string;
+    password: string;
+    fullName: string;
+    email: string;
+    phone: string;
+  }) =>
+    apiRequest<User>({
+      url: '/auth/accountant/register',
+      method: 'POST',
+      data,
+    }),
+
+  registerMaintenance: (data: {
+    username: string;
+    password: string;
+    fullName: string;
+    email: string;
+    phone: string;
+  }) =>
+    apiRequest<User>({
+      url: '/auth/maintenance/register',
+      method: 'POST',
+      data,
+    }),
+
+
+  registerOwner: (data: {
+    username: string;
+    password: string;
+    fullName: string;
+    email: string;
+    phone: string;
+  }) =>
+    apiRequest<User>({
+      url: '/auth/owner/register',
+      method: 'POST',
+      data,
+    }),
   changePassword: (currentPassword: string, newPassword: string) =>
     apiRequest<ApiResponse<null>>({
       url: '/auth/change-password',

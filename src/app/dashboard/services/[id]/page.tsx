@@ -9,8 +9,11 @@ import { servicesApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import ServiceHistory from '@/components/services/ServiceHistory';
+import ServiceComments from '@/components/services/ServiceComments';
 import { formatDate } from '@/lib/utils';
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ServiceDetailPageProps {
   params: Promise<{
@@ -22,7 +25,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
   // Use React.use() to unwrap the params Promise
   const { id } = React.use(params);
   const router = useRouter();
-
+  const { user } = useAuth();
   const [service, setService] = useState<ServiceOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -41,9 +44,41 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
     try {
       setIsLoading(true);
       const response = await servicesApi.getById(id);
+      console.log(response);
 
       if (response.success) {
-        setService(response.data);
+        // Parse serviceHistory if it's a JSON string
+        const serviceData = { ...response.data };
+
+        if (serviceData.serviceHistory && typeof serviceData.serviceHistory === 'string') {
+          try {
+            const parsed = JSON.parse(serviceData.serviceHistory);
+
+            // Filter out invalid entries and keep only valid objects
+            if (Array.isArray(parsed)) {
+              serviceData.serviceHistory = parsed.filter(item =>
+                item &&
+                typeof item === 'object' &&
+                item.status &&
+                item.date &&
+                typeof item.status === 'string'
+              );
+            } else {
+              serviceData.serviceHistory = [];
+            }
+          } catch (parseError) {
+            console.error('Error parsing serviceHistory:', parseError);
+            serviceData.serviceHistory = []; // Fallback to empty array
+          }
+        }
+
+        // Ensure serviceHistory is an array
+        if (!Array.isArray(serviceData.serviceHistory)) {
+          serviceData.serviceHistory = [];
+        }
+
+        console.log('Processed serviceHistory:', serviceData.serviceHistory);
+        setService(serviceData);
       } else {
         toast.error(response.message || 'فشل في جلب تفاصيل الخدمة');
       }
@@ -54,7 +89,6 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       setIsLoading(false);
     }
   };
-
   // حذف الخدمة
   const handleDelete = async () => {
     try {
@@ -194,6 +228,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       case 'appliance': return 'أجهزة منزلية';
       case 'structural': return 'هيكلي';
       case 'general': return 'عام';
+      case 'general_cleaning': return 'تنظيف عام';
       case 'deep': return 'تنظيف عميق';
       case 'windows': return 'تنظيف نوافذ';
       case 'carpets': return 'تنظيف سجاد';
@@ -201,6 +236,38 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
       case 'camera': return 'كاميرات أمنية';
       case 'alarm': return 'نظام إنذار';
       default: return subtype;
+    }
+  };
+
+  // الحصول على لون شارة الحالة
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // الحصول على وصف الحالة
+  const getStatusDescription = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'تم استلام الطلب وهو في انتظار المراجعة والمعالجة.';
+      case 'in-progress':
+        return 'يعمل فريق الصيانة حاليًا على معالجة هذا الطلب.';
+      case 'completed':
+        return 'تم إكمال الطلب بنجاح. يمكن إغلاق هذا الطلب.';
+      case 'rejected':
+        return 'تم رفض أو إلغاء هذا الطلب. تم إشعار المستأجر بالقرار.';
+      default:
+        return '';
     }
   };
 
@@ -237,6 +304,42 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
         </div>
       </div>
 
+      {/* شريط الحالة */}
+      <div className={`rounded-lg p-4 ${getStatusBadgeClass(service.status)} bg-opacity-50`}>
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            {service.status === 'pending' && (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            {service.status === 'in-progress' && (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            )}
+            {service.status === 'completed' && (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            {service.status === 'rejected' && (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          <div className="mr-3">
+            <h3 className="text-sm font-medium">
+              الحالة الحالية: {translateStatus(service.status)}
+            </h3>
+            <div className="mt-1 text-sm">
+              <p>{getStatusDescription(service.status)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* تفاصيل الخدمة */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* المعلومات الرئيسية */}
@@ -245,11 +348,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900">تفاصيل الطلب</h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  service.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                    service.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      'bg-red-100 text-red-800'
-                  }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(service.status)}`}
               >
                 {translateStatus(service.status)}
               </span>
@@ -391,13 +490,13 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                       </p>
                     </div>
 
-                    <div className="pt-4 mt-4 border-t border-gray-200">
+                    {user && (user.role === "manager" || user.role === "admin") && <div className="pt-4 mt-4 border-t border-gray-200">
                       <Link href={`/dashboard/units/${service.reservation.unit.id}`}>
                         <Button variant="outline" fullWidth>
                           عرض تفاصيل الوحدة
                         </Button>
                       </Link>
-                    </div>
+                    </div>}
                   </>
                 ) : (
                   <p className="text-gray-500">معلومات الوحدة غير متوفرة</p>
@@ -435,13 +534,15 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                       </p>
                     </div>
 
-                    <div className="pt-4 mt-4 border-t border-gray-200">
-                      <Link href={`/dashboard/users/${service.user.id}`}>
-                        <Button variant="outline" fullWidth>
-                          عرض ملف المستأجر
-                        </Button>
-                      </Link>
-                    </div>
+                    {user && (user.role === "manager" || user.role === "admin") &&
+                      < div className="pt-4 mt-4 border-t border-gray-200">
+                        <Link href={`/dashboard/users/${service.user.id}`}>
+                          <Button variant="outline" fullWidth>
+                            عرض ملف المستأجر
+                          </Button>
+                        </Link>
+                      </div>
+                    }
                   </>
                 ) : (
                   <p className="text-gray-500">معلومات المستأجر غير متوفرة</p>
@@ -450,15 +551,30 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             </div>
           </Card>
         </div>
-      </div>
+      </div >
+
+      {/* مسار الحالة والتعليقات */}
+      < div className="grid grid-cols-1 lg:grid-cols-2 gap-6" >
+        {/* مسار حالة الطلب */}
+        < Card >
+          <div className="p-6">
+            <ServiceHistory
+              service={service}
+            />
+          </div>
+        </Card >
+
+
+      </div >
 
       {/* نافذة تأكيد الحذف */}
-      <Modal
+      < Modal
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        onClose={() => setDeleteModalOpen(false)
+        }
         title="حذف طلب الخدمة"
         footer={
-          <div className="flex justify-end space-x-3">
+          < div className="flex justify-end space-x-3" >
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}
@@ -474,21 +590,21 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             >
               حذف
             </Button>
-          </div>
+          </div >
         }
       >
         <p className="text-gray-600">
           هل أنت متأكد من أنك تريد حذف طلب الخدمة هذا؟ لا يمكن التراجع عن هذا الإجراء.
         </p>
-      </Modal>
+      </Modal >
 
       {/* نافذة تأكيد تحديث الحالة */}
-      <Modal
+      < Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
         title="تحديث الحالة"
         footer={
-          <div className="flex justify-end space-x-3">
+          < div className="flex justify-end space-x-3" >
             <Button
               variant="outline"
               onClick={() => setStatusUpdateModalOpen(false)}
@@ -504,7 +620,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
             >
               تحديث الحالة
             </Button>
-          </div>
+          </div >
         }
       >
         <p className="text-gray-600">
@@ -514,12 +630,28 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           </span>
           ؟
         </p>
-        {newStatus === 'rejected' && (
-          <p className="mt-2 text-red-600 text-sm">
-            ملاحظة: إلغاء طلب الخدمة سيؤدي إلى إخطار المستأجر بأن طلبه لن تتم معالجته.
-          </p>
-        )}
-      </Modal>
-    </div>
+        {
+          newStatus === 'rejected' && (
+            <p className="mt-2 text-red-600 text-sm">
+              ملاحظة: إلغاء طلب الخدمة سيؤدي إلى إخطار المستأجر بأن طلبه لن تتم معالجته.
+            </p>
+          )
+        }
+        {
+          newStatus === 'completed' && (
+            <p className="mt-2 text-green-600 text-sm">
+              ملاحظة: تحديد الطلب كمكتمل سيؤدي إلى إخطار المستأجر بأن طلبه قد تم حله بنجاح.
+            </p>
+          )
+        }
+        {
+          newStatus === 'in-progress' && (
+            <p className="mt-2 text-blue-600 text-sm">
+              ملاحظة: تحديد الطلب كقيد التنفيذ سيؤدي إلى إخطار المستأجر بأن العمل قد بدأ.
+            </p>
+          )
+        }
+      </Modal >
+    </div >
   );
 }

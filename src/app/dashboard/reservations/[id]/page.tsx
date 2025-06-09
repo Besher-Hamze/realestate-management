@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import EnhancedPaymentList from '@/components/payments/EnhancedPaymentList';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReservationDetailPageProps {
   params: Promise<{
@@ -23,7 +24,7 @@ interface ReservationDetailPageProps {
 export default function ReservationDetailPage({ params }: ReservationDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
-
+  const { user } = useAuth();
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -371,10 +372,11 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             الحجز #{reservation.id}
           </h1>
           <div className="flex space-x-3 ">
-            <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
-              <Button variant="outline" className='mx-4'>تعديل</Button>
-            </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
+            {user && user.role == "manager" && <>
+              <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
+                <Button variant="outline" className='mx-4'>تعديل</Button>
+              </Link>
+              <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button></>}
           </div>
         </div>
       </div>
@@ -657,23 +659,25 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       </div>
 
       {/* طلبات الخدمة */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">طلبات الخدمة</h2>
+      {user && (user.role == "manager" || user.role == "tenant" || user.role == "maintenance" || user.role == "admin") &&
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">طلبات الخدمة</h2>
 
+          </div>
+
+          <Card>
+            <Table
+              data={serviceOrders}
+              columns={serviceOrderColumns}
+              keyExtractor={(service) => service.id}
+              isLoading={isServicesLoading}
+              emptyMessage="لم يتم العثور على طلبات خدمة لهذا الحجز"
+              onRowClick={(service) => router.push(`/dashboard/services/${service.id}`)}
+            />
+          </Card>
         </div>
-
-        <Card>
-          <Table
-            data={serviceOrders}
-            columns={serviceOrderColumns}
-            keyExtractor={(service) => service.id}
-            isLoading={isServicesLoading}
-            emptyMessage="لم يتم العثور على طلبات خدمة لهذا الحجز"
-            onRowClick={(service) => router.push(`/dashboard/services/${service.id}`)}
-          />
-        </Card>
-      </div>
+      }
 
       {/* نافذة تأكيد الحذف */}
       <Modal

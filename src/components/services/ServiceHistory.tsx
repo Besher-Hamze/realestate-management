@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatDate } from '@/lib/utils';
+import { ServiceOrder } from '@/lib/types';
 
 // Define a type for service status history
 interface ServiceStatusHistory {
@@ -10,10 +11,7 @@ interface ServiceStatusHistory {
 
 // Define the component props
 interface ServiceHistoryProps {
-  serviceId: number;
-  currentStatus: string;
-  createdAt: string;
-  updatedAt: string;
+  service: ServiceOrder;
 }
 
 // Helper function to translate status to Arabic
@@ -32,56 +30,87 @@ const translateStatus = (status: string): string => {
   }
 };
 
-export default function ServiceHistory({
-  serviceId,
-  currentStatus,
-  createdAt,
-  updatedAt,
-}: ServiceHistoryProps) {
+// Helper function to format time
+const formatTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
+// Helper function to get status note in Arabic
+const getStatusNote = (status: string): string => {
+  switch (status) {
+    case 'pending':
+      return 'تم استلام طلب الخدمة وإضافته إلى قائمة الانتظار للمراجعة';
+    case 'in-progress':
+      return 'تمت مراجعة الطلب وتم تعيينه إلى فريق الصيانة';
+    case 'completed':
+      return 'تم إكمال طلب الخدمة بنجاح';
+    case 'rejected':
+      return 'تم رفض الطلب';
+    default:
+      return 'تحديث حالة الطلب';
+  }
+};
+
+export default function ServiceHistory({ service }: ServiceHistoryProps) {
   const [statusHistory, setStatusHistory] = useState<ServiceStatusHistory[]>([]);
 
-  // In a real implementation, you would fetch the history from an API
-  // Here, we'll simulate it based on the available information
   useEffect(() => {
-    // Create a history based on current status, creation date, and update date
-    const history: ServiceStatusHistory[] = [
-      {
-        status: 'pending',
-        date: createdAt,
-        note: 'تم استلام طلب الخدمة وإضافته إلى قائمة الانتظار للمراجعة',
-      },
-    ];
+    // Check if service has serviceHistory, if yes use it, otherwise create a basic history
+    if (service.serviceHistory && service.serviceHistory.length > 0) {
 
-    // Add additional status updates based on current status
-    if (currentStatus !== 'pending') {
-      if (currentStatus === 'in-progress' || currentStatus === 'completed' || currentStatus === 'rejected') {
-        // If current status is in-progress, completed, or rejected, add an in-progress step
-        // Use a date between created and updated for better UX
-        const inProgressDate = new Date(
-          (new Date(createdAt).getTime() + new Date(updatedAt).getTime()) / 2
-        ).toISOString();
+      // Use the actual service history from the API
+      const history: ServiceStatusHistory[] = service.serviceHistory.map((historyItem) => ({
+        status: historyItem.status,
+        date: new Date(historyItem.date).toISOString(),
+        note: getStatusNote(historyItem.status),
+      }));
+      setStatusHistory(history);
+    } else {
+      // Fallback: Create a basic history based on current status, creation date, and update date
+      const history: ServiceStatusHistory[] = [
+        {
+          status: 'pending',
+          date: service.createdAt,
+          note: 'تم استلام طلب الخدمة وإضافته إلى قائمة الانتظار للمراجعة',
+        },
+      ];
 
-        history.push({
-          status: 'in-progress',
-          date: inProgressDate,
-          note: 'تمت مراجعة الطلب وتم تعيينه إلى فريق الصيانة',
-        });
+      // Add additional status updates based on current status
+      if (service.status !== 'pending') {
+        if (service.status === 'in-progress' || service.status === 'completed' || service.status === 'rejected') {
+          // If current status is in-progress, completed, or rejected, add an in-progress step
+          // Use a date between created and updated for better UX
+          const inProgressDate = new Date(
+            (new Date(service.createdAt).getTime() + new Date(service.updatedAt).getTime()) / 2
+          ).toISOString();
+
+          history.push({
+            status: 'in-progress',
+            date: inProgressDate,
+            note: 'تمت مراجعة الطلب وتم تعيينه إلى فريق الصيانة',
+          });
+        }
+
+        if (service.status === 'completed' || service.status === 'rejected') {
+          history.push({
+            status: service.status,
+            date: service.updatedAt,
+            note:
+              service.status === 'completed'
+                ? 'تم إكمال طلب الخدمة بنجاح'
+                : 'تم رفض الطلب',
+          });
+        }
       }
 
-      if (currentStatus === 'completed' || currentStatus === 'rejected') {
-        history.push({
-          status: currentStatus,
-          date: updatedAt,
-          note:
-            currentStatus === 'completed'
-              ? 'تم إكمال طلب الخدمة بنجاح'
-              : 'تم رفض الطلب',
-        });
-      }
+      setStatusHistory(history);
     }
-
-    setStatusHistory(history);
-  }, [serviceId, currentStatus, createdAt, updatedAt]);
+  }, [service]);
 
   return (
     <div className="space-y-6">
@@ -101,15 +130,14 @@ export default function ServiceHistory({
                 <div className="relative flex space-x-3">
                   <div>
                     <span
-                      className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${
-                        event.status === 'pending'
-                          ? 'bg-yellow-100'
-                          : event.status === 'in-progress'
+                      className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${event.status === 'pending'
+                        ? 'bg-yellow-100'
+                        : event.status === 'in-progress'
                           ? 'bg-blue-100'
                           : event.status === 'completed'
-                          ? 'bg-green-100'
-                          : 'bg-red-100'
-                      }`}
+                            ? 'bg-green-100'
+                            : 'bg-red-100'
+                        }`}
                     >
                       {event.status === 'pending' ? (
                         <svg
@@ -177,7 +205,7 @@ export default function ServiceHistory({
                   <div className="min-w-0 flex-1 pt-1.5 mr-4">
                     <div>
                       <p className="text-sm text-gray-500">
-                        {formatDate(event.date)}
+                        {formatTime(event.date)} - {formatDate(event.date)}
                       </p>
                     </div>
                     <div className="mt-2">
@@ -193,6 +221,47 @@ export default function ServiceHistory({
           ))}
         </ul>
       </div>
+
+      {/* Progress indicator */}
+      <div className="border-t border-gray-200 pt-4">
+        <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+          <span>تقدم الطلب</span>
+          <span>
+            {service.status === 'pending' && '25%'}
+            {service.status === 'in-progress' && '75%'}
+            {(service.status === 'completed' || service.status === 'rejected') && '100%'}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all duration-300 ${service.status === 'pending' ? 'bg-yellow-400 w-1/4' :
+              service.status === 'in-progress' ? 'bg-blue-500 w-3/4' :
+                service.status === 'completed' ? 'bg-green-500 w-full' :
+                  'bg-red-500 w-full'
+              }`}
+          />
+        </div>
+      </div>
+
+      {/* Next expected action */}
+      {service.status !== 'completed' && service.status !== 'rejected' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg className="h-5 w-5 text-blue-600 mt-0.5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-blue-800">الخطوة التالية</h4>
+              <p className="mt-1 text-sm text-blue-700">
+                {service.status === 'pending'
+                  ? 'ننتظر مراجعة الطلب من قبل فريق الإدارة وتحديد الفني المناسب.'
+                  : 'العمل جاري حالياً، سيتم تحديث الحالة عند اكتمال المهمة.'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

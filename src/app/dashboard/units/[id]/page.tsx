@@ -337,12 +337,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 </p>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">غرف النوم</h3>
-                <p className="mt-1 text-base text-gray-900">
-                  {unit.bedrooms}
-                </p>
-              </div>
+
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500">الحمامات</h3>

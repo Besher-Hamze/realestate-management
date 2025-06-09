@@ -34,7 +34,7 @@ export default function PaymentsPage() {
     { value: 'cash', label: 'نقدًا' },
     { value: 'credit_card', label: 'بطاقة ائتمان' },
     { value: 'bank_transfer', label: 'تحويل بنكي' },
-    { value: 'check', label: 'شيك' },
+    { value: 'checks', label: 'شيك' },
     { value: 'other', label: 'أخرى' },
   ];
 

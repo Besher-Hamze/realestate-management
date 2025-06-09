@@ -10,6 +10,7 @@ import UnitList from '@/components/units/UnitList';
 import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import { UNIT_STATUS_OPTIONS, UNIT_TYPE_OPTIONS } from '@/constants/options';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function UnitsPage() {
   const [units, setUnits] = useState<RealEstateUnit[]>([]);
@@ -20,6 +21,8 @@ export default function UnitsPage() {
   const [buildingFilter, setBuildingFilter] = useState<string>('all');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoadingBuildings, setIsLoadingBuildings] = useState(false);
+  const { user } = useAuth();
+  const canEdit = user?.role === 'admin' || user?.role === 'manager';
 
   // خيارات تصفية الحالة
   const statusOptions = [
@@ -143,7 +146,7 @@ export default function UnitsPage() {
       {/* الترويسة مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold text-gray-900">الوحدات العقارية</h1>
-        <Link href="/dashboard/units/create">
+        {canEdit && <Link href="/dashboard/units/create">
           <Button
             variant="primary"
             leftIcon={
@@ -154,7 +157,7 @@ export default function UnitsPage() {
           >
             إضافة وحدة
           </Button>
-        </Link>
+        </Link>}
       </div>
 
       {/* بطاقات ملخص الحالة */}

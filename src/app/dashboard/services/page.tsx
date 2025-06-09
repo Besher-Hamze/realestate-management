@@ -166,41 +166,15 @@ export default function ServicesPage() {
                 </svg>
               </div>
               <div className="mr-4">
-                <h3 className="font-medium text-red-800">ملغي</h3>
-                <p className="text-2xl font-bold text-red-900">{getStatusCount('cancelled')}</p>
+                <h3 className="font-medium text-red-800">مرفوض</h3>
+                <p className="text-2xl font-bold text-red-900">{getStatusCount('rejected')}</p>
               </div>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* المرشحات */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-64">
-            <Select
-              label="الحالة"
-              id="statusFilter"
-              name="statusFilter"
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              options={statusOptions}
-              fullWidth
-            />
-          </div>
-          <div className="w-full sm:w-64">
-            <Select
-              label="نوع الخدمة"
-              id="typeFilter"
-              name="typeFilter"
-              value={typeFilter}
-              onChange={handleTypeFilterChange}
-              options={typeOptions}
-              fullWidth
-            />
-          </div>
-        </div>
-      </div>
+
 
       {/* قائمة الخدمات */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">

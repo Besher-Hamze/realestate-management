@@ -247,7 +247,11 @@ export const unitSchema = yup.object({
     .required('المبنى مطلوب')
     .positive('يرجى اختيار مبنى صالح')
     .integer('معرف المبنى غير صالح'),
-
+  ownerId: yup
+    .number()
+    .required('المالك مطلوب')
+    .positive('يرجى اختيار مالك صالح')
+    .integer('معرف المالك غير صالح'),
   unitNumber: yup
     .string()
     .required('رقم الوحدة مطلوب')
@@ -386,9 +390,7 @@ export const reservationSchema = yup.object({
 
   startDate: yup
     .date()
-    .required('تاريخ البداية مطلوب')
-    .min(new Date(), 'تاريخ البداية لا يمكن أن يكون في الماضي'),
-
+    .required('تاريخ البداية مطلوب'),
   endDate: yup
     .date()
     .required('تاريخ النهاية مطلوب')

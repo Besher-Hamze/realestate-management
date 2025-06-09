@@ -1,5 +1,5 @@
 // Auth Types
-export type Role = 'admin' | 'manager' | 'tenant';
+export type Role = 'admin' | 'manager' | 'accountant' | 'maintenance' | 'owner' | 'tenant';
 
 export interface User {
   id: number;
@@ -70,6 +70,7 @@ export type UnitStatus = 'available' | 'rented' | 'maintenance';
 export interface RealEstateUnit {
   id: number;
   buildingId: number;
+  ownerId: number;
   unitNumber: string;
   unitType: UnitType;
   unitLayout?: UnitLayout;
@@ -90,6 +91,7 @@ export interface UnitFormData {
   unitNumber: string;
   unitType: UnitType;
   unitLayout?: UnitLayout;
+  ownerId: number;
   floor: string; // Changed from number to string
   area: number;
   bathrooms: number;
@@ -266,6 +268,7 @@ export interface ServiceOrder {
   status: ServiceStatus;
   attachmentFile?: string;
   attachmentFileUrl?: string;
+  serviceHistory: { status: ServiceStatus, date: Date }[],
   createdAt: string;
   updatedAt: string;
   user?: User;
@@ -313,10 +316,10 @@ export interface PaymentFormData {
 export interface GeneralStatistics {
   totalBuildings: number;
   totalUnits: number;
-  totalReservations: number;
+  activeReservations: number;
   totalTenants: number;
   totalPendingServices: number;
-  totalRevenueThisMonth: number;
+  totalPayment: number;
 }
 
 export interface UnitStatusStatistics {
