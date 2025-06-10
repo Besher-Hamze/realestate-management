@@ -73,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         //   sameSite: 'lax' as const
         // };
 
-        Cookies.set('token', token);
+        Cookies.set('token', token, { expires: 7 }); // 7 days
+
 
         // Store remember me preference
         if (rememberMe) {
