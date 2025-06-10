@@ -10,14 +10,14 @@ interface AuthContextType {
   isLoading: boolean;
   canEdit: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: false,
+  isLoading: true, // Start with true to prevent premature redirects
   canEdit: false,
   isAuthenticated: false,
   login: async () => false,
@@ -27,41 +27,67 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with true
   const router = useRouter();
 
   // Calculate canEdit based on user role
   const canEdit = user?.role === 'admin' || user?.role === 'manager';
 
-  // Check if user is authenticated on initial load, but only if we have a token
+  // Check if user is authenticated on initial load
   useEffect(() => {
-    const token = Cookies.get('token');
-    if (token) {
-      const initAuth = async () => {
-        setIsLoading(true);
-        await checkAuth();
-        setIsLoading(false);
-      };
+    const initAuth = async () => {
+      console.log('AuthProvider: Initializing auth check...'); // Debug log
 
-      initAuth();
-    }
+      const token = Cookies.get('token');
+      if (token) {
+        console.log('AuthProvider: Token found, checking auth...'); // Debug log
+        await checkAuth();
+      } else {
+        console.log('AuthProvider: No token found'); // Debug log
+      }
+
+      setIsLoading(false);
+      console.log('AuthProvider: Auth check complete'); // Debug log
+    };
+
+    initAuth();
   }, []);
 
-  // Login function
-  const login = async (username: string, password: string): Promise<boolean> => {
+  // Login function with remember me support
+  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
+      console.log('AuthProvider: Attempting login...'); // Debug log
       setIsLoading(true);
 
       const response = await authApi.login(username, password);
 
       if (response.success && response.data) {
-        const { token, user: userData } = response.data;
+        console.log(response.data);
 
-        // Set token in cookie
-        Cookies.set('token', token, { expires: 7 }); // 7 days
+        const { token, ...userData } = response.data;
+
+        // Set token in cookie with appropriate expiration
+        const cookieOptions = {
+          expires: rememberMe ? 30 : 7, // 30 days if remember me, 7 days otherwise
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax' as const
+        };
+
+        Cookies.set('token', token, cookieOptions);
+
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+          localStorage.setItem('username', username);
+        } else {
+          localStorage.removeItem('rememberMe');
+          localStorage.removeItem('username');
+        }
 
         // Set user from login response
-        setUser(userData);
+        setUser(userData as any);
+        console.log('AuthProvider: Login successful, user set:', userData); // Debug log
+
         return true;
       }
 
@@ -76,8 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Logout function
   const logout = () => {
+    console.log('AuthProvider: Logging out...'); // Debug log
     Cookies.remove('token');
     setUser(null);
+
+    // Don't remove remember me data on logout
+    // localStorage.removeItem('rememberMe');
+    // localStorage.removeItem('username');
+
     router.push('/login');
   };
 
@@ -87,17 +119,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = Cookies.get('token');
 
       if (!token) {
+        console.log('AuthProvider: No token in checkAuth'); // Debug log
         setUser(null);
         return false;
       }
 
+      console.log('AuthProvider: Checking auth with token...'); // Debug log
       const response = await authApi.getMe();
 
       if (response.success && response.data) {
+        console.log('AuthProvider: Auth check successful, user:', response.data); // Debug log
         setUser(response.data);
         return true;
       }
 
+      console.log('AuthProvider: Auth check failed, removing token'); // Debug log
       Cookies.remove('token');
       setUser(null);
       return false;
@@ -111,6 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Calculate isAuthenticated based on user presence
   const isAuthenticated = !!user;
+
+  console.log('AuthProvider render:', { isLoading, isAuthenticated, user: user?.role }); // Debug log
 
   return (
     <AuthContext.Provider
