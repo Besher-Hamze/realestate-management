@@ -67,13 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { token, ...userData } = response.data;
 
         // Set token in cookie with appropriate expiration
-        const cookieOptions = {
-          expires: rememberMe ? 30 : 7, // 30 days if remember me, 7 days otherwise
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax' as const
-        };
+        // const cookieOptions = {
+        //   expires: rememberMe ? 30 : 7, // 30 days if remember me, 7 days otherwise
+        //   secure: process.env.NODE_ENV === 'production',
+        //   sameSite: 'lax' as const
+        // };
 
-        Cookies.set('token', token, cookieOptions);
+        Cookies.set('token', token);
 
         // Store remember me preference
         if (rememberMe) {
