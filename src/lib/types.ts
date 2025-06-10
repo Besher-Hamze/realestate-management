@@ -221,6 +221,48 @@ export interface Reservation {
   serviceOrders?: ServiceOrder[];
 }
 
+export interface Reservation {
+  id: number;
+  userId: number;
+  unitId: number;
+  contractType: ContractType;
+  startDate: string;
+  endDate: string;
+  contractDuration?: string;
+  contractImage?: string;
+  contractImageUrl?: string;
+  contractPdf?: string;
+  contractPdfUrl?: string;
+  paymentMethod: PaymentMethod;
+  paymentSchedule: PaymentSchedule;
+
+  // Enhanced deposit fields
+  includesDeposit: boolean;
+  depositAmount?: number;
+  depositPaymentMethod?: DepositPaymentMethod;
+  depositCheckImage?: string;
+  depositCheckImageUrl?: string;
+  depositStatus?: DepositStatus;
+  depositPaidDate?: string;
+  depositReturnedDate?: string;
+  depositNotes?: string;
+
+  status: ReservationStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+  unit?: RealEstateUnit;
+  payments?: Payment[];
+  serviceOrders?: ServiceOrder[];
+}
+
+
+
+// Enhanced deposit types
+export type DepositPaymentMethod = 'cash' | 'check';
+export type DepositStatus = 'unpaid' | 'paid' | 'returned';
+
 export interface ReservationFormData {
   // With existing tenant
   userId?: number;
@@ -240,15 +282,24 @@ export interface ReservationFormData {
   identityImageBack?: File;
   commercialRegisterImage?: File;
 
-  // Common fields
+  // Common reservation fields
   unitId: number;
   contractType: ContractType;
   startDate: string;
   endDate: string;
   paymentMethod: PaymentMethod;
   paymentSchedule: PaymentSchedule;
+
+  // Enhanced deposit fields
   includesDeposit: boolean;
   depositAmount?: number;
+  depositPaymentMethod?: DepositPaymentMethod;
+  depositCheckImage?: File;
+  depositStatus?: DepositStatus;
+  depositPaidDate?: string;
+  depositReturnedDate?: string;
+  depositNotes?: string;
+
   notes?: string;
   contractImage?: File;
   contractPdf?: File;
@@ -351,4 +402,53 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export type ExpenseType =
+  | 'maintenance'    // صيانة
+  | 'utilities'      // خدمات (كهرباء، ماء، إنترنت)
+  | 'insurance'      // تأمين
+  | 'cleaning'       // تنظيف
+  | 'security'       // أمن
+  | 'management'     // إدارة
+  | 'repairs'        // إصلاحات
+  | 'other';         // أخرى
+
+export interface Expense {
+  id: number;
+  unitId: number;
+  expenseType: ExpenseType;
+  amount: number;
+  expenseDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  unit?: RealEstateUnit;
+}
+
+export interface ExpenseFormData {
+  unitId: number;
+  expenseType: ExpenseType;
+  amount: number;
+  expenseDate: string;
+  notes?: string;
+}
+
+export interface ExpenseStatistics {
+  totalExpenses: number;
+  monthlyExpenses: number;
+  expensesByType: {
+    maintenance: number;
+    utilities: number;
+    insurance: number;
+    cleaning: number;
+    security: number;
+    management: number;
+    repairs: number;
+    other: number;
+  };
+  expensesByMonth: {
+    month: string;
+    amount: number;
+  }[];
 }

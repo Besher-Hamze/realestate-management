@@ -29,9 +29,10 @@ export const UNIT_LAYOUT_OPTIONS = [
 ];
 
 export const FLOOR_OPTIONS = [
-  { value: 'G', label: 'الأرضي' },
+  { value: '-2', label: 'قبو -2' },
+  { value: '-1', label: 'قبو -1 ' },
   { value: 'M', label: 'الميزانين' },
-  { value: 'B', label: 'البدروم' },
+  { value: 'G', label: 'الأرضي' },
   { value: '1', label: 'الأول' },
   { value: '2', label: 'الثاني' },
   { value: '3', label: 'الثالث' },
@@ -221,3 +222,14 @@ export const getPaymentStatusLabel = (value: string) => {
 export const getUserRoleLabel = (value: string) => {
   return USER_ROLE_OPTIONS.find(option => option.value === value)?.label || value;
 };
+
+export const EXPENSE_TYPE_OPTIONS = [
+  { value: 'maintenance', label: 'صيانة' },
+  { value: 'utilities', label: 'خدمات (كهرباء، ماء، إنترنت)' },
+  { value: 'insurance', label: 'تأمين' },
+  { value: 'cleaning', label: 'تنظيف' },
+  { value: 'security', label: 'أمن' },
+  { value: 'management', label: 'إدارة' },
+  { value: 'repairs', label: 'إصلاحات' },
+  { value: 'other', label: 'أخرى' },
+];

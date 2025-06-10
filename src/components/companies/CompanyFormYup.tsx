@@ -97,6 +97,9 @@ export default function CompanyForm({
   const watchedIdentityImageFront = watch('identityImageFront');
   const watchedIdentityImageBack = watch('identityImageBack');
 
+  // Watch companyType to conditionally show/hide registration number field
+  const watchedCompanyType = watch('companyType');
+
   // Reset form when editing data changes
   useEffect(() => {
     if (isEdit && initialData) {
@@ -278,13 +281,16 @@ export default function CompanyForm({
                 helpText="رقم هاتف إضافي (اختياري)"
               />
 
-              <FormInput
-                label="رقم السجل التجاري"
-                register={register}
-                name="registrationNumber"
-                error={errors.registrationNumber}
-                helpText="رقم السجل التجاري للشركة (اختياري)"
-              />
+              {/* Conditionally render registration number field - only show when companyType is NOT 'owner' */}
+              {watchedCompanyType !== 'owner' && (
+                <FormInput
+                  label="رقم السجل التجاري"
+                  register={register}
+                  name="registrationNumber"
+                  error={errors.registrationNumber}
+                  helpText="رقم السجل التجاري للشركة (اختياري)"
+                />
+              )}
 
               <FormInput
                 label="اسم المفوض"

@@ -4,14 +4,15 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Building, Unit } from '@/lib/types';
+import { Building } from '@/lib/types';
 import { buildingsApi, unitsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { TableColumn } from '@/components/ui/Table';
-import { formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { BUILDING_TYPE_OPTIONS } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BuildingDetailPageProps {
   params: Promise<{
@@ -30,6 +31,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
   const [isUnitsLoading, setIsUnitsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { canEdit } = useAuth();
 
   // جلب تفاصيل المبنى عند تحميل المكون
   useEffect(() => {
@@ -123,7 +125,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
     {
       key: 'price',
       header: 'السعر',
-      cell: (unit) => <span className="text-gray-900 font-medium">${unit.price}</span>,
+      cell: (unit) => <span className="text-gray-900 font-medium">{formatCurrency(unit.price)}</span>,
     },
     {
       key: 'status',
@@ -145,9 +147,11 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
           <Link href={`/dashboard/units/${unit.id}`}>
             <Button size="sm" variant="outline">عرض</Button>
           </Link>
-          <Link href={`/dashboard/units/${unit.id}/edit`}>
-            <Button size="sm" variant="outline">تعديل</Button>
-          </Link>
+          {canEdit &&
+            <Link href={`/dashboard/units/${unit.id}/edit`}>
+              <Button size="sm" variant="outline">تعديل</Button>
+            </Link>
+          }
         </div>
       ),
     },
@@ -219,24 +223,26 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">{building.name}</h1>
-          <div className="flex space-x-3">
-            <Link href={`/dashboard/units/create?buildingId=${building.id}`}>
-              <Button
-                variant="primary"
-                leftIcon={
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                }
-              >
-                إضافة وحدة
-              </Button>
-            </Link>
-            <Link href={`/dashboard/buildings/${building.id}/edit`}>
-              <Button variant="outline">تعديل المبنى</Button>
-            </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
-          </div>
+          {canEdit &&
+            <div className="flex space-x-3">
+              <Link href={`/dashboard/units/create?buildingId=${building.id}`}>
+                <Button
+                  variant="primary"
+                  leftIcon={
+                    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  }
+                >
+                  إضافة وحدة
+                </Button>
+              </Link>
+              <Link href={`/dashboard/buildings/${building.id}/edit`}>
+                <Button variant="outline">تعديل المبنى</Button>
+              </Link>
+              <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
+            </div>
+          }
         </div>
       </div>
 
@@ -321,7 +327,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">الوحدات</h2>
-          <Link href={`/dashboard/units/create?buildingId=${building.id}`}>
+          {canEdit && <Link href={`/dashboard/units/create?buildingId=${building.id}`}>
             <Button
               variant="primary"
               size="sm"
@@ -333,7 +339,7 @@ export default function BuildingDetailPage({ params }: BuildingDetailPageProps) 
             >
               إضافة وحدة
             </Button>
-          </Link>
+          </Link>}
         </div>
 
         <Card>

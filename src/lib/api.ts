@@ -19,7 +19,10 @@ import {
   TenantFormData,
   GeneralStatistics,
   UnitStatusStatistics,
-  ServiceStatusStatistics
+  ServiceStatusStatistics,
+  Expense,
+  ExpenseFormData,
+  ExpenseStatistics
 } from './types';
 
 // Manager credentials interface for company creation response
@@ -440,6 +443,7 @@ export const reservationsApi = {
         identityImageFront: data.identityImageFront,
         identityImageBack: data.identityImageBack,
         commercialRegisterImage: data.commercialRegisterImage,
+        depositCheckImage: data.depositCheckImage
       },
       formData
     );
@@ -735,3 +739,50 @@ export const dashboardApi = {
       method: 'GET',
     }),
 };
+
+export const expensesApi = {
+  getAll: () =>
+    apiRequest<Expense[]>({
+      url: '/expenses',
+      method: 'GET',
+    }),
+
+  getById: (id: number | string) =>
+    apiRequest<Expense>({
+      url: `/expenses/${id}`,
+      method: 'GET',
+    }),
+
+  getByUnitId: (unitId: number | string) =>
+    apiRequest<Expense[]>({
+      url: `/expenses/unit/${unitId}`,
+      method: 'GET',
+    }),
+
+  getStatistics: () =>
+    apiRequest<ExpenseStatistics>({
+      url: '/expenses/statistics',
+      method: 'GET',
+    }),
+
+  create: (data: ExpenseFormData) =>
+    apiRequest<Expense>({
+      url: '/expenses',
+      method: 'POST',
+      data,
+    }),
+
+  update: (id: number | string, data: Partial<ExpenseFormData>) =>
+    apiRequest<Expense>({
+      url: `/expenses/${id}`,
+      method: 'PUT',
+      data,
+    }),
+
+  delete: (id: number | string) =>
+    apiRequest<ApiResponse<null>>({
+      url: `/expenses/${id}`,
+      method: 'DELETE',
+    }),
+};
+

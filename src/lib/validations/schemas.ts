@@ -94,9 +94,17 @@ export const companySchema = yup.object({
 
   registrationNumber: yup
     .string()
-    .nullable()
-    .min(5, 'رقم التسجيل قصير جداً')
-    .max(50, 'رقم التسجيل طويل جداً'),
+    .when('companyType', {
+      is: 'agency',
+      then: (schema) => schema
+        .required('رقم التسجيل مطلوب للشركات المالكة')
+        .min(1, 'رقم التسجيل قصير جداً')
+        .max(50, 'رقم التسجيل طويل جداً'),
+      otherwise: (schema) => schema
+        .nullable()
+        .min(1, 'رقم التسجيل قصير جداً')
+        .max(50, 'رقم التسجيل طويل جداً')
+    }),
 
   delegateName: yup
     .string()
@@ -369,15 +377,281 @@ export const userSchema = yup.object({
 });
 
 // ===== RESERVATION VALIDATION SCHEMA =====
+
+
+// ===== EXPENSE VALIDATION SCHEMA =====
+export const expenseSchema = yup.object({
+  unitId: yup
+    .number()
+    .required('الوحدة مطلوبة')
+    .positive('يرجى اختيار وحدة صالحة')
+    .integer('معرف الوحدة غير صالح'),
+
+  expenseType: yup
+    .string()
+    .required('نوع المصروف مطلوب')
+    .oneOf([
+      'maintenance',
+      'utilities',
+      'insurance',
+      'cleaning',
+      'security',
+      'management',
+      'repairs',
+      'other'
+    ], 'نوع المصروف غير صالح'),
+
+  amount: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (originalValue === '') return undefined;
+      return Number(originalValue);
+    })
+    .required('المبلغ مطلوب')
+    .positive('المبلغ يجب أن يكون أكبر من صفر')
+    .max(1000000, 'المبلغ كبير جداً (الحد الأقصى مليون)')
+    .typeError('يرجى إدخال مبلغ صالح بالأرقام فقط'),
+
+  // Updated expenseDate validation - accept string in YYYY-MM-DD format
+  expenseDate: yup
+    .string()
+    .required('تاريخ المصروف مطلوب')
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ المصروف يجب أن يكون بصيغة صحيحة (YYYY-MM-DD)')
+    .test('not-future', 'تاريخ المصروف لا يمكن أن يكون في المستقبل', function (value) {
+      if (!value) return true;
+      const inputDate = new Date(value);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Set to end of today
+      return inputDate <= today;
+    }),
+
+  notes: yup
+    .string()
+    .nullable()
+    .max(1000, 'الملاحظات طويلة جداً (الحد الأقصى 1000 حرف)'),
+});
+
+export type ExpenseFormData = yup.InferType<typeof expenseSchema>;
+
+// Base reservation schema with all fields (edit mode)
 export const reservationSchema = yup.object({
+  // Common reservation fields
   userId: yup
     .number()
-    .when('$createNewTenant', {
-      is: false,
-      then: (schema) => schema.required('المستأجر مطلوب').positive('يرجى اختيار مستأجر صالح'),
+    .nullable()
+    .positive('يرجى اختيار مستأجر صالح'),
+
+  unitId: yup
+    .number()
+    .nullable()
+    .positive('يرجى اختيار وحدة صالحة'),
+
+  contractType: yup
+    .string()
+    .nullable()
+    .oneOf(['residential', 'commercial'], 'نوع العقد غير صالح'),
+
+  startDate: yup
+    .string()
+    .nullable()
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ البداية يجب أن يكون بصيغة صحيحة'),
+
+  endDate: yup
+    .string()
+    .nullable()
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ النهاية يجب أن يكون بصيغة صحيحة')
+    .test('end-after-start', 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية', function (value) {
+      const { startDate } = this.parent;
+      if (!startDate || !value) return true;
+      return new Date(value) > new Date(startDate);
+    }),
+
+  paymentMethod: yup
+    .string()
+    .nullable()
+    .oneOf(['cash', 'checks'], 'طريقة الدفع غير صالحة'),
+
+  paymentSchedule: yup
+    .string()
+    .nullable()
+    .oneOf(['monthly', 'quarterly', 'triannual', 'biannual', 'annual'], 'جدول الدفع غير صالح'),
+
+  // Deposit fields
+  includesDeposit: yup
+    .boolean()
+    .nullable(),
+
+  depositAmount: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (originalValue === '') return undefined;
+      return Number(originalValue);
+    })
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema
+        .positive('مبلغ التأمين يجب أن يكون أكبر من صفر')
+        .typeError('يرجى إدخال مبلغ صالح للتأمين'),
       otherwise: (schema) => schema.nullable()
     }),
 
+  depositPaymentMethod: yup
+    .string()
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema.oneOf(['cash', 'check'], 'طريقة دفع التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositStatus: yup
+    .string()
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema.oneOf(['unpaid', 'paid', 'returned'], 'حالة التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositPaidDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'paid',
+      then: (schema) => schema.matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ دفع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositReturnedDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'returned',
+      then: (schema) => schema.matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ استرجاع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositNotes: yup
+    .string()
+    .nullable()
+    .max(500, 'ملاحظات التأمين طويلة جداً'),
+
+  depositCheckImage: yup
+    .mixed<File>()
+    .nullable()
+    .when(['includesDeposit', 'depositPaymentMethod'], {
+      is: (includesDeposit, depositPaymentMethod) => includesDeposit && depositPaymentMethod === 'check',
+      then: (schema) => schema
+        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+        }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  // Other fields
+  notes: yup
+    .string()
+    .nullable()
+    .max(1000, 'الملاحظات طويلة جداً'),
+
+  contractImage: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    }),
+
+  contractPdf: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن يكون ملف PDF', (value) => {
+      return !value || value.type === 'application/pdf';
+    }),
+
+  // New tenant fields
+  tenantFullName: yup
+    .string()
+    .nullable()
+    .min(2, 'الاسم الكامل قصير جداً')
+    .max(100, 'الاسم الكامل طويل جداً')
+    .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
+
+  tenantEmail: yup
+    .string()
+    .nullable()
+    .matches(emailRegex, 'صيغة البريد الإلكتروني غير صحيحة', { excludeEmptyString: true }),
+
+  tenantPhone: yup
+    .string()
+    .nullable()
+    .matches(phoneRegex, 'رقم الهاتف غير صالح', { excludeEmptyString: true }),
+
+  tenantWhatsappNumber: yup
+    .string()
+    .nullable()
+    .matches(phoneRegex, 'رقم الواتساب غير صالح', { excludeEmptyString: true }),
+
+  tenantIdNumber: yup
+    .string()
+    .nullable()
+    .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
+
+  tenantType: yup
+    .string()
+    .nullable()
+    .oneOf(['partnership', 'commercial_register', 'person', 'embassy', 'foreign_company', 'government', 'inheritance', 'civil_registry'], 'نوع المستأجر غير صالح'),
+
+  tenantBusinessActivities: yup
+    .string()
+    .nullable()
+    .min(10, 'وصف الأنشطة التجارية قصير جداً')
+    .max(500, 'وصف الأنشطة التجارية طويل جداً'),
+
+  tenantContactPerson: yup
+    .string()
+    .nullable()
+    .min(2, 'اسم الشخص المسؤول قصير جداً')
+    .max(100, 'اسم الشخص المسؤول طويل جداً')
+    .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
+
+  tenantContactPosition: yup
+    .string()
+    .nullable()
+    .min(2, 'منصب الشخص المسؤول قصير جداً')
+    .max(100, 'منصب الشخص المسؤول طويل جداً'),
+
+  tenantNotes: yup
+    .string()
+    .nullable()
+    .max(1000, 'ملاحظات المستأجر طويلة جداً'),
+
+  // Identity documents
+  identityImageFront: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    }),
+
+  identityImageBack: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    }),
+
+  commercialRegisterImage: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    }),
+});
+
+// Create reservation schema (extended with required fields for create mode)
+export const createReservationSchema = yup.object({
+  // Basic required fields
   unitId: yup
     .number()
     .required('الوحدة مطلوبة')
@@ -389,12 +663,19 @@ export const reservationSchema = yup.object({
     .oneOf(['residential', 'commercial'], 'نوع العقد غير صالح'),
 
   startDate: yup
-    .date()
-    .required('تاريخ البداية مطلوب'),
+    .string()
+    .required('تاريخ البداية مطلوب')
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ البداية يجب أن يكون بصيغة صحيحة'),
+
   endDate: yup
-    .date()
+    .string()
     .required('تاريخ النهاية مطلوب')
-    .min(yup.ref('startDate'), 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية'),
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ النهاية يجب أن يكون بصيغة صحيحة')
+    .test('end-after-start', 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية', function (value) {
+      const { startDate } = this.parent;
+      if (!startDate || !value) return true;
+      return new Date(value) > new Date(startDate);
+    }),
 
   paymentMethod: yup
     .string()
@@ -408,14 +689,28 @@ export const reservationSchema = yup.object({
 
   includesDeposit: yup
     .boolean()
-    .required(),
+    .required('الرجاء تحديد ما إذا كان يتضمن تأمين'),
 
+  // Contract documents - required for create mode
+  contractImage: yup
+    .mixed<File>()
+    .required('صورة العقد مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+    }),
+
+  contractPdf: yup
+    .mixed<File>()
+    .required('ملف PDF للعقد مطلوب')
+    .test('fileType', 'يجب أن يكون ملف PDF', (value) => {
+      return value ? value.type === 'application/pdf' : false;
+    }),
+
+  // Enhanced deposit fields validation
   depositAmount: yup
     .number()
     .transform((value, originalValue) => {
-      // If it's an empty string, return undefined to trigger required validation
       if (originalValue === '') return undefined;
-      // If it's not a number, return NaN to trigger typeError
       return Number(originalValue);
     })
     .when('includesDeposit', {
@@ -427,37 +722,372 @@ export const reservationSchema = yup.object({
       otherwise: (schema) => schema.nullable()
     }),
 
+  depositPaymentMethod: yup
+    .string()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema
+        .required('طريقة دفع التأمين مطلوبة')
+        .oneOf(['cash', 'check'], 'طريقة دفع التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositStatus: yup
+    .string()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema
+        .required('حالة التأمين مطلوبة')
+        .oneOf(['unpaid', 'paid', 'returned'], 'حالة التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositPaidDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'paid',
+      then: (schema) => schema
+        .required('تاريخ دفع التأمين مطلوب')
+        .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ دفع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositReturnedDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'returned',
+      then: (schema) => schema
+        .required('تاريخ استرجاع التأمين مطلوب')
+        .matches(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ استرجاع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  depositCheckImage: yup
+    .mixed<File>()
+    .when(['includesDeposit', 'depositPaymentMethod'], {
+      is: (includesDeposit, depositPaymentMethod) => includesDeposit && depositPaymentMethod === 'check',
+      then: (schema) => schema
+        .required('صورة شيك التأمين مطلوبة')
+        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+        }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  // Tenant validation (conditional based on createNewTenant context)
+  userId: yup
+    .number()
+    .when('$createNewTenant', {
+      is: false,
+      then: (schema) => schema
+        .required('المستأجر مطلوب')
+        .positive('يرجى اختيار مستأجر صالح'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  // New tenant fields (conditional based on createNewTenant context)
+  tenantFullName: yup
+    .string()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('الاسم الكامل مطلوب')
+        .min(2, 'الاسم الكامل قصير جداً')
+        .max(100, 'الاسم الكامل طويل جداً')
+        .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantEmail: yup
+    .string()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('البريد الإلكتروني مطلوب')
+        .matches(emailRegex, 'صيغة البريد الإلكتروني غير صحيحة', { excludeEmptyString: true }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantPhone: yup
+    .string()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('رقم الهاتف مطلوب')
+        .matches(phoneRegex, 'رقم الهاتف غير صالح', { excludeEmptyString: true }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantIdNumber: yup
+    .string()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('رقم الهوية مطلوب')
+        .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantType: yup
+    .string()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('نوع المستأجر مطلوب')
+        .oneOf(['partnership', 'commercial_register', 'person', 'embassy', 'foreign_company', 'government', 'inheritance', 'civil_registry'], 'نوع المستأجر غير صالح'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  // Business tenant fields (conditional based on tenant type)
+  tenantBusinessActivities: yup
+    .string()
+    .nullable()
+    .when(['$createNewTenant', 'tenantType'], {
+      is: (createNewTenant, tenantType) => createNewTenant && ['commercial_register', 'partnership', 'foreign_company'].includes(tenantType || ''),
+      then: (schema) => schema
+        .required('وصف الأنشطة التجارية مطلوب')
+        .min(10, 'وصف الأنشطة التجارية قصير جداً')
+        .max(500, 'وصف الأنشطة التجارية طويل جداً'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantContactPerson: yup
+    .string()
+    .nullable()
+    .when(['$createNewTenant', 'tenantType'], {
+      is: (createNewTenant, tenantType) => createNewTenant && tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
+      then: (schema) => schema
+        .required('اسم الشخص المسؤول مطلوب')
+        .min(2, 'اسم الشخص المسؤول قصير جداً')
+        .max(100, 'اسم الشخص المسؤول طويل جداً')
+        .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  tenantContactPosition: yup
+    .string()
+    .nullable()
+    .when(['$createNewTenant', 'tenantType'], {
+      is: (createNewTenant, tenantType) => createNewTenant && tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
+      then: (schema) => schema
+        .required('منصب الشخص المسؤول مطلوب')
+        .min(2, 'منصب الشخص المسؤول قصير جداً')
+        .max(100, 'منصب الشخص المسؤول طويل جداً'),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  // Identity documents (required for new tenants)
+  identityImageFront: yup
+    .mixed<File>()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('صورة الهوية (الوجه الأمامي) مطلوبة')
+        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+        }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  identityImageBack: yup
+    .mixed<File>()
+    .when('$createNewTenant', {
+      is: true,
+      then: (schema) => schema
+        .required('صورة الهوية (الوجه الخلفي) مطلوبة')
+        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+        }),
+      otherwise: (schema) => schema.nullable()
+    }),
+
+  commercialRegisterImage: yup
+    .mixed<File>()
+    .nullable()
+    .when(['$createNewTenant', 'tenantType'], {
+      is: (createNewTenant, tenantType) => createNewTenant && ['commercial_register', 'partnership', 'foreign_company'].includes(tenantType || ''),
+      then: (schema) => schema
+        .required('صورة السجل التجاري مطلوبة')
+        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+        }),
+      otherwise: (schema) => schema.nullable()
+    }),
+});
+
+// Edit mode uses the base schema (with fewer required fields)
+
+
+// ===== RESERVATION VALIDATION SCHEMA =====
+
+// Base reservation schema with all fields optional (edit mode)
+export const editReservationSchema = yup.object({
+  // Common reservation fields
+  userId: yup
+    .number()
+    .nullable()
+    .positive('يرجى اختيار مستأجر صالح')
+    .optional(),
+
+  unitId: yup
+    .number()
+    .nullable()
+    .positive('يرجى اختيار وحدة صالحة')
+    .optional(),
+
+  contractType: yup
+    .string()
+    .nullable()
+    .oneOf(['residential', 'commercial', ''], 'نوع العقد غير صالح')
+    .optional(),
+
+  startDate: yup
+    .string()
+    .nullable()
+    .matches(/^\d{4}-\d{2}-\d{2}$|^$/, 'تاريخ البداية يجب أن يكون بصيغة صحيحة')
+    .optional(),
+
+  endDate: yup
+    .string()
+    .nullable()
+    .matches(/^\d{4}-\d{2}-\d{2}$|^$/, 'تاريخ النهاية يجب أن يكون بصيغة صحيحة')
+    .test('end-after-start', 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية', function (value) {
+      const { startDate } = this.parent;
+      if (!startDate || !value) return true;
+      return new Date(value) > new Date(startDate);
+    })
+    .optional(),
+
+  paymentMethod: yup
+    .string()
+    .nullable()
+    .oneOf(['cash', 'checks', ''], 'طريقة الدفع غير صالحة')
+    .optional(),
+
+  paymentSchedule: yup
+    .string()
+    .nullable()
+    .oneOf(['monthly', 'quarterly', 'triannual', 'biannual', 'annual', ''], 'جدول الدفع غير صالح')
+    .optional(),
+
+  // Deposit fields
+  includesDeposit: yup
+    .boolean()
+    .nullable()
+    .optional(),
+
+  depositAmount: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (originalValue === '' || originalValue == null) return undefined;
+      return Number(originalValue);
+    })
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) =>
+        schema
+          .positive('مبلغ التأمين يجب أن يكون أكبر من صفر')
+          .typeError('يرجى إدخال مبلغ صالح للتأمين'),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  depositPaymentMethod: yup
+    .string()
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema.oneOf(['cash', 'check', ''], 'طريقة دفع التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  depositStatus: yup
+    .string()
+    .nullable()
+    .when('includesDeposit', {
+      is: true,
+      then: (schema) => schema.oneOf(['unpaid', 'paid', 'returned', ''], 'حالة التأمين غير صالحة'),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  depositPaidDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'paid',
+      then: (schema) =>
+        schema.matches(/^\d{4}-\d{2}-\d{2}$|^$/, 'تاريخ دفع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  depositReturnedDate: yup
+    .string()
+    .nullable()
+    .when(['includesDeposit', 'depositStatus'], {
+      is: (includesDeposit, depositStatus) => includesDeposit && depositStatus === 'returned',
+      then: (schema) =>
+        schema.matches(/^\d{4}-\d{2}-\d{2}$|^$/, 'تاريخ استرجاع التأمين يجب أن يكون بصيغة صحيحة'),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  depositNotes: yup
+    .string()
+    .nullable()
+    .max(500, 'ملاحظات التأمين طويلة جداً')
+    .optional(),
+
+  depositCheckImage: yup
+    .mixed<File>()
+    .nullable()
+    .when(['includesDeposit', 'depositPaymentMethod'], {
+      is: (includesDeposit, depositPaymentMethod) => includesDeposit && depositPaymentMethod === 'check',
+      then: (schema) =>
+        schema.test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+          return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+        }),
+      otherwise: (schema) => schema.nullable(),
+    })
+    .optional(),
+
+  // Other fields
   notes: yup
     .string()
     .nullable()
-    .max(1000, 'الملاحظات طويلة جداً'),
+    .max(1000, 'الملاحظات طويلة جداً')
+    .optional(),
 
-  contractImage: yup.mixed<File>().required('صورة العقد مطلوبة')
+  contractImage: yup
+    .mixed<File>()
+    .nullable()
     .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-    }),
-  contractPdf: yup.mixed<File>().required('ملف PDF للعقد مطلوب')
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    })
+    .optional(),
+
+  contractPdf: yup
+    .mixed<File>()
+    .nullable()
     .test('fileType', 'يجب أن يكون ملف PDF', (value) => {
-      return value ? value.type === 'application/pdf' : false;
-    }),
-  identityImageFront: yup.mixed<File>().required('صورة الوجه الأمامي للهوية مطلوبة')
-    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-    }),
-  identityImageBack: yup.mixed<File>().required('صورة الوجه الخلفي للهوية مطلوبة')
-    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-    }),
-  commercialRegisterImage: yup.mixed<File>().when('tenantType', {
-    is: (value: string) => ['commercial_register', 'partnership', 'foreign_company'].includes(value),
-    then: (schema) => schema.required('صورة السجل التجاري مطلوبة')
-      .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-        return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-      }),
-    otherwise: (schema) => schema.optional(),
-  }),
-});
+      return !value || value.type === 'application/pdf';
+    })
+    .optional(),
 
+
+  commercialRegisterImage: yup
+    .mixed<File>()
+    .nullable()
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
+    })
+    .optional(),
+});
 // ===== PAYMENT VALIDATION SCHEMA =====
 export const paymentSchema = yup.object({
   reservationId: yup

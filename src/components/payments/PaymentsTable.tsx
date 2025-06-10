@@ -39,6 +39,10 @@ export default function PaymentsTable({
   const [checkImage, setCheckImage] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Image preview modal state
+  const [imagePreviewModalOpen, setImagePreviewModalOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
+
   // Handle row click - navigate to payment detail
   const handleRowClick = (payment: Payment) => {
     if (!singlePayment) {
@@ -68,6 +72,13 @@ export default function PaymentsTable({
     setUploadModalOpen(true);
   };
 
+  // Open image preview modal
+  const openImagePreview = (imageUrl: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPreviewImageUrl(imageUrl);
+    setImagePreviewModalOpen(true);
+  };
+
   // Delete payment
   const handleDelete = async () => {
     if (!selectedPayment) return;
@@ -80,7 +91,7 @@ export default function PaymentsTable({
         toast.success('تم حذف المدفوعة بنجاح');
         setDeleteModalOpen(false);
         onRefresh();
-        
+
         // If we're on a single payment page, navigate back to the payments list
         if (singlePayment) {
           router.push('/dashboard/payments');
@@ -166,7 +177,7 @@ export default function PaymentsTable({
       default: return status;
     }
   };
-  
+
   // Get translated payment method
   const getPaymentMethodName = (method: string): string => {
     switch (method) {
@@ -177,6 +188,36 @@ export default function PaymentsTable({
       case 'other': return 'أخرى';
       default: return method;
     }
+  };
+
+  // Get contract type name
+  const getContractTypeName = (type: string): string => {
+    switch (type) {
+      case 'residential': return 'سكني';
+      case 'commercial': return 'تجاري';
+      default: return type;
+    }
+  };
+
+  // Get payment schedule name
+  const getPaymentScheduleName = (schedule: string): string => {
+    switch (schedule) {
+      case 'monthly': return 'شهري';
+      case 'quarterly': return 'ربع سنوي';
+      case 'triannual': return 'كل 4 أشهر';
+      case 'biannual': return 'نصف سنوي';
+      case 'annual': return 'سنوي';
+      default: return schedule;
+    }
+  };
+
+  // Calculate days overdue for delayed payments
+  const getDaysOverdue = (paymentDate: string): number => {
+    const today = new Date();
+    const dueDate = new Date(paymentDate);
+    const diffTime = today.getTime() - dueDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   // Status action button component
@@ -203,10 +244,10 @@ export default function PaymentsTable({
     ...(singlePayment || !!reservationId ? [] : [
       {
         key: 'reservation',
-        header: 'الحجز',
+        header: 'معلومات الحجز',
         cell: (payment: Payment) => (
-          <div className="flex flex-col">
-            <Link 
+          <div className="flex flex-col space-y-1">
+            <Link
               href={`/dashboard/reservations/${payment.reservationId}`}
               className="text-primary-600 hover:text-primary-800 font-medium"
               onClick={(e) => e.stopPropagation()}
@@ -214,10 +255,33 @@ export default function PaymentsTable({
               #{payment.reservationId}
             </Link>
             {payment.reservation && (
-              <span className="text-xs text-gray-500 mt-1">
-                {payment.reservation.unit?.unitNumber || 'وحدة غير معروفة'} - 
-                {payment.reservation.user?.fullName || 'مستأجر غير معروف'}
-              </span>
+              <>
+                {/* Unit Information */}
+                <div className="text-xs text-gray-600">
+                  <span className="font-medium">الوحدة:</span> {payment.reservation.unit?.unitNumber || 'غير معروفة'}
+                  {payment.reservation.unit?.building?.name && (
+                    <span className="text-gray-500"> - {payment.reservation.unit.building.name}</span>
+                  )}
+                </div>
+
+                {/* Tenant Information */}
+                <div className="text-xs text-gray-600">
+                  <span className="font-medium">المستأجر:</span> {payment.reservation.user?.fullName || 'غير معروف'}
+                </div>
+
+                {/* Contract Information */}
+                <div className="text-xs text-gray-500">
+                  <span className="font-medium">النوع:</span> {getContractTypeName(payment.reservation.contractType)}
+                  {payment.reservation.paymentSchedule && (
+                    <span> | <span className="font-medium">الدفع:</span> {getPaymentScheduleName(payment.reservation.paymentSchedule)}</span>
+                  )}
+                </div>
+
+                {/* Contract Period */}
+                <div className="text-xs text-gray-500">
+                  <span className="font-medium">الفترة:</span> {formatDate(payment.reservation.startDate)} - {formatDate(payment.reservation.endDate)}
+                </div>
+              </>
             )}
           </div>
         ),
@@ -226,40 +290,67 @@ export default function PaymentsTable({
     {
       key: 'date',
       header: 'تاريخ الاستحقاق',
-      cell: (payment: Payment) => <span className="text-gray-700">{formatDate(payment.paymentDate)}</span>,
+      cell: (payment: Payment) => (
+        <div className="flex flex-col">
+          <span className="text-gray-700 font-medium">{formatDate(payment.paymentDate)}</span>
+          {payment.status === 'delayed' && (
+            <span className="text-xs text-red-600 font-medium">
+              متأخر {getDaysOverdue(payment.paymentDate)} يوم
+            </span>
+          )}
+          {payment.status === 'pending' && new Date(payment.paymentDate) < new Date() && (
+            <span className="text-xs text-orange-600 font-medium">
+              مستحق منذ {getDaysOverdue(payment.paymentDate)} يوم
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: 'amount',
       header: 'المبلغ',
-      cell: (payment: Payment) => <span className="font-medium text-gray-900">{formatCurrency(payment.amount)}</span>,
+      cell: (payment: Payment) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">{formatCurrency(payment.amount)}</span>
+          {/* Show deposit information if available */}
+          {payment.reservation?.includesDeposit && payment.reservation.depositAmount && (
+            <span className="text-xs text-blue-600">
+              + {formatCurrency(payment.reservation.depositAmount)} تأمين
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: 'method',
       header: 'طريقة الدفع',
       cell: (payment: Payment) => (
-        <div className="flex flex-col">
-          <span className="text-gray-700">{getPaymentMethodName(payment.paymentMethod)}</span>
+        <div className="flex flex-col space-y-1">
+          <span className="text-gray-700 font-medium">{getPaymentMethodName(payment.paymentMethod)}</span>
           {payment.paymentMethod === 'checks' && (
-            <div className="mt-1">
+            <div>
               {payment.checkImageUrl ? (
-                <a
-                  href={payment.checkImageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:text-primary-500 text-xs font-medium"
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  className="text-primary-600 hover:text-primary-500 text-xs font-medium underline"
+                  onClick={(e) => openImagePreview(payment.checkImageUrl!, e)}
                 >
                   عرض صورة الشيك
-                </a>
+                </button>
               ) : (
                 <button
-                  className="text-primary-600 hover:text-primary-500 text-xs font-medium"
+                  className="text-orange-600 hover:text-orange-500 text-xs font-medium"
                   onClick={(e) => openUploadModal(payment, e)}
                 >
                   إضافة صورة الشيك
                 </button>
               )}
             </div>
+          )}
+          {/* Show reservation payment method for context */}
+          {payment.reservation?.paymentMethod && payment.reservation.paymentMethod !== payment.paymentMethod && (
+            <span className="text-xs text-gray-500">
+              (الطريقة المتفق عليها: {getPaymentMethodName(payment.reservation.paymentMethod)})
+            </span>
           )}
         </div>
       ),
@@ -272,21 +363,60 @@ export default function PaymentsTable({
         switch (payment.status) {
           case 'paid': statusClass = 'bg-green-100 text-green-800'; break;
           case 'pending': statusClass = 'bg-yellow-100 text-yellow-800'; break;
-          case 'delayed': statusClass = 'bg-purple-100 text-purple-800'; break;
-          case 'cancelled': statusClass = 'bg-red-100 text-red-800'; break;
+          case 'delayed': statusClass = 'bg-red-100 text-red-800'; break;
+          case 'cancelled': statusClass = 'bg-gray-100 text-gray-800'; break;
         }
 
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
-            {getStatusName(payment.status)}
-          </span>
+          <div className="flex flex-col space-y-1">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
+              {getStatusName(payment.status)}
+            </span>
+            {/* Show reservation status for context */}
+            {payment.reservation?.status && (
+              <span className="text-xs text-gray-500">
+                الحجز: {payment.reservation.status === 'active' ? 'نشط' :
+                  payment.reservation.status === 'expired' ? 'منتهي' : 'ملغي'}
+              </span>
+            )}
+          </div>
         );
       },
     },
     {
+      key: 'notes',
+      header: 'ملاحظات',
+      cell: (payment: Payment) => (
+        <div className="max-w-xs">
+          {payment.notes ? (
+            <div className="text-xs text-gray-600 truncate" title={payment.notes}>
+              {payment.notes}
+            </div>
+          ) : (
+            <span className="text-xs text-gray-400">لا توجد ملاحظات</span>
+          )}
+          {/* Show reservation notes if payment notes are empty */}
+          {!payment.notes && payment.reservation?.notes && (
+            <div className="text-xs text-gray-500 truncate" title={`ملاحظات الحجز: ${payment.reservation.notes}`}>
+              حجز: {payment.reservation.notes}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       key: 'createdAt',
       header: 'تاريخ الإنشاء',
-      cell: (payment: Payment) => <span className="text-gray-700">{formatDate(payment.createdAt)}</span>,
+      cell: (payment: Payment) => (
+        <div className="flex flex-col">
+          <span className="text-gray-700 text-sm">{formatDate(payment.createdAt)}</span>
+          {payment.updatedAt !== payment.createdAt && (
+            <span className="text-xs text-gray-500">
+              آخر تحديث: {formatDate(payment.updatedAt)}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: 'actions',
@@ -296,8 +426,8 @@ export default function PaymentsTable({
           {/* Quick status update buttons */}
           <StatusButton payment={payment} status="paid" label="تم الدفع" color="green" />
           <StatusButton payment={payment} status="pending" label="قيد الانتظار" color="yellow" />
-          <StatusButton payment={payment} status="delayed" label="متأخر" color="purple" />
-          <StatusButton payment={payment} status="cancelled" label="إلغاء" color="red" />
+          <StatusButton payment={payment} status="delayed" label="متأخر" color="red" />
+          <StatusButton payment={payment} status="cancelled" label="إلغاء" color="gray" />
 
           {/* Check image upload button (only for check payments without image) */}
           {payment.paymentMethod === 'checks' && !payment.checkImageUrl && (
@@ -321,7 +451,7 @@ export default function PaymentsTable({
               تعديل
             </Button>
           </Link>
-          
+
           <Button
             size="xs"
             variant="danger"
@@ -399,7 +529,7 @@ export default function PaymentsTable({
           )}
 
           {newStatus === 'delayed' && (
-            <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-md text-purple-700 text-sm mb-4">
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
               <strong>ملاحظة:</strong> تحديد هذه المدفوعة كمتأخرة قد يؤثر على سجل المستأجر.
             </div>
           )}
@@ -472,6 +602,32 @@ export default function PaymentsTable({
               disabled={isUploading || !checkImage}
             >
               تحميل الصورة
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Image preview modal */}
+      <Modal
+        isOpen={imagePreviewModalOpen}
+        onClose={() => setImagePreviewModalOpen(false)}
+        title="معاينة صورة الشيك"
+        size="lg"
+      >
+        <div className="p-6">
+          <div className="flex justify-center">
+            <img
+              src={previewImageUrl}
+              alt="صورة الشيك"
+              className="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
+            />
+          </div>
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setImagePreviewModalOpen(false)}
+            >
+              إغلاق
             </Button>
           </div>
         </div>

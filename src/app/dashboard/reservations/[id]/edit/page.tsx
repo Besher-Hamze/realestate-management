@@ -145,6 +145,7 @@ export default function EditReservationPage({ params }: EditReservationPageProps
                     isEdit={true}
                     initialData={reservation}
                     onSuccess={handleSuccess}
+                    preSelectedUserId={reservation.userId}
                 />
             )}
         </div>

@@ -8,6 +8,7 @@ import { User, AuthResponse } from '@/lib/types';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  canEdit: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -17,6 +18,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: false,
+  canEdit: false,
   isAuthenticated: false,
   login: async () => false,
   logout: () => { },
@@ -27,6 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Calculate canEdit based on user role
+  const canEdit = user?.role === 'admin' || user?.role === 'manager';
 
   // Check if user is authenticated on initial load, but only if we have a token
   useEffect(() => {
@@ -50,13 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.login(username, password);
 
       if (response.success && response.data) {
-        const { token, ...userData } = response.data;
+        const { token, user: userData } = response.data;
 
         // Set token in cookie
         Cookies.set('token', token, { expires: 7 }); // 7 days
 
         // Set user from login response
-        setUser(userData as any);
+        setUser(userData);
         return true;
       }
 
@@ -111,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        canEdit,
         isLoading,
         isAuthenticated,
         login,

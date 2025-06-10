@@ -1,16 +1,59 @@
-import { 
-  Reservation, 
-  ContractType, 
-  PaymentMethod, 
-  PaymentSchedule, 
-  ReservationStatus,
-  TenantType
+import {
+  TenantType,
+  User,
+  RealEstateUnit,
+  Payment,
+  ServiceOrder
 } from '@/lib/types';
+
+export type ContractType = 'residential' | 'commercial';
+export type PaymentMethod = 'cash' | 'checks';
+export type PaymentSchedule = 'monthly' | 'quarterly' | 'triannual' | 'biannual' | 'annual';
+export type ReservationStatus = 'active' | 'expired' | 'cancelled';
+
+// Enhanced deposit types
+export type DepositPaymentMethod = 'cash' | 'check';
+export type DepositStatus = 'unpaid' | 'paid' | 'returned';
+export interface Reservation {
+  id: number;
+  userId: number;
+  unitId: number;
+  contractType: ContractType;
+  startDate: string;
+  endDate: string;
+  contractDuration?: string;
+  contractImage?: string;
+  contractImageUrl?: string;
+  contractPdf?: string;
+  contractPdfUrl?: string;
+  paymentMethod: PaymentMethod;
+  paymentSchedule: PaymentSchedule;
+
+  // Enhanced deposit fields
+  includesDeposit: boolean;
+  depositAmount?: number;
+  depositPaymentMethod?: DepositPaymentMethod;
+  depositCheckImage?: string;
+  depositCheckImageUrl?: string;
+  depositStatus?: DepositStatus;
+  depositPaidDate?: string;
+  depositReturnedDate?: string;
+  depositNotes?: string;
+
+  status: ReservationStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+  unit?: RealEstateUnit;
+  payments?: Payment[];
+  serviceOrders?: ServiceOrder[];
+}
 
 export interface CreateReservationFormData {
   // With existing tenant
   userId?: number;
-  
+
   // Or create new tenant
   tenantFullName?: string;
   tenantEmail?: string;
@@ -25,7 +68,7 @@ export interface CreateReservationFormData {
   identityImageFront?: File;
   identityImageBack?: File;
   commercialRegisterImage?: File;
-  
+
   // Common fields
   unitId: number;
   contractType: ContractType;
@@ -84,8 +127,8 @@ export interface ReservationFilterProps {
   contractType?: ContractType;
   startDate?: string;
   endDate?: string;
-  onFilterChange: (filters: { 
-    status?: ReservationStatus, 
+  onFilterChange: (filters: {
+    status?: ReservationStatus,
     contractType?: ContractType,
     startDate?: string,
     endDate?: string

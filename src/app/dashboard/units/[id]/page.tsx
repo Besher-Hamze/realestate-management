@@ -17,6 +17,7 @@ import {
   getUnitStatusLabel,
   getReservationStatusLabel
 } from '@/constants/options';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UnitDetailPageProps {
   params: Promise<{
@@ -34,7 +35,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   const [isReservationsLoading, setIsReservationsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const { canEdit } = useAuth();
   // جلب تفاصيل الوحدة عند تحميل المكون
   useEffect(() => {
     fetchUnit();
@@ -179,7 +180,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         );
       },
     },
-    {
+    ...(canEdit ? [{
       key: 'actions',
       header: 'الإجراءات',
       cell: (reservation) => (
@@ -189,7 +190,8 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
           </Link>
         </div>
       ),
-    },
+    }] : []
+    )
   ];
 
   // عرض حالة التحميل
@@ -265,7 +267,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">الوحدة {unit.unitNumber}</h1>
-          <div className="flex space-x-3">
+          {canEdit && <div className="flex space-x-3">
             <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
               <Button
                 variant="primary"
@@ -282,7 +284,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <Button variant="outline">تعديل الوحدة</Button>
             </Link>
             <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -357,7 +359,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         </Card>
 
         {/* إجراءات تغيير الحالة */}
-        <Card>
+        {canEdit && <Card>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">تغيير الحالة</h2>
 
@@ -408,26 +410,29 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               </div>
             </div>
           </div>
-        </Card>
+        </Card>}
       </div>
 
       {/* سجل المستأجرين  */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">سجل المستأجرين </h2>
-          <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={
-                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              }
-            >
-              اضافة مستأجر
-            </Button>
-          </Link>
+          {
+            canEdit &&
+            <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                }
+              >
+                اضافة مستأجر
+              </Button>
+            </Link>
+          }
         </div>
 
         <Card>
@@ -437,7 +442,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
             keyExtractor={(reservation) => reservation.id}
             isLoading={isReservationsLoading}
             emptyMessage="لا يوجد سجل حجوزات لهذه الوحدة"
-            onRowClick={(reservation) => router.push(`/dashboard/reservations/${reservation.id}`)}
+            onRowClick={(reservation) => canEdit && router.push(`/dashboard/reservations/${reservation.id}`)}
           />
         </Card>
       </div>

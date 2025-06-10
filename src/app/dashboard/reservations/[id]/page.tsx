@@ -435,6 +435,84 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </p>
               </div>}
 
+              {reservation.includesDeposit && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-gray-500 mb-3">معلومات التأمين</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6 p-4 bg-gray-50 rounded-md border border-gray-200">
+                    {reservation.depositAmount && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">مبلغ التأمين</h3>
+                        <p className="mt-1 text-base text-gray-900">
+                          {formatCurrency(reservation.depositAmount)}
+                        </p>
+                      </div>
+                    )}
+
+                    {reservation.depositPaymentMethod && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">طريقة دفع التأمين</h3>
+                        <p className="mt-1 text-base text-gray-900">
+                          {reservation.depositPaymentMethod === 'cash' ? 'نقدًا' : 'شيك'}
+                        </p>
+                      </div>
+                    )}
+
+                    {reservation.depositStatus && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">حالة التأمين</h3>
+                        <p className="mt-1 text-base text-gray-900">
+                          {reservation.depositStatus === 'unpaid' ? 'غير مدفوع' :
+                            reservation.depositStatus === 'paid' ? 'مدفوع' : 'مسترجع'}
+                        </p>
+                      </div>
+                    )}
+
+                    {reservation.depositPaidDate && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">تاريخ دفع التأمين</h3>
+                        <p className="mt-1 text-base text-gray-900">
+                          {formatDate(reservation.depositPaidDate)}
+                        </p>
+                      </div>
+                    )}
+
+                    {reservation.depositReturnedDate && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">تاريخ استرجاع التأمين</h3>
+                        <p className="mt-1 text-base text-gray-900">
+                          {formatDate(reservation.depositReturnedDate)}
+                        </p>
+                      </div>
+                    )}
+
+                    {reservation.depositCheckImageUrl && (
+                      <div className="md:col-span-2">
+                        <h3 className="text-sm font-medium text-gray-500 mb-2">صورة شيك التأمين</h3>
+                        <a
+                          href={reservation.depositCheckImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          عرض صورة الشيك
+                        </a>
+                      </div>
+                    )}
+
+                    {reservation.depositNotes && (
+                      <div className="md:col-span-2">
+                        <h3 className="text-sm font-medium text-gray-500 mb-2">ملاحظات التأمين</h3>
+                        <p className="text-gray-700 whitespace-pre-line">
+                          {reservation.depositNotes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* الملاحظات */}
