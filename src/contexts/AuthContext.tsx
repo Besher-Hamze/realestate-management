@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check authentication status
   const checkAuth = async (): Promise<boolean> => {
     try {
+      const a = 0;
       const token = Cookies.get('token');
 
       if (!token) {
