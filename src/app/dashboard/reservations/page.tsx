@@ -20,7 +20,6 @@ export default function ReservationsPage() {
   const statusOptions = [
     { value: 'all', label: 'جميع الحالات' },
     { value: 'active', label: 'نشط' },
-    { value: 'pending', label: 'قيد الانتظار' },
     { value: 'expired', label: 'منتهي' },
     { value: 'cancelled', label: 'ملغي' },
   ];

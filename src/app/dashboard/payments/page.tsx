@@ -318,6 +318,22 @@ export default function PaymentsPage() {
             </div>
           </div>
         </Card>
+        <Card className="bg-gray-50 border-gray-200">
+          <div className="p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-gray-100 rounded-md p-3">
+                <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <div className="mr-4">
+                <h3 className="font-medium text-gray-800">ملغاة</h3>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(calculateTotal('cancelled'))}</p>
+                <p className="text-sm text-gray-600">{getPaymentCount('cancelled')} مدفوعة</p>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* المرشحات */}

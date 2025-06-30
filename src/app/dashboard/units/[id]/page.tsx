@@ -48,6 +48,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       const response = await unitsApi.getById(id);
 
       if (response.success) {
+
         setUnit(response.data);
         fetchReservations();
       } else {
@@ -352,6 +353,12 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 <h3 className="text-sm font-medium text-gray-500">الوصف</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.description || 'لا يوجد وصف متاح'}
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <h3 className="text-sm font-medium text-gray-500">اسم المالك </h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {unit.ownerName || 'لا يوجد اسم متاح'}
                 </p>
               </div>
             </div>

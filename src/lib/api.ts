@@ -429,6 +429,8 @@ export const reservationsApi = {
       if (value instanceof File) {
         // formData.append(key, value);
       } else if (value !== undefined && value !== null) {
+        console.log(value);
+
         formData.append(key, String(value));
       }
     });

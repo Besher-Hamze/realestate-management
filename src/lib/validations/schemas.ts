@@ -790,62 +790,37 @@ export const createReservationSchema = yup.object({
   // New tenant fields (conditional based on createNewTenant context)
   tenantFullName: yup
     .string()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('الاسم الكامل مطلوب')
-        .min(2, 'الاسم الكامل قصير جداً')
-        .max(100, 'الاسم الكامل طويل جداً')
-        .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
-      otherwise: (schema) => schema.nullable()
-    }),
+    .required('الاسم الكامل مطلوب')
+    .min(2, 'الاسم الكامل قصير جداً')
+    .max(100, 'الاسم الكامل طويل جداً')
+    .matches(arabicTextRegex, 'النص يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', { excludeEmptyString: true }),
 
   tenantEmail: yup
     .string()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('البريد الإلكتروني مطلوب')
-        .matches(emailRegex, 'صيغة البريد الإلكتروني غير صحيحة', { excludeEmptyString: true }),
-      otherwise: (schema) => schema.nullable()
-    }),
+    .required('البريد الإلكتروني مطلوب')
+    .matches(emailRegex, 'صيغة البريد الإلكتروني غير صحيحة', { excludeEmptyString: true }),
 
   tenantPhone: yup
     .string()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('رقم الهاتف مطلوب')
-        .matches(phoneRegex, 'رقم الهاتف غير صالح', { excludeEmptyString: true }),
-      otherwise: (schema) => schema.nullable()
-    }),
+    .required('رقم الهاتف مطلوب')
+    .matches(phoneRegex, 'رقم الهاتف غير صالح', { excludeEmptyString: true }),
 
   tenantIdNumber: yup
     .string()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('رقم الهوية مطلوب')
-        .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
-      otherwise: (schema) => schema.nullable()
-    }),
+    .required('رقم الهوية مطلوب')
+    .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
 
   tenantType: yup
     .string()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('نوع المستأجر مطلوب')
-        .oneOf(['partnership', 'commercial_register', 'person', 'embassy', 'foreign_company', 'government', 'inheritance', 'civil_registry'], 'نوع المستأجر غير صالح'),
-      otherwise: (schema) => schema.nullable()
-    }),
+    .required('نوع المستأجر مطلوب')
+    .oneOf(['partnership', 'commercial_register', 'person', 'embassy', 'foreign_company', 'government', 'inheritance', 'civil_registry'], 'نوع المستأجر غير صالح'),
 
-  // Business tenant fields (conditional based on tenant type)
+  // Business tenant fields (conditional based on tenant type only)
   tenantBusinessActivities: yup
     .string()
     .nullable()
-    .when(['$createNewTenant', 'tenantType'], {
-      is: (createNewTenant, tenantType) => createNewTenant && ['commercial_register', 'partnership', 'foreign_company'].includes(tenantType || ''),
+    .when('tenantType', {
+      is: (tenantType) => ['commercial_register', 'partnership', 'foreign_company'].includes(tenantType || ''),
       then: (schema) => schema
         .required('وصف الأنشطة التجارية مطلوب')
         .min(10, 'وصف الأنشطة التجارية قصير جداً')
@@ -856,8 +831,8 @@ export const createReservationSchema = yup.object({
   tenantContactPerson: yup
     .string()
     .nullable()
-    .when(['$createNewTenant', 'tenantType'], {
-      is: (createNewTenant, tenantType) => createNewTenant && tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
+    .when('tenantType', {
+      is: (tenantType) => tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
       then: (schema) => schema
         .required('اسم الشخص المسؤول مطلوب')
         .min(2, 'اسم الشخص المسؤول قصير جداً')
@@ -869,38 +844,27 @@ export const createReservationSchema = yup.object({
   tenantContactPosition: yup
     .string()
     .nullable()
-    .when(['$createNewTenant', 'tenantType'], {
-      is: (createNewTenant, tenantType) => createNewTenant && tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
+    .when('tenantType', {
+      is: (tenantType) => tenantType !== 'person' && tenantType !== null && tenantType !== undefined,
       then: (schema) => schema
         .required('منصب الشخص المسؤول مطلوب')
         .min(2, 'منصب الشخص المسؤول قصير جداً')
         .max(100, 'منصب الشخص المسؤول طويل جداً'),
       otherwise: (schema) => schema.nullable()
     }),
-
   // Identity documents (required for new tenants)
   identityImageFront: yup
     .mixed<File>()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('صورة الهوية (الوجه الأمامي) مطلوبة')
-        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-        }),
-      otherwise: (schema) => schema.nullable()
+    .required('صورة الهوية (الوجه الأمامي) مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
     }),
 
   identityImageBack: yup
     .mixed<File>()
-    .when('$createNewTenant', {
-      is: true,
-      then: (schema) => schema
-        .required('صورة الهوية (الوجه الخلفي) مطلوبة')
-        .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-          return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-        }),
-      otherwise: (schema) => schema.nullable()
+    .required('صورة الهوية (الوجه الخلفي) مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
+      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
     }),
 
   commercialRegisterImage: yup

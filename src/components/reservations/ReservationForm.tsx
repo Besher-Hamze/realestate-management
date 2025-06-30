@@ -7,7 +7,6 @@ import { Controller } from 'react-hook-form';
 import { Reservation, User, RealEstateUnit } from '@/lib/types';
 import { reservationsApi, unitsApi, usersApi } from '@/lib/api';
 import {
-  reservationSchema,
   createReservationSchema,
   editReservationSchema,
   ReservationFormData,
@@ -46,32 +45,65 @@ const DEPOSIT_STATUS_OPTIONS = [
   { value: 'returned', label: 'مسترجع' },
 ];
 
-const initialReservationData: Partial<ReservationFormData> = {
-  userId: undefined,
-  unitId: 0,
-  contractType: 'residential',
-  startDate: new Date().toISOString().split('T')[0] as any,
-  endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] as any,
-  paymentMethod: 'cash',
-  paymentSchedule: 'monthly',
-  includesDeposit: false,
-  depositAmount: undefined,
-  depositPaymentMethod: 'cash',
-  depositStatus: 'unpaid',
-  depositPaidDate: undefined,
-  depositReturnedDate: undefined,
-  depositNotes: '',
-  notes: '',
-  tenantFullName: '',
-  tenantEmail: '',
-  tenantPhone: '',
-  tenantWhatsappNumber: '',
-  tenantIdNumber: '',
-  tenantType: 'person',
-  tenantBusinessActivities: '',
-  tenantContactPerson: '',
-  tenantContactPosition: '',
-  tenantNotes: '',
+const getInitialData = (isEdit: boolean, initialData?: Reservation, preSelectedUnitId?: number, preSelectedUserId?: number): Partial<ReservationFormData> => {
+  if (isEdit && initialData) {
+    return {
+      userId: initialData.userId,
+      unitId: initialData.unitId,
+      contractType: initialData.contractType,
+      startDate: initialData.startDate.split('T')[0] as any,
+      endDate: initialData.endDate.split('T')[0] as any,
+      paymentMethod: initialData.paymentMethod,
+      paymentSchedule: initialData.paymentSchedule,
+      includesDeposit: initialData.includesDeposit,
+      depositAmount: initialData.depositAmount || undefined,
+      depositPaymentMethod: initialData.depositPaymentMethod || 'cash',
+      depositStatus: initialData.depositStatus || 'unpaid',
+      depositPaidDate: initialData.depositPaidDate ? initialData.depositPaidDate.split('T')[0] : undefined,
+      depositReturnedDate: initialData.depositReturnedDate ? initialData.depositReturnedDate.split('T')[0] : undefined,
+      depositNotes: initialData.depositNotes || '',
+      notes: initialData.notes || '',
+      tenantFullName: '',
+      tenantEmail: '',
+      tenantPhone: '',
+      tenantWhatsappNumber: '',
+      tenantIdNumber: '',
+      tenantType: 'person',
+      tenantBusinessActivities: '',
+      tenantContactPerson: '',
+      tenantContactPosition: '',
+      tenantNotes: '',
+    };
+  }
+
+  // Default values for create mode
+  return {
+    userId: preSelectedUserId,
+    unitId: preSelectedUnitId || 0,
+    contractType: 'residential',
+    startDate: new Date().toISOString().split('T')[0] as any,
+    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] as any,
+    paymentMethod: 'cash',
+    paymentSchedule: 'monthly',
+    includesDeposit: false,
+    depositAmount: undefined,
+    depositPaymentMethod: 'cash',
+    depositStatus: 'unpaid',
+    depositPaidDate: undefined,
+    depositReturnedDate: undefined,
+    depositNotes: '',
+    notes: '',
+    tenantFullName: '',
+    tenantEmail: '',
+    tenantPhone: '',
+    tenantWhatsappNumber: '',
+    tenantIdNumber: '',
+    tenantType: 'person',
+    tenantBusinessActivities: '',
+    tenantContactPerson: '',
+    tenantContactPosition: '',
+    tenantNotes: '',
+  };
 };
 
 export default function ReservationForm({
@@ -86,16 +118,12 @@ export default function ReservationForm({
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [createNewTenant, setCreateNewTenant] = useState(!preSelectedUserId);
+  const [createNewTenant, setCreateNewTenant] = useState(true);
   const [newUserCredentials, setNewUserCredentials] = useState<NewUserCredentials | null>(null);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
 
   // Choose the appropriate schema based on mode
-  const getValidationSchema = () => {
-    const schema = isEdit ? editReservationSchema : createReservationSchema;
-    console.log('Using schema:', isEdit ? 'editReservationSchema' : 'createReservationSchema');
-    return schema;
-  };
+  const validationSchema = isEdit ? editReservationSchema : createReservationSchema;
 
   // Initialize form with the correct validation schema
   const {
@@ -107,45 +135,10 @@ export default function ReservationForm({
     setValue,
     watch,
     setFileValue,
+    trigger,
   } = useFileForm<ReservationFormData>(
-    getValidationSchema(),
-    isEdit && initialData
-      ? {
-        userId: initialData.userId,
-        unitId: initialData.unitId,
-        contractType: initialData.contractType,
-        startDate: initialData.startDate.split('T')[0] as any,
-        endDate: initialData.endDate.split('T')[0] as any,
-        paymentMethod: initialData.paymentMethod,
-        paymentSchedule: initialData.paymentSchedule,
-        includesDeposit: initialData.includesDeposit,
-        depositAmount: initialData.depositAmount || undefined,
-        depositPaymentMethod: initialData.depositPaymentMethod || 'cash',
-        depositStatus: initialData.depositStatus || 'unpaid',
-        depositPaidDate: initialData.depositPaidDate ? initialData.depositPaidDate.split('T')[0] as any : undefined,
-        depositReturnedDate: initialData.depositReturnedDate
-          ? initialData.depositReturnedDate.split('T')[0]
-          : undefined,
-        depositNotes: initialData.depositNotes || '',
-        notes: initialData.notes || '',
-        tenantFullName: '',
-        tenantEmail: '',
-        tenantPhone: '',
-        tenantWhatsappNumber: '',
-        tenantIdNumber: '',
-        tenantType: 'person',
-        tenantBusinessActivities: '',
-        tenantContactPerson: '',
-        tenantContactPosition: '',
-        tenantNotes: '',
-      }
-      : preSelectedUnitId || preSelectedUserId
-        ? {
-          ...initialReservationData,
-          unitId: preSelectedUnitId || 0,
-          userId: preSelectedUserId,
-        }
-        : initialReservationData,
+    validationSchema,
+    getInitialData(isEdit, initialData, preSelectedUnitId, preSelectedUserId),
     { createNewTenant }
   );
 
@@ -166,7 +159,10 @@ export default function ReservationForm({
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
       console.log('Form validation errors:', errors);
-      toast.error('يرجى التحقق من الأخطاء في النموذج');
+      // Show specific field errors
+      Object.entries(errors).forEach(([field, error]) => {
+        console.log(`${field}: ${error?.message}`);
+      });
     }
   }, [errors]);
 
@@ -215,40 +211,6 @@ export default function ReservationForm({
     }
   }, [createNewTenant, isEdit]);
 
-  // Reset form when editing data changes
-  useEffect(() => {
-    if (isEdit && initialData) {
-      console.log('Resetting form with initialData:', initialData);
-      reset({
-        userId: initialData.userId,
-        unitId: initialData.unitId,
-        contractType: initialData.contractType,
-        startDate: initialData.startDate.split('T')[0] as any,
-        endDate: initialData.endDate.split('T')[0] as any,
-        paymentMethod: initialData.paymentMethod,
-        paymentSchedule: initialData.paymentSchedule,
-        includesDeposit: initialData.includesDeposit,
-        depositAmount: initialData.depositAmount || undefined,
-        depositPaymentMethod: initialData.depositPaymentMethod || 'cash',
-        depositStatus: initialData.depositStatus || 'unpaid',
-        depositPaidDate: initialData.depositPaidDate ? initialData.depositPaidDate.split('T')[0] : undefined,
-        depositReturnedDate: initialData.depositReturnedDate ? initialData.depositReturnedDate.split('T')[0] : undefined,
-        depositNotes: initialData.depositNotes || '',
-        notes: initialData.notes || '',
-        tenantFullName: '',
-        tenantEmail: '',
-        tenantPhone: '',
-        tenantWhatsappNumber: '',
-        tenantIdNumber: '',
-        tenantType: 'person',
-        tenantBusinessActivities: '',
-        tenantContactPerson: '',
-        tenantContactPosition: '',
-        tenantNotes: '',
-      });
-    }
-  }, [isEdit, initialData, reset]);
-
   // Clear deposit fields when deposit is disabled
   useEffect(() => {
     if (!watchedIncludesDeposit) {
@@ -258,6 +220,7 @@ export default function ReservationForm({
       setValue('depositPaidDate', undefined);
       setValue('depositReturnedDate', undefined);
       setValue('depositNotes', '');
+      setValue('depositCheckImage', null);
     }
   }, [watchedIncludesDeposit, setValue]);
 
@@ -274,9 +237,23 @@ export default function ReservationForm({
     }
   }, [watchedStartDate, setValue, watch, isEdit]);
 
+  // Update createNewTenant context when it changes
+  useEffect(() => {
+    // Trigger re-validation when createNewTenant changes
+    trigger();
+  }, [createNewTenant, trigger]);
+
   // Form submission handler
   const onSubmit = async (data: ReservationFormData) => {
     console.log('Form submitted with data:', data);
+
+    // Manually validate required fields
+    const isValid = await trigger();
+    if (!isValid) {
+      toast.error('يرجى التحقق من جميع الحقول المطلوبة');
+      return;
+    }
+
     try {
       let response;
       if (isEdit && initialData) {
@@ -286,9 +263,11 @@ export default function ReservationForm({
         console.log('Creating new reservation');
         response = await reservationsApi.create(data);
       }
+
       if (response.success) {
         const successMessage = isEdit ? 'تم تحديث الحجز بنجاح' : 'تم إنشاء الحجز بنجاح';
         toast.success(successMessage);
+
         if (!isEdit && response.data.tenant?.user) {
           setNewUserCredentials(response.data.tenant.user);
           setShowCredentialsModal(true);
@@ -313,6 +292,8 @@ export default function ReservationForm({
   const handleFileChange = (fieldName: keyof ReservationFormData) => (files: FileList | null) => {
     const file = files?.[0] || null;
     setFileValue(fieldName, file);
+    // Trigger validation for this field
+    trigger(fieldName);
   };
 
   // Handle modal close and navigation
@@ -364,21 +345,13 @@ export default function ReservationForm({
   // Prepare options for dropdowns
   const unitOptions = units.map((unit) => ({
     value: unit.id.toString(),
-    label: `${unit.unitNumber} - ${unit.building?.name || 'مبنى غير معروف'} (${unit.status === 'available' ? 'متاح' : unit.status
-      })`,
+    label: `${unit.unitNumber} - ${unit.building?.name || 'مبنى غير معروف'} (${unit.status === 'available' ? 'متاح' : unit.status})`,
   }));
 
-  // Log button disabled state
-  const isButtonDisabled = isSubmitting || loadingUnits || (loadingUsers && !createNewTenant);
-  useEffect(() => {
-    console.log('Submit button disabled state:', {
-      isSubmitting,
-      loadingUnits,
-      loadingUsers,
-      createNewTenant,
-      isButtonDisabled,
-    });
-  }, [isSubmitting, loadingUnits, loadingUsers, createNewTenant]);
+  const userOptions = users.map((user) => ({
+    value: user.id.toString(),
+    label: `${user.fullName} - ${user.email}`,
+  }));
 
   return (
     <>
@@ -395,10 +368,9 @@ export default function ReservationForm({
               label="وحدة العقار"
               register={register}
               name="unitId"
-              value={preSelectedUnitId}
               error={errors.unitId}
               options={unitOptions}
-              required={false} // Optional in edit mode
+              required={!isEdit}
               placeholder={loadingUnits ? 'جاري التحميل...' : 'اختر الوحدة'}
               disabled={loadingUnits || isEdit || !!preSelectedUnitId}
               helpText={loadingUnits ? 'جاري تحميل الوحدات...' : 'اختر الوحدة لهذا الحجز'}
@@ -411,7 +383,7 @@ export default function ReservationForm({
                 name="contractType"
                 error={errors.contractType}
                 options={CONTRACT_TYPE_OPTIONS}
-                required={false} // Optional in edit mode
+                required={!isEdit}
                 placeholder="اختر نوع العقد"
               />
 
@@ -421,7 +393,7 @@ export default function ReservationForm({
                 name="startDate"
                 type="date"
                 error={errors.startDate}
-                required={false} // Optional in edit mode
+                required={!isEdit}
                 helpText="تاريخ بدء سريان العقد"
               />
             </div>
@@ -432,7 +404,7 @@ export default function ReservationForm({
               name="endDate"
               type="date"
               error={errors.endDate}
-              required={false} // Optional in edit mode
+              required={!isEdit}
               helpText="تاريخ انتهاء العقد"
             />
           </div>
@@ -451,7 +423,7 @@ export default function ReservationForm({
                 name="paymentMethod"
                 error={errors.paymentMethod}
                 options={PAYMENT_METHOD_OPTIONS}
-                required={false} // Optional in edit mode
+                required={!isEdit}
                 placeholder="اختر طريقة الدفع"
               />
 
@@ -461,7 +433,7 @@ export default function ReservationForm({
                 name="paymentSchedule"
                 error={errors.paymentSchedule}
                 options={PAYMENT_SCHEDULE_OPTIONS}
-                required={false} // Optional in edit mode
+                required={!isEdit}
                 placeholder="اختر جدول الدفع"
               />
             </div>
@@ -577,123 +549,122 @@ export default function ReservationForm({
           {/* Tenant Information Section - Only for new reservations */}
           {!isEdit && (
             <div className="space-y-6">
-              <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-medium text-gray-900">معلومات المستأجر</h3>
-                <p className="text-sm text-gray-500 mt-1">اختيار المستأجر أو إنشاء حساب جديد</p>
-              </div>
 
-              <div className="space-y-6 p-6 bg-gray-50 rounded-lg">
-                <h4 className="text-md font-medium text-gray-900">بيانات المستأجر الجديد</h4>
+              {/* Tenant Selection Toggle */}
+              <div className="space-y-4">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormSelect
-                    label="نوع المستأجر"
-                    register={register}
-                    name="tenantType"
-                    error={errors.tenantType}
-                    options={TENANT_TYPE_OPTIONS}
-                    required={createNewTenant}
-                    placeholder="اختر نوع المستأجر"
-                  />
+                <div className="space-y-6 p-6 bg-gray-50 rounded-lg">
+                  <h4 className="text-md font-medium text-gray-900">بيانات المستأجر الجديد</h4>
 
-                  <FormInput
-                    label="الاسم الكامل"
-                    register={register}
-                    name="tenantFullName"
-                    error={errors.tenantFullName}
-                    required={createNewTenant}
-                    helpText="الاسم الكامل للمستأجر"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput
-                    label="البريد الإلكتروني"
-                    register={register}
-                    name="tenantEmail"
-                    type="email"
-                    error={errors.tenantEmail}
-                    required={createNewTenant}
-                    helpText="البريد الإلكتروني للمستأجر"
-                  />
-
-                  <FormInput
-                    label="رقم الهاتف"
-                    register={register}
-                    name="tenantPhone"
-                    type="tel"
-                    error={errors.tenantPhone}
-                    required={createNewTenant}
-                    helpText="رقم الهاتف الأساسي"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput
-                    label="رقم واتساب"
-                    register={register}
-                    name="tenantWhatsappNumber"
-                    type="tel"
-                    error={errors.tenantWhatsappNumber}
-                    required={false}
-                    helpText="رقم الواتساب (اختياري)"
-                  />
-
-                  <FormInput
-                    label="رقم الهوية"
-                    register={register}
-                    type="number"
-                    name="tenantIdNumber"
-                    error={errors.tenantIdNumber}
-                    required={createNewTenant}
-                    helpText="رقم الهوية الوطنية (10 أرقام)"
-                  />
-                </div>
-
-                {watchedTenantType &&
-                  ['commercial_register', 'partnership', 'foreign_company'].includes(watchedTenantType) && (
-                    <FormTextArea
-                      label="الأنشطة التجارية"
-                      register={register}
-                      name="tenantBusinessActivities"
-                      error={errors.tenantBusinessActivities}
-                      required={['commercial_register', 'partnership', 'foreign_company'].includes(watchedTenantType)}
-                      rows={3}
-                      helpText="وصف الأنشطة التجارية للمستأجر"
-                    />
-                  )}
-
-                {watchedTenantType && !['person'].includes(watchedTenantType) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormInput
-                      label="اسم الشخص المسؤول"
+                    <FormSelect
+                      label="نوع المستأجر"
                       register={register}
-                      name="tenantContactPerson"
-                      error={errors.tenantContactPerson}
-                      required={!['person'].includes(watchedTenantType)}
-                      helpText="اسم الشخص المسؤول عن التواصل"
+                      name="tenantType"
+                      error={errors.tenantType}
+                      options={TENANT_TYPE_OPTIONS}
+                      required={createNewTenant}
+                      placeholder="اختر نوع المستأجر"
                     />
 
                     <FormInput
-                      label="منصب الشخص المسؤول"
+                      label="الاسم الكامل"
                       register={register}
-                      name="tenantContactPosition"
-                      error={errors.tenantContactPosition}
-                      required={!['person'].includes(watchedTenantType)}
-                      helpText="المنصب أو الوظيفة"
+                      name="tenantFullName"
+                      error={errors.tenantFullName}
+                      required={createNewTenant}
+                      helpText="الاسم الكامل للمستأجر"
                     />
                   </div>
-                )}
 
-                <FormTextArea
-                  label="ملاحظات عن المستأجر"
-                  register={register}
-                  name="tenantNotes"
-                  error={errors.tenantNotes}
-                  rows={3}
-                  required={false}
-                  helpText="أي معلومات إضافية عن المستأجر (اختياري)"
-                />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormInput
+                      label="البريد الإلكتروني"
+                      register={register}
+                      name="tenantEmail"
+                      type="email"
+                      error={errors.tenantEmail}
+                      required={createNewTenant}
+                      helpText="البريد الإلكتروني للمستأجر"
+                    />
+
+                    <FormInput
+                      label="رقم الهاتف"
+                      register={register}
+                      name="tenantPhone"
+                      type="tel"
+                      error={errors.tenantPhone}
+                      required={createNewTenant}
+                      helpText="رقم الهاتف الأساسي"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormInput
+                      label="رقم واتساب"
+                      register={register}
+                      name="tenantWhatsappNumber"
+                      type="tel"
+                      error={errors.tenantWhatsappNumber}
+                      required={false}
+                      helpText="رقم الواتساب (اختياري)"
+                    />
+
+                    <FormInput
+                      label="رقم الهوية"
+                      register={register}
+                      name="tenantIdNumber"
+                      error={errors.tenantIdNumber}
+                      required={createNewTenant}
+                      helpText="رقم الهوية الوطنية (10 أرقام)"
+                    />
+                  </div>
+
+                  {watchedTenantType &&
+                    ['commercial_register', 'partnership', 'foreign_company'].includes(watchedTenantType) && (
+                      <FormTextArea
+                        label="الأنشطة التجارية"
+                        register={register}
+                        name="tenantBusinessActivities"
+                        error={errors.tenantBusinessActivities}
+                        required={['commercial_register', 'partnership', 'foreign_company'].includes(watchedTenantType)}
+                        rows={3}
+                        helpText="وصف الأنشطة التجارية للمستأجر"
+                      />
+                    )}
+
+                  {watchedTenantType && !['person'].includes(watchedTenantType) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormInput
+                        label="اسم الشخص المسؤول"
+                        register={register}
+                        name="tenantContactPerson"
+                        error={errors.tenantContactPerson}
+                        required={!['person'].includes(watchedTenantType)}
+                        helpText="اسم الشخص المسؤول عن التواصل"
+                      />
+
+                      <FormInput
+                        label="منصب الشخص المسؤول"
+                        register={register}
+                        name="tenantContactPosition"
+                        error={errors.tenantContactPosition}
+                        required={!['person'].includes(watchedTenantType)}
+                        helpText="المنصب أو الوظيفة"
+                      />
+                    </div>
+                  )}
+
+                  <FormTextArea
+                    label="ملاحظات عن المستأجر"
+                    register={register}
+                    name="tenantNotes"
+                    error={errors.tenantNotes}
+                    rows={3}
+                    required={false}
+                    helpText="أي معلومات إضافية عن المستأجر (اختياري)"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -719,7 +690,7 @@ export default function ReservationForm({
                     helpText="صورة واضحة للعقد (JPEG, PNG)"
                     currentFile={isEdit ? initialData?.contractImageUrl : undefined}
                     selectedFile={watchedContractImage}
-                    required={false} // Optional in edit mode
+                    required={!isEdit}
                   />
                 )}
               />
@@ -737,13 +708,14 @@ export default function ReservationForm({
                     helpText="ملف PDF للعقد"
                     currentFile={isEdit ? initialData?.contractPdfUrl : undefined}
                     selectedFile={watchedContractPdf}
-                    required={false} // Optional in edit mode
+                    required={!isEdit}
                   />
                 )}
               />
             </div>
 
-            {createNewTenant && !isEdit && (
+            {/* Identity Documents - Always show in create mode */}
+            {!isEdit && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Controller
                   name="identityImageFront"
@@ -756,7 +728,7 @@ export default function ReservationForm({
                       onChange={handleFileChange('identityImageFront')}
                       error={fieldState.error}
                       helpText="صورة واضحة للوجه الأمامي للهوية"
-                      required={createNewTenant}
+                      required={true}
                       selectedFile={watchedIdentityImageFront}
                     />
                   )}
@@ -773,7 +745,7 @@ export default function ReservationForm({
                       onChange={handleFileChange('identityImageBack')}
                       error={fieldState.error}
                       helpText="صورة واضحة للوجه الخلفي للهوية"
-                      required={createNewTenant}
+                      required={true}
                       selectedFile={watchedIdentityImageBack}
                     />
                   )}
@@ -824,6 +796,33 @@ export default function ReservationForm({
             />
           </div>
 
+          {/* Show validation errors summary */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="mr-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    يرجى تصحيح الأخطاء التالية:
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      {Object.entries(errors).map(([field, error]) => (
+                        <li key={field}>
+                          {error?.message || `خطأ في حقل ${field}`}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
             <Button
@@ -837,7 +836,7 @@ export default function ReservationForm({
             <Button
               type="submit"
               isLoading={isSubmitting}
-              disabled={isSubmitting || loadingUnits} // Simplified disabled logic
+              disabled={isSubmitting || loadingUnits}
             >
               {isEdit ? 'تحديث الحجز' : 'إنشاء الحجز'}
             </Button>

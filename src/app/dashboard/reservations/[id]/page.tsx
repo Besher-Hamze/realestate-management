@@ -623,15 +623,6 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => openStatusUpdateModal('pending')}
-                  disabled={reservation.status === 'pending'}
-                  className="border-yellow-500 text-yellow-700 hover:bg-yellow-50 disabled:opacity-50"
-                >
-                  تحديد كقيد الانتظار
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
                   onClick={() => openStatusUpdateModal('expired')}
                   disabled={reservation.status === 'expired'}
                   className="border-gray-500 text-gray-700 hover:bg-gray-50 disabled:opacity-50"

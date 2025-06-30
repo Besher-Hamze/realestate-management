@@ -71,6 +71,7 @@ export interface RealEstateUnit {
   id: number;
   buildingId: number;
   ownerId: number;
+  ownerName: string;
   unitNumber: string;
   unitType: UnitType;
   unitLayout?: UnitLayout;
