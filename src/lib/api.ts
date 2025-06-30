@@ -22,7 +22,8 @@ import {
   ServiceStatusStatistics,
   Expense,
   ExpenseFormData,
-  ExpenseStatistics
+  ExpenseStatistics,
+  AvaibleParkingData
 } from './types';
 
 // Manager credentials interface for company creation response
@@ -140,6 +141,9 @@ export const buildingsApi = {
       method: 'GET',
     }),
 
+
+
+
   getById: (id: number | string) =>
     apiRequest<Building>({
       url: `/buildings/${id}`,
@@ -249,6 +253,11 @@ export const unitsApi = {
       method: 'GET',
     }),
 
+  getAvaibleParking: (buildingId: number) =>
+    apiRequest<AvaibleParkingData>({
+      url: `/units/parking/available/${buildingId}`,
+      method: 'GET',
+    }),
   getAvailable: (filters?: {
     minPrice?: number;
     maxPrice?: number;

@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import { formatCurrency } from '@/lib/utils';
 import EnhancedPaymentList from '@/components/payments/EnhancedPaymentList';
+import { PAYMENT_METHOD_OPTIONS } from '@/constants';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -34,11 +35,7 @@ export default function PaymentsPage() {
   // خيارات تصفية طريقة الدفع
   const methodOptions = [
     { value: 'all', label: 'جميع الطرق' },
-    { value: 'cash', label: 'نقدًا' },
-    { value: 'credit_card', label: 'بطاقة ائتمان' },
-    { value: 'bank_transfer', label: 'تحويل بنكي' },
-    { value: 'checks', label: 'شيك' },
-    { value: 'other', label: 'أخرى' },
+    ...PAYMENT_METHOD_OPTIONS
   ];
 
   // خيارات تصفية المباني

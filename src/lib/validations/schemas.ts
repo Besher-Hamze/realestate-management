@@ -197,7 +197,7 @@ export const buildingSchema = yup.object({
 
   buildingType: yup
     .string()
-    .required('نوع المبنى مطلوب')
+    .nullable()
     .oneOf(['residential', 'commercial', 'mixed'], 'نوع المبنى غير صالح'),
 
   totalUnits: yup
@@ -260,6 +260,9 @@ export const unitSchema = yup.object({
     .required('المالك مطلوب')
     .positive('يرجى اختيار مالك صالح')
     .integer('معرف المالك غير صالح'),
+  parkingNumber: yup
+    .string()
+    .required('المواقف الداخلية مطلوب'),
   unitNumber: yup
     .string()
     .required('رقم الوحدة مطلوب')

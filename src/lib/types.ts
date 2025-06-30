@@ -50,6 +50,16 @@ export interface Building {
   units?: RealEstateUnit[];
 }
 
+export interface AvaibleParkingData {
+  buildingId: number;
+  buildingName: string;
+  totalParkingSpaces: number;
+  usedParkingSpaces: number;
+  availableParkingSpaces: number;
+  availableSpots: string[];
+  usedSpots: string[];
+}
+
 export interface BuildingFormData {
   companyId: number;
   buildingNumber: string;
@@ -74,6 +84,7 @@ export interface RealEstateUnit {
   ownerName: string;
   unitNumber: string;
   unitType: UnitType;
+  parkingNumber: string;
   unitLayout?: UnitLayout;
   floor: string; // Changed from number to string
   area: number;
@@ -93,6 +104,7 @@ export interface UnitFormData {
   unitType: UnitType;
   unitLayout?: UnitLayout;
   ownerId: number;
+  parkingNumber: number;
   floor: string; // Changed from number to string
   area: number;
   bathrooms: number;

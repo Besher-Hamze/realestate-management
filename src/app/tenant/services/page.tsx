@@ -234,7 +234,7 @@ export default function TenantServicesPage() {
               </div>
               <div className="mr-4">
                 <h3 className="font-medium text-red-800">ملغي</h3>
-                <p className="text-2xl font-bold text-red-900">{getStatusCount('cancelled')}</p>
+                <p className="text-2xl font-bold text-red-900">{getStatusCount('rejected')}</p>
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { RealEstateUnit, Building, User } from '@/lib/types';
+import { RealEstateUnit, Building, User, AvaibleParkingData } from '@/lib/types';
 import { unitsApi, buildingsApi, usersApi } from '@/lib/api';
 import { unitSchema, UnitFormData } from '@/lib/validations/schemas';
 import { useAsyncForm } from '@/hooks/useYupForm';
@@ -27,7 +27,7 @@ interface UnitFormYupProps {
 
 const initialUnitData: Partial<UnitFormData> = {
   buildingId: 0,
-  ownerId: 0, // Add ownerId field
+  ownerId: 0,
   unitNumber: '',
   unitType: 'apartment',
   unitLayout: null,
@@ -50,8 +50,12 @@ export default function UnitForm({
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState(true);
   const [owners, setOwners] = useState<User[]>([]);
+  const [parkingData, setParkingData] = useState<AvaibleParkingData | null>(null);
   const [selectedOwnerId, setSelectedOwnerId] = useState<number | undefined>(preSelectedOwnerId);
+  const [selectedInternalParkingSpaces, setSelectedInternalParkingSpaces] = useState<string>('');
+  const [selectedBuildingId, setSelectedBuildingId] = useState<number | undefined>(preSelectedBuildingId);
   const [isLoadingOwners, setIsLoadingOwners] = useState(false);
+  const [isLoadingParkingSpaces, setIsLoadingParkingSpaces] = useState(false);
 
   // Initialize form with validation schema
   const {
@@ -66,6 +70,7 @@ export default function UnitForm({
     isEdit && initialData ? {
       buildingId: initialData.buildingId,
       ownerId: initialData.ownerId || 0,
+      parkingNumber: initialData.parkingNumber || "0",
       unitNumber: initialData.unitNumber,
       unitType: initialData.unitType,
       unitLayout: initialData.unitLayout,
@@ -82,8 +87,9 @@ export default function UnitForm({
     }
   );
 
-  // Watch unit type to conditionally show layout field
+  // Watch unit type and building ID
   const watchedUnitType = watch('unitType');
+  const watchedBuildingId = watch('buildingId');
 
   // Fetch owners function
   const fetchOwners = async () => {
@@ -92,7 +98,7 @@ export default function UnitForm({
       const response = await usersApi.getAll();
 
       if (response.success) {
-        // تصفية المستخدمين للحصول على الملاك فقط
+        // Filter users to get only owners
         const ownerUsers = response.data.filter(user => user.role === 'owner');
         setOwners(ownerUsers);
       } else {
@@ -106,7 +112,38 @@ export default function UnitForm({
     }
   };
 
-  // تحويل قائمة الملاك إلى خيارات للقائمة المنسدلة
+  // Fetch available parking spaces for a specific building
+  const fetchInternalParkingSpaces = async (buildingId: number) => {
+    if (!buildingId) {
+      setParkingData(null);
+      setSelectedInternalParkingSpaces('');
+      setValue('parkingNumber', "0");
+      return;
+    }
+
+    try {
+      setIsLoadingParkingSpaces(true);
+      const response = await unitsApi.getAvaibleParking(buildingId);
+
+      if (response.success) {
+        setParkingData(response.data);
+        // Reset parking selection when building changes
+        setSelectedInternalParkingSpaces('');
+        setValue('parkingNumber', "0");
+      } else {
+        toast.error(response.message || 'فشل في جلب المواقف المتاحة');
+        setParkingData(null);
+      }
+    } catch (error) {
+      console.error('خطأ في جلب المواقف:', error);
+      toast.error('حدث خطأ أثناء جلب المواقف المتاحة');
+      setParkingData(null);
+    } finally {
+      setIsLoadingParkingSpaces(false);
+    }
+  };
+
+  // Convert owners list to dropdown options
   const ownerOptions = [
     { value: '', label: 'اختر المالك' },
     ...owners.map(owner => ({
@@ -115,12 +152,47 @@ export default function UnitForm({
     }))
   ];
 
-  // التعامل مع تغيير المالك المحدد
+  // Convert available parking spots to dropdown options
+  const parkingOptions = [
+    { value: '', label: 'اختر الموقف الداخلي' },
+    ...(parkingData?.availableSpots || []).map(spot => ({
+      value: spot,
+      label: `موقف رقم ${spot}`
+    }))
+  ];
+
+  // Handle owner change
   const handleOwnerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     const ownerId = value ? parseInt(value, 10) : undefined;
     setSelectedOwnerId(ownerId);
     setValue('ownerId', ownerId || 0);
+  };
+
+  // Handle building change
+  const handleBuildingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const buildingId = value ? parseInt(value, 10) : undefined;
+    setSelectedBuildingId(buildingId);
+    setValue('buildingId', buildingId || 0);
+
+    // Reset parking selection when building changes
+    setSelectedInternalParkingSpaces('');
+    setValue('parkingNumber', "");
+
+    // Fetch parking spaces for the new building
+    if (buildingId) {
+      fetchInternalParkingSpaces(buildingId);
+    } else {
+      setParkingData(null);
+    }
+  };
+
+  // Handle parking space change
+  const handleInternalParkingSpacesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedInternalParkingSpaces(value);
+    setValue('parkingNumber', value);
   };
 
   // Load buildings and owners on component mount
@@ -145,6 +217,14 @@ export default function UnitForm({
     fetchOwners();
   }, []);
 
+  // Load parking spaces when building selection changes
+  useEffect(() => {
+    if (watchedBuildingId && watchedBuildingId !== selectedBuildingId) {
+      setSelectedBuildingId(watchedBuildingId);
+      fetchInternalParkingSpaces(watchedBuildingId);
+    }
+  }, [watchedBuildingId, selectedBuildingId]);
+
   // Update selectedOwnerId when preSelectedOwnerId changes
   useEffect(() => {
     if (preSelectedOwnerId) {
@@ -153,12 +233,21 @@ export default function UnitForm({
     }
   }, [preSelectedOwnerId, setValue]);
 
+  // Load parking spaces for preselected building
+  useEffect(() => {
+    if (preSelectedBuildingId) {
+      setSelectedBuildingId(preSelectedBuildingId);
+      fetchInternalParkingSpaces(preSelectedBuildingId);
+    }
+  }, [preSelectedBuildingId]);
+
   // Reset form when editing data changes
   useEffect(() => {
     if (isEdit && initialData) {
       reset({
         buildingId: initialData.buildingId,
         ownerId: initialData.ownerId || 0,
+        parkingNumber: initialData.parkingNumber || "",
         unitNumber: initialData.unitNumber,
         unitType: initialData.unitType,
         unitLayout: initialData.unitLayout,
@@ -170,6 +259,13 @@ export default function UnitForm({
         description: initialData.description || '',
       });
       setSelectedOwnerId(initialData.ownerId);
+      setSelectedBuildingId(initialData.buildingId);
+      setSelectedInternalParkingSpaces(initialData.parkingNumber?.toString() || '');
+
+      // Load parking data for the initial building
+      if (initialData.buildingId) {
+        fetchInternalParkingSpaces(initialData.buildingId);
+      }
     } else if (preSelectedBuildingId) {
       reset({
         ...initialUnitData,
@@ -200,10 +296,11 @@ export default function UnitForm({
         data.unitLayout = null;
       }
 
-      // Include ownerId in submission data
+      // Include ownerId and parking in submission data
       const submitData = {
         ...data,
         ownerId: selectedOwnerId,
+        parkingNumber: selectedInternalParkingSpaces ? selectedInternalParkingSpaces : undefined,
       };
 
       let response;
@@ -284,17 +381,25 @@ export default function UnitForm({
             <p className="text-sm text-gray-500 mt-1">يرجى إدخال المعلومات الأساسية للوحدة</p>
           </div>
 
-          <FormSelect
-            label="المبنى"
-            register={register}
-            name="buildingId"
-            error={errors.buildingId}
-            options={buildingOptions}
-            required
-            placeholder={loadingBuildings ? "جاري التحميل..." : "اختر المبنى"}
-            disabled={loadingBuildings || isEdit}
-            helpText={loadingBuildings ? 'جاري تحميل المباني...' : 'اختر المبنى الذي تنتمي إليه الوحدة'}
-          />
+          <div>
+            <Select
+              label="المبنى"
+              id="buildingId"
+              name="buildingId"
+              value={selectedBuildingId?.toString() || ''}
+              onChange={handleBuildingChange}
+              options={[
+                { value: '', label: loadingBuildings ? "جاري التحميل..." : "اختر المبنى" },
+                ...buildingOptions
+              ]}
+              required
+              disabled={loadingBuildings || isEdit}
+              fullWidth
+            />
+            {loadingBuildings && (
+              <p className="text-sm text-gray-500 mt-1">جاري تحميل المباني...</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
@@ -316,6 +421,44 @@ export default function UnitForm({
               placeholder="اختر نوع الوحدة"
             />
           </div>
+
+          {/* Parking Section */}
+          {selectedBuildingId && (
+            <div className="space-y-4">
+              <div>
+                <Select
+                  label="المواقف الداخلية المتاحة"
+                  id="parkingNumber"
+                  name="parkingNumber"
+                  value={selectedInternalParkingSpaces}
+                  onChange={handleInternalParkingSpacesChange}
+                  options={parkingOptions}
+                  disabled={isLoadingParkingSpaces || !parkingData}
+                  fullWidth
+                />
+
+                {isLoadingParkingSpaces && (
+                  <p className="text-sm text-gray-500 mt-1">جاري تحميل المواقف المتاحة...</p>
+                )}
+
+                {!isLoadingParkingSpaces && parkingData && (
+                  <div className="text-sm text-gray-600 mt-2">
+                    <p>إجمالي المواقف: {parkingData.totalParkingSpaces}</p>
+                    <p>المواقف المتاحة: {parkingData.availableParkingSpaces}</p>
+                    <p>المواقف المستخدمة: {parkingData.usedParkingSpaces}</p>
+                  </div>
+                )}
+
+                {!isLoadingParkingSpaces && !parkingData && selectedBuildingId && (
+                  <p className="text-sm text-red-500 mt-1">لا توجد معلومات عن المواقف لهذا المبنى</p>
+                )}
+
+                {!selectedBuildingId && (
+                  <p className="text-sm text-gray-500 mt-1">يرجى اختيار المبنى أولاً لعرض المواقف المتاحة</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Conditional Layout Field for Apartments */}
           {watchedUnitType === 'apartment' && (

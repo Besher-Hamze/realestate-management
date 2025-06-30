@@ -8,6 +8,7 @@ import { ServiceOrder } from '@/lib/types';
 import { servicesApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import ServiceHistory from '@/components/services/ServiceHistory';
 import ServiceComments from '@/components/services/ServiceComments';
 import { formatDate } from '@/lib/utils';
@@ -26,6 +27,10 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
   const [isLoading, setIsLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // جلب تفاصيل الخدمة عند تحميل المكون
   useEffect(() => {
@@ -69,9 +74,37 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
     }
   };
 
+  // حذف الخدمة
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await servicesApi.delete(id);
 
+      if (response.success) {
+        toast.success('تم حذف طلب الخدمة بنجاح');
+        router.push('/tenant/services');
+      } else {
+        toast.error(response.message || 'فشل في حذف طلب الخدمة');
+        setDeleteModalOpen(false);
+      }
+    } catch (error) {
+      console.error('خطأ في حذف الخدمة:', error);
+      toast.error('حدث خطأ أثناء حذف طلب الخدمة');
+      setDeleteModalOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
+  // التحقق من إمكانية التعديل (فقط الطلبات المعلقة)
+  const canEdit = () => {
+    return service && service.status === 'pending';
+  };
 
+  // التحقق من إمكانية الحذف (فقط الطلبات المعلقة)
+  const canDelete = () => {
+    return service && service.status === 'pending';
+  };
 
   // عرض حالة التحميل
   if (isLoading) {
@@ -127,6 +160,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       case 'completed':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -143,6 +177,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       case 'completed':
         return 'تم إكمال طلبك. يرجى إعلامنا إذا كان لديك أي مشاكل أخرى.';
       case 'cancelled':
+      case 'rejected':
         return 'تم إلغاء طلبك. يرجى الاتصال بمدير العقار للحصول على مزيد من المعلومات.';
       default:
         return '';
@@ -155,7 +190,8 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       case 'pending': return 'قيد الانتظار';
       case 'in-progress': return 'قيد التنفيذ';
       case 'completed': return 'مكتمل';
-      case 'cancelled': return 'ملغي';
+      case 'cancelled':
+      case 'rejected': return 'ملغي';
       default: return status.replace('-', ' ');
     }
   };
@@ -179,7 +215,8 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
       case 'appliance': return 'أجهزة منزلية';
       case 'structural': return 'هيكلي';
       case 'general': return 'عام';
-      case 'deep': return 'تنظيف عميق';  // Fixed: was 'general'
+      case 'general_cleaning': return 'تنظيف عام';
+      case 'deep': return 'تنظيف عميق';
       case 'windows': return 'تنظيف نوافذ';
       case 'carpets': return 'تنظيف سجاد';
       case 'locksmith': return 'أقفال';
@@ -215,12 +252,55 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
           </h1>
 
           <div className="flex space-x-3">
+            {canEdit() && (
+              <Link href={`/tenant/services/${service.id}/edit`}>
+                <Button variant="outline">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  تعديل
+                </Button>
+              </Link>
+            )}
+
+            {canDelete() && (
+              <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                حذف
+              </Button>
+            )}
+
             <Link href="/tenant/services/create">
               <Button variant="primary">طلب جديد</Button>
             </Link>
           </div>
         </div>
       </div>
+
+      {/* تنبيه للطلبات المعلقة */}
+      {canEdit() && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="mr-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                يمكنك تعديل أو حذف هذا الطلب
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  نظراً لأن طلبك لا يزال قيد الانتظار، يمكنك تعديله أو حذفه. بمجرد أن يبدأ فريق الصيانة في العمل على طلبك، لن تتمكن من تعديله.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* شريط الحالة */}
       <div className={`rounded-lg p-4 ${getStatusBadgeClass(service.status)} bg-opacity-50`}>
@@ -241,7 +321,7 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
-            {service.status === 'rejected' && (
+            {(service.status === 'rejected' || service.status === 'cancelled') && (
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -387,12 +467,57 @@ export default function TenantServiceDetailPage({ params }: TenantServiceDetailP
         {/* Service History */}
         <Card>
           <div className="p-6">
-            <ServiceHistory
-              service={service} />
+            <ServiceHistory service={service} />
           </div>
         </Card>
-
       </div>
+
+      {/* نافذة تأكيد الحذف */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="حذف طلب الخدمة"
+        footer={
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              isLoading={isDeleting}
+              disabled={isDeleting}
+            >
+              حذف
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-gray-600">
+            هل أنت متأكد من أنك تريد حذف طلب الخدمة{' '}
+            <span className="font-medium">#{service.id}</span>؟
+          </p>
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء. سيتم حذف الطلب نهائياً من النظام.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

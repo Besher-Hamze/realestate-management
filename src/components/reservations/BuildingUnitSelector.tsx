@@ -17,12 +17,12 @@ export default function BuildingUnitSelector({
   preSelectedUnitId
 }: BuildingUnitSelectorProps) {
   const router = useRouter();
-  
+
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [units, setUnits] = useState<RealEstateUnit[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(null);
   const [selectedUnitId, setSelectedUnitId] = useState<number | null>(preSelectedUnitId || null);
-  
+
   const [isLoadingBuildings, setIsLoadingBuildings] = useState(true);
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
 
@@ -78,7 +78,7 @@ export default function BuildingUnitSelector({
 
           if (response.success) {
             setUnits(response.data);
-            
+
             // If only one unit is available, auto-select it
             if (response.data.length === 1) {
               setSelectedUnitId(response.data[0].id);
@@ -140,7 +140,7 @@ export default function BuildingUnitSelector({
     <Card>
       <div className="p-6 space-y-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">اختيار الوحدة للحجز</h2>
-        
+
         {/* Building Selection */}
         <div className="space-y-4">
           <Select
@@ -156,7 +156,7 @@ export default function BuildingUnitSelector({
             helpText={isLoadingBuildings ? 'جاري تحميل المباني...' : 'اختر المبنى أولاً'}
             emptyOptionLabel="اختر المبنى"
           />
-          
+
           {/* Unit Selection (only shown when building is selected) */}
           {selectedBuildingId && (
             <Select
@@ -170,10 +170,10 @@ export default function BuildingUnitSelector({
               required
               fullWidth
               helpText={
-                isLoadingUnits 
-                  ? 'جاري تحميل الوحدات المتاحة...' 
-                  : units.length === 0 
-                    ? 'لا توجد وحدات متاحة في هذا المبنى' 
+                isLoadingUnits
+                  ? 'جاري تحميل الوحدات المتاحة...'
+                  : units.length === 0
+                    ? 'لا توجد وحدات متاحة في هذا المبنى'
                     : 'اختر الوحدة للحجز'
               }
               emptyOptionLabel="اختر الوحدة"
@@ -199,6 +199,10 @@ export default function BuildingUnitSelector({
                         <p className="text-gray-700">{unit.floor}</p>
                       </div>
                       <div>
+                        <p className="text-sm font-medium text-gray-500">رقم الموقف الداخلي</p>
+                        <p className="text-gray-700">{unit.parkingNumber}</p>
+                      </div>
+                      <div>
                         <p className="text-sm font-medium text-gray-500">المساحة</p>
                         <p className="text-gray-700">{unit.area} م²</p>
                       </div>
@@ -212,11 +216,11 @@ export default function BuildingUnitSelector({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">نوع الوحدة</p>
-                        <p className="text-gray-700">{unit.unitType === 'apartment' ? 'شقة' : 
-                          unit.unitType === 'studio' ? 'ستوديو' : 
-                          unit.unitType === 'shop' ? 'محل تجاري' : 
-                          unit.unitType === 'office' ? 'مكتب' : 
-                          unit.unitType === 'villa' ? 'فيلا' : 'غرفة'
+                        <p className="text-gray-700">{unit.unitType === 'apartment' ? 'شقة' :
+                          unit.unitType === 'studio' ? 'ستوديو' :
+                            unit.unitType === 'shop' ? 'محل تجاري' :
+                              unit.unitType === 'office' ? 'مكتب' :
+                                unit.unitType === 'villa' ? 'فيلا' : 'غرفة'
                         }</p>
                       </div>
                     </div>
@@ -233,7 +237,7 @@ export default function BuildingUnitSelector({
             })}
           </div>
         )}
-        
+
         {/* Buttons */}
         <div className="flex justify-end space-x-3 pt-4">
           <Button

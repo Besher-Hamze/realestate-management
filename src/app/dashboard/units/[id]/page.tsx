@@ -327,6 +327,13 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               </div>
 
               <div>
+                <h3 className="text-sm font-medium text-gray-500">الموقف الداخلي</h3>
+                <p className="mt-1 text-base text-gray-900">
+                  {unit.parkingNumber}
+                </p>
+              </div>
+
+              <div>
                 <h3 className="text-sm font-medium text-gray-500">المساحة</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.area} م²
