@@ -295,12 +295,12 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           <h1 className="text-2xl font-bold text-gray-900">
             طلب الخدمة #{service.id}
           </h1>
-          <div className="flex space-x-3">
+          {/* <div className="flex space-x-3">
             <Link href={`/dashboard/services/${service.id}/edit`}>
               <Button variant="outline">تعديل</Button>
             </Link>
             <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
-          </div>
+          </div> */}
         </div>
       </div>
 
