@@ -58,7 +58,7 @@ export default function Sidebar() {
       // تحديد اسم الملف - يمكنك تخصيصه حسب الحاجة
       const filename = response.headers['content-disposition']
         ? response.headers['content-disposition'].split('filename=')[1]?.replace(/"/g, '')
-        : `report_${new Date().toISOString().split('T')[0]}.pdf`;
+        : `report_${new Date().toISOString().split('T')[0]}.xlsx`;
 
       link.download = filename;
       document.body.appendChild(link);
