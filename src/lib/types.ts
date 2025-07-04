@@ -14,6 +14,7 @@ export interface User {
   identityImageBackUrl?: string;
   commercialRegisterImageUrl?: string;
   role: Role;
+  tenantInfo?: TenantInfo;
   companyId?: number;
   createdAt: string;
   updatedAt: string;
@@ -232,6 +233,14 @@ export interface Reservation {
   unit?: RealEstateUnit;
   payments?: Payment[];
   serviceOrders?: ServiceOrder[];
+}
+
+export interface TenantInfo {
+  tenantType: TenantType;
+  businessActivities: string;
+  contactPerson: string;
+  contactPosition: string;
+  notes: string;
 }
 
 export interface Reservation {

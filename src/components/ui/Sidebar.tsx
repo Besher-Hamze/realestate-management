@@ -4,17 +4,21 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Role } from '@/lib/types';
+import apiClient from '@/utils/axios';
 
 interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ReactNode;
   roles?: Role[];
+  onClick?: () => void;
+  isAction?: boolean;
 }
 
 export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -35,6 +39,43 @@ export default function Sidebar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Function to handle report generation
+  const handleGenerateReport = async () => {
+    try {
+      setIsGeneratingReport(true);
+
+      const response = await apiClient.get('/dashboard/generate', {
+        responseType: 'blob', // مهم لتحميل الملفات
+      });
+
+      // إنشاء رابط لتحميل الملف
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // تحديد اسم الملف - يمكنك تخصيصه حسب الحاجة
+      const filename = response.headers['content-disposition']
+        ? response.headers['content-disposition'].split('filename=')[1]?.replace(/"/g, '')
+        : `report_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // تنظيف
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+
+    } catch (error) {
+      console.error('خطأ في توليد التقرير:', error);
+      // يمكنك إضافة notification أو toast هنا
+      alert('حدث خطأ أثناء توليد التقرير');
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   // Nav items for different roles
   const adminNavItems: NavItem[] = [
@@ -117,6 +158,17 @@ export default function Sidebar() {
         </svg>
       ),
       roles: ['manager', 'accountant'],
+    },
+    {
+      label: 'توليد تقرير',
+      isAction: true,
+      onClick: handleGenerateReport,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      roles: ['owner'],
     },
     {
       label: 'المستخدمين',
@@ -208,23 +260,46 @@ export default function Sidebar() {
         {/* Nav Items */}
         <nav className="p-4">
           <ul className="space-y-2">
-            {filteredNavItems.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            {filteredNavItems.map((item, index) => {
+              const isActive = item.href && (pathname === item.href || pathname?.startsWith(`${item.href}/`));
 
               return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'flex items-center p-2 rounded-md transition-colors group',
-                      isActive
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700'
-                    )}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
+                <li key={item.href || index}>
+                  {item.isAction ? (
+                    <button
+                      onClick={item.onClick}
+                      disabled={isGeneratingReport}
+                      className={cn(
+                        'flex items-center p-2 rounded-md transition-colors group w-full text-right',
+                        'text-gray-300 hover:bg-gray-700',
+                        isGeneratingReport && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      <span className="mr-3">
+                        {isGeneratingReport ? (
+                          <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        ) : (
+                          item.icon
+                        )}
+                      </span>
+                      <span>{isGeneratingReport ? 'جارِ التوليد...' : item.label}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href!}
+                      className={cn(
+                        'flex items-center p-2 rounded-md transition-colors group',
+                        isActive
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-700'
+                      )}
+                    >
+                      <span className="mr-3">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  )}
                 </li>
               );
             })}

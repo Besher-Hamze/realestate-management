@@ -753,6 +753,36 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                     {formatDate(reservation.user.createdAt)}
                   </p>
                 </div>
+                {reservation.user.tenantInfo &&
+                  <>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500"> نوع المستأجر </h3>
+                      <p className="mt-1 text-base text-gray-900">
+                        {reservation.user.tenantInfo.tenantType}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500"> المنصب </h3>
+                      <p className="mt-1 text-base text-gray-900">
+                        {reservation.user.tenantInfo.contactPosition}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500"> نشاطات تجارية </h3>
+                      <p className="mt-1 text-base text-gray-900">
+                        {reservation.user.tenantInfo.businessActivities}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500"> رقم التواصل </h3>
+                      <p className="mt-1 text-base text-gray-900">
+                        {reservation.user.tenantInfo.contactPerson}
+                      </p>
+                    </div>
+
+                  </>
+                }
+
               </div>
             ) : (
               <p className="text-gray-500">معلومات المستأجر غير متاحة</p>

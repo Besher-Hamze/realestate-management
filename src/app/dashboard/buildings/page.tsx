@@ -24,7 +24,6 @@ export default function BuildingsPage() {
     try {
       setIsLoading(true);
       const response = await buildingsApi.getAll();
-
       if (response.data) {
         setBuildings(response.data);
       } else {

@@ -74,6 +74,7 @@ export default function Table<T>({
     );
   }
 
+
   return (
     <div className={cn('overflow-x-auto', className)}>
       <table

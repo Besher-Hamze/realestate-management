@@ -59,7 +59,7 @@ export async function apiRequest<T>(
         if (typeof window !== 'undefined') {
           // window.location.href = '/login';
         }
-        
+
         // Return error response
         return {
           success: false,
@@ -68,7 +68,7 @@ export async function apiRequest<T>(
         };
       }
     }
-    
+
     const response: AxiosResponse<ApiResponse<T>> = await apiClient(config);
     return { ...response.data, success: true };
   } catch (error) {
@@ -79,7 +79,7 @@ export async function apiRequest<T>(
         data: {} as T,
       };
     }
-    
+
     return {
       success: false,
       message: 'Network error',
@@ -100,7 +100,7 @@ export async function formDataRequest<T>(
 ): Promise<ApiResponse<T>> {
   // Use existing FormData if provided, otherwise create new
   const formData = existingFormData || new FormData();
-  
+
   // Add regular data to form if not using existing FormData
   if (!existingFormData) {
     Object.entries(data).forEach(([key, value]) => {
@@ -109,7 +109,7 @@ export async function formDataRequest<T>(
       }
     });
   }
-  
+
   // Add files to form
   if (files) {
     Object.entries(files).forEach(([key, file]) => {
@@ -118,7 +118,7 @@ export async function formDataRequest<T>(
       }
     });
   }
-  
+
   return apiRequest<T>({
     url,
     method,

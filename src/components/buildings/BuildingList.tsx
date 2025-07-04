@@ -173,6 +173,7 @@ export default function BuildingList({
     },
   ];
 
+
   return (
     <>
       <Table
