@@ -597,8 +597,8 @@ export const reservationSchema = yup.object({
 
   tenantIdNumber: yup
     .string()
-    .nullable()
-    // .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
+    .nullable(),
+  // .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
 
   tenantType: yup
     .string()
