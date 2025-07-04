@@ -616,7 +616,7 @@ export default function ReservationForm({
                       name="tenantIdNumber"
                       error={errors.tenantIdNumber}
                       required={createNewTenant}
-                      helpText="رقم الهوية الوطنية (10 أرقام)"
+                      helpText="رقم الهوية الوطنية"
                     />
                   </div>
 

@@ -376,7 +376,7 @@ export const userSchema = yup.object({
   idNumber: yup
     .string()
     .required('رقم الهوية مطلوب')
-    .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام'),
+  // .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام'),
 });
 
 // ===== RESERVATION VALIDATION SCHEMA =====
@@ -598,7 +598,7 @@ export const reservationSchema = yup.object({
   tenantIdNumber: yup
     .string()
     .nullable()
-    .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
+    // .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
 
   tenantType: yup
     .string()
@@ -810,8 +810,8 @@ export const createReservationSchema = yup.object({
 
   tenantIdNumber: yup
     .string()
-    .required('رقم الهوية مطلوب')
-    .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
+    .required('رقم الهوية مطلوب'),
+  // .matches(/^[0-9]{10}$/, 'رقم الهوية يجب أن يكون 10 أرقام', { excludeEmptyString: true }),
 
   tenantType: yup
     .string()
