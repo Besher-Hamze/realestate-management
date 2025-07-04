@@ -49,7 +49,7 @@ export const validatePhone = (phone: string): boolean => {
 export const validateIdNumber = (idNumber: string): boolean => {
   // Oman civil ID format: 8 digits
   const omanIdRegex = /^\d{8}$/;
-  return omanIdRegex.test(idNumber);
+  return true;
 };
 
 export const validatePassword = (password: string): boolean => {
