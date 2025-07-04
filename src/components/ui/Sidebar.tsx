@@ -45,7 +45,7 @@ export default function Sidebar() {
     try {
       setIsGeneratingReport(true);
 
-      const response = await apiClient.get('/dashboard/generate', {
+      const response = await apiClient.get('/owner-reports/financial-report', {
         responseType: 'blob', // مهم لتحميل الملفات
       });
 
