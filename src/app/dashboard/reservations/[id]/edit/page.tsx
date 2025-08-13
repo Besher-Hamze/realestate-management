@@ -9,6 +9,8 @@ import ReservationForm from '@/components/reservations/ReservationForm';
 import Card from '@/components/ui/Card';
 import { reservationsApi } from '@/lib/api';
 import { Reservation } from '@/lib/types';
+import { useSearchParams } from 'next/navigation';
+import { ReservationStatus } from '@/types';
 
 interface EditReservationPageProps {
     params: Promise<{
@@ -17,10 +19,17 @@ interface EditReservationPageProps {
 }
 
 export default function EditReservationPage({ params }: EditReservationPageProps) {
+
+    // reservations/${reservation.id}/edit?status=active
+    // get the status if it exists in the url
+    const searchParams = useSearchParams();
+    const quryStatus = searchParams.get('status') as ReservationStatus;
     const router = useRouter();
     const resolvedParams = use(params);
     const reservationId = resolvedParams.id;
+
     const [reservation, setReservation] = useState<Reservation | null>(null);
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +41,17 @@ export default function EditReservationPage({ params }: EditReservationPageProps
 
                 const response = await reservationsApi.getById(reservationId);
                 if (response.success) {
-                    setReservation(response.data);
+                    if (quryStatus) {
+                        console.log("Query Status : ", quryStatus);
+
+                        setReservation({
+                            ...response.data,
+                            status: quryStatus,
+                        });
+                    } else {
+                        setReservation(response.data);
+                    }
+
                 } else {
                     setError(response.message || 'فشل في تحميل بيانات الحجز');
                     toast.error(response.message || 'فشل في تحميل بيانات الحجز');
@@ -52,7 +71,6 @@ export default function EditReservationPage({ params }: EditReservationPageProps
     }, [reservationId]);
 
     const handleSuccess = (updatedReservation: Reservation) => {
-        toast.success('تم تحديث الحجز بنجاح');
         router.push(`/dashboard/reservations/${updatedReservation.id}`);
     };
 

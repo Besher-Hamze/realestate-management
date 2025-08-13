@@ -14,7 +14,6 @@ export interface CreateTenantFormData {
   contactPosition?: string;
   notes?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   commercialRegisterImage?: File;
 }
 
@@ -30,7 +29,6 @@ export interface UpdateTenantFormData {
   contactPosition?: string;
   notes?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   commercialRegisterImage?: File;
 }
 

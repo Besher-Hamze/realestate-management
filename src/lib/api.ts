@@ -212,7 +212,6 @@ export const companiesApi = {
       {
         logoImage: data.logoImage,
         identityImageFront: data.identityImageFront,
-        identityImageBack: data.identityImageBack
       }
     ),
 
@@ -234,7 +233,6 @@ export const companiesApi = {
       {
         logoImage: data.logoImage,
         identityImageFront: data.identityImageFront,
-        identityImageBack: data.identityImageBack
       }
     ),
 
@@ -359,7 +357,6 @@ export const tenantsApi = {
       {},
       {
         identityImageFront: data.identityImageFront,
-        identityImageBack: data.identityImageBack,
         commercialRegisterImage: data.commercialRegisterImage,
       },
       formData
@@ -384,7 +381,6 @@ export const tenantsApi = {
       {},
       {
         identityImageFront: data.identityImageFront,
-        identityImageBack: data.identityImageBack,
         commercialRegisterImage: data.commercialRegisterImage,
       },
       formData
@@ -452,7 +448,6 @@ export const reservationsApi = {
         contractImage: data.contractImage,
         contractPdf: data.contractPdf,
         identityImageFront: data.identityImageFront,
-        identityImageBack: data.identityImageBack,
         commercialRegisterImage: data.commercialRegisterImage,
         depositCheckImage: data.depositCheckImage
       },
@@ -569,11 +564,29 @@ export const servicesApi = {
 
   update: (id: number | string, data: Partial<ServiceOrderFormData>) => {
     try {
+      const formData = {
+        reservationId: data.reservationId,
+        serviceType: data.serviceType,
+        serviceSubtype: data.serviceSubtype,
+        description: data.description,
+        status: data.status,
+        servicePrice: data.servicePrice,
+        completionDescription: data.completionDescription,
+      };
+
+      const files: { [key: string]: File } = {};
+      if (data.attachmentFile) {
+        files.attachmentFile = data.attachmentFile;
+      }
+      if (data.completionAttachment) {
+        files.completionAttachment = data.completionAttachment;
+      }
+
       return formDataRequest<ServiceOrder>(
         `/services/${id}`,
         'PUT',
-        data,
-        data.attachmentFile ? { attachmentFile: data.attachmentFile } : undefined
+        formData,
+        Object.keys(files).length > 0 ? files : undefined
       );
     } catch (error) {
       console.error('Error updating service order:', error);
@@ -770,6 +783,12 @@ export const expensesApi = {
       method: 'GET',
     }),
 
+  getByBuildingId: (buildingId: number | string) =>
+    apiRequest<Expense[]>({
+      url: `/expenses/building/${buildingId}`,
+      method: 'GET',
+    }),
+
   getStatistics: () =>
     apiRequest<ExpenseStatistics>({
       url: '/expenses/statistics',
@@ -777,18 +796,42 @@ export const expensesApi = {
     }),
 
   create: (data: ExpenseFormData) =>
-    apiRequest<Expense>({
-      url: '/expenses',
-      method: 'POST',
-      data,
-    }),
+    formDataRequest<Expense>(
+      '/expenses',
+      'POST',
+      {
+        buildingId: data.buildingId,
+        unitId: data.unitId,
+        responsibleParty: data.responsibleParty,
+        expenseType: data.expenseType,
+        amount: data.amount,
+        expenseDate: data.expenseDate,
+        notes: data.notes,
+        attachmentDescription: data.attachmentDescription,
+      },
+      {
+        attachmentFile: data.attachmentFile,
+      }
+    ),
 
   update: (id: number | string, data: Partial<ExpenseFormData>) =>
-    apiRequest<Expense>({
-      url: `/expenses/${id}`,
-      method: 'PUT',
-      data,
-    }),
+    formDataRequest<Expense>(
+      `/expenses/${id}`,
+      'PUT',
+      {
+        buildingId: data.buildingId,
+        unitId: data.unitId,
+        responsibleParty: data.responsibleParty,
+        expenseType: data.expenseType,
+        amount: data.amount,
+        expenseDate: data.expenseDate,
+        notes: data.notes,
+        attachmentDescription: data.attachmentDescription,
+      },
+      {
+        attachmentFile: data.attachmentFile,
+      }
+    ),
 
   delete: (id: number | string) =>
     apiRequest<ApiResponse<null>>({

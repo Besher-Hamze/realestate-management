@@ -92,12 +92,17 @@ export default function LoginPage() {
       console.log('Submitting login form...'); // Debug log
       const success = await login(formData.username, formData.password, rememberMe);
 
-      if (success) {
+      if (success.status) {
         toast.success('تم تسجيل الدخول بنجاح');
 
         console.log('Login successful, useEffect will handle redirect'); // Debug log
       } else {
-        toast.error('اسم المستخدم أو كلمة المرور غير صحيحة');
+        const message = success.message;
+        if (message != "") {
+          toast.error(message);
+        } else {
+          toast.error('اسم المستخدم أو كلمة المرور غير صحيحة');
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error);

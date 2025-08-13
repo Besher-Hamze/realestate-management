@@ -141,8 +141,8 @@ export default function ExpenseDetailPage() {
                         مصروف {getExpenseTypeName(expense.expenseType)}
                     </h1>
                     <p className="text-gray-600">
-                        {expense.unit ? `وحدة ${expense.unit.unitNumber}` : `وحدة #${expense.unitId}`}
-                        {expense.unit?.building && ` - ${expense.unit.building.name}`}
+                        {expense.building?.name || `مبنى #${expense.buildingId}`}
+                        {expense.unit && ` - وحدة ${expense.unit.unitNumber}`}
                     </p>
                 </div>
 
@@ -210,53 +210,51 @@ export default function ExpenseDetailPage() {
                 </div>
             </Card>
 
-            {/* Unit Information Card */}
+            {/* Building and Unit Information Card */}
             <Card>
                 <div className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">معلومات الوحدة</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">معلومات المبنى والوحدة</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Building Information */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                رقم الوحدة
+                                اسم المبنى
                             </label>
                             <p className="text-gray-900 font-medium">
-                                {expense.unit ? expense.unit.unitNumber : `#${expense.unitId}`}
+                                {expense.building?.name || `مبنى #${expense.buildingId}`}
                             </p>
                         </div>
 
-                        {expense.unit?.building && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        اسم المبنى
-                                    </label>
-                                    <p className="text-gray-900 font-medium">
-                                        {expense.unit.building.name}
-                                    </p>
-                                </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                رقم المبنى
+                            </label>
+                            <p className="text-gray-900 font-medium">
+                                {expense.building?.buildingNumber || 'غير محدد'}
+                            </p>
+                        </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        رقم المبنى
-                                    </label>
-                                    <p className="text-gray-900 font-medium">
-                                        {expense.unit.building.buildingNumber}
-                                    </p>
-                                </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                عنوان المبنى
+                            </label>
+                            <p className="text-gray-600">
+                                {expense.building?.address || 'غير محدد'}
+                            </p>
+                        </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        عنوان المبنى
-                                    </label>
-                                    <p className="text-gray-600">
-                                        {expense.unit.building.address}
-                                    </p>
-                                </div>
-                            </>
-                        )}
-
+                        {/* Unit Information */}
                         {expense.unit && (
                             <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        رقم الوحدة
+                                    </label>
+                                    <p className="text-gray-900 font-medium">
+                                        {expense.unit.unitNumber}
+                                    </p>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         نوع الوحدة
@@ -279,19 +277,29 @@ export default function ExpenseDetailPage() {
                                         {expense.unit.floor}
                                     </p>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        إجراءات الوحدة
+                                    </label>
+                                    <Link
+                                        href={`/dashboard/units/${expense.unitId}`}
+                                        className="text-primary-600 hover:text-primary-500 font-medium"
+                                    >
+                                        عرض تفاصيل الوحدة →
+                                    </Link>
+                                </div>
                             </>
                         )}
 
+                        {/* Responsible Party */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                إجراءات الوحدة
+                                الطرف المسؤول
                             </label>
-                            <Link
-                                href={`/dashboard/units/${expense.unitId}`}
-                                className="text-primary-600 hover:text-primary-500 font-medium"
-                            >
-                                عرض تفاصيل الوحدة →
-                            </Link>
+                            <p className="text-gray-900 font-medium">
+                                {expense.responsibleParty === 'owner' ? 'المالك' : 'المستأجر'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -306,6 +314,47 @@ export default function ExpenseDetailPage() {
                             <p className="text-gray-700 whitespace-pre-wrap">
                                 {expense.notes}
                             </p>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* Attachment Card */}
+            {expense.attachmentFile && (
+                <Card>
+                    <div className="p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">المرفقات</h3>
+                        <div className="bg-gray-50 rounded-md p-4">
+                            <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                        {expense.attachmentFile.split('/').pop() || 'ملف مرفق'}
+                                    </p>
+                                    {expense.attachmentDescription && (
+                                        <p className="text-sm text-gray-500">
+                                            {expense.attachmentDescription}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex-shrink-0">
+                                    <a
+                                        href={expense.attachmentFileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        عرض الملف
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </Card>
@@ -364,10 +413,21 @@ export default function ExpenseDetailPage() {
                             <span className="text-sm text-gray-600">{formatDate(expense.expenseDate)}</span>
                         </div>
                         <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">المبنى:</span>
+                            <span className="text-sm text-gray-600">
+                                {expense.building?.name || `مبنى #${expense.buildingId}`}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center">
                             <span className="text-sm font-medium text-gray-700">الوحدة:</span>
                             <span className="text-sm text-gray-600">
-                                {expense.unit ? `وحدة ${expense.unit.unitNumber}` : `وحدة #${expense.unitId}`}
-                                {expense.unit?.building && ` - ${expense.unit.building.name}`}
+                                {expense.unit ? `وحدة ${expense.unit.unitNumber}` : 'غير محدد'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">الطرف المسؤول:</span>
+                            <span className="text-sm text-gray-600">
+                                {expense.responsibleParty === 'owner' ? 'المالك' : 'المستأجر'}
                             </span>
                         </div>
                     </div>

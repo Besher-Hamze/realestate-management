@@ -72,9 +72,6 @@ export default function TenantForm({
         case 'identityImageFront':
           setIdentityFrontFile(files[0]);
           break;
-        case 'identityImageBack':
-          setIdentityBackFile(files[0]);
-          break;
         case 'commercialRegisterImage':
           setCommRegisterFile(files[0]);
           break;
@@ -95,7 +92,6 @@ export default function TenantForm({
       // إضافة الملفات إن وجدت
       const files: Record<string, File | undefined> = {};
       if (identityFrontFile) files.identityImageFront = identityFrontFile;
-      if (identityBackFile) files.identityImageBack = identityBackFile;
       if (commRegisterFile) files.commercialRegisterImage = commRegisterFile;
 
       let response;
@@ -302,24 +298,7 @@ export default function TenantForm({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                صورة الهوية (الوجه الخلفي)
-              </label>
-              <input
-                id="identityImageBack"
-                name="identityImageBack"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-primary-50 file:text-primary-700
-                  hover:file:bg-primary-100"
-              />
-            </div>
+
 
             {isBusinessTenant && (
               <div className="md:col-span-2">

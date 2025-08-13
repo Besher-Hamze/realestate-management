@@ -15,6 +15,7 @@ export default function ReservationsPage() {
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [buildingFilter, setBuildingFilter] = useState<string>('all');
 
   // خيارات تصفية الحالة
   const statusOptions = [
@@ -24,17 +25,35 @@ export default function ReservationsPage() {
     { value: 'cancelled', label: 'ملغي' },
   ];
 
-  // جلب المستأجرين  عند تحميل المكون
+  // استخراج أسماء المباني الفريدة من البيانات
+  const getBuildingOptions = () => {
+    const buildings = reservations
+      .map(reservation => reservation.unit?.building)
+      .filter((building, index, self) =>
+        building && self.findIndex(b => b?.id === building.id) === index
+      )
+      .map(building => ({
+        value: building!.id.toString(),
+        label: building!.name
+      }));
+
+    return [
+      { value: 'all', label: 'جميع المباني' },
+      ...buildings
+    ];
+  };
+
+  // جلب المستأجرين عند تحميل المكون
   useEffect(() => {
     fetchReservations();
   }, []);
 
-  // تطبيق التصفية عند تغيير المستأجرين  أو مرشح الحالة
+  // تطبيق التصفية عند تغيير المستأجرين أو المرشحات
   useEffect(() => {
     applyFilters();
-  }, [reservations, statusFilter]);
+  }, [reservations, statusFilter, buildingFilter]);
 
-  // جلب بيانات المستأجرين 
+  // جلب بيانات المستأجرين
   const fetchReservations = async () => {
     try {
       setIsLoading(true);
@@ -43,23 +62,30 @@ export default function ReservationsPage() {
       if (response.success) {
         setReservations(response.data);
       } else {
-        toast.error(response.message || 'فشل في جلب المستأجرين ');
+        toast.error(response.message || 'فشل في جلب المستأجرين');
       }
     } catch (error) {
-      console.error('خطأ في جلب المستأجرين :', error);
-      toast.error('حدث خطأ أثناء جلب المستأجرين ');
+      console.error('خطأ في جلب المستأجرين:', error);
+      toast.error('حدث خطأ أثناء جلب المستأجرين');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // تطبيق المرشحات على المستأجرين 
+  // تطبيق المرشحات على المستأجرين
   const applyFilters = () => {
     let filtered = [...reservations];
 
     // تطبيق مرشح الحالة
     if (statusFilter !== 'all') {
       filtered = filtered.filter((reservation) => reservation.status === statusFilter);
+    }
+
+    // تطبيق مرشح المبنى
+    if (buildingFilter !== 'all') {
+      filtered = filtered.filter((reservation) =>
+        reservation.unit?.building?.id === parseInt(buildingFilter)
+      );
     }
 
     setFilteredReservations(filtered);
@@ -70,6 +96,11 @@ export default function ReservationsPage() {
     setStatusFilter(e.target.value);
   };
 
+  // التعامل مع تغيير مرشح المبنى
+  const handleBuildingFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBuildingFilter(e.target.value);
+  };
+
   // التعامل مع حذف الحجز
   const handleDelete = (id: number) => {
     setReservations((prevReservations) => prevReservations.filter((reservation) => reservation.id !== id));
@@ -77,14 +108,20 @@ export default function ReservationsPage() {
 
   // بطاقات الإحصائيات
   const getStatusCount = (status: string) => {
-    return reservations.filter(reservation => reservation.status === status).length;
+    return filteredReservations.filter(reservation => reservation.status === status).length;
+  };
+
+  // إعادة تعيين المرشحات
+  const resetFilters = () => {
+    setStatusFilter('all');
+    setBuildingFilter('all');
   };
 
   return (
     <div className="space-y-6">
       {/* العنوان مع أزرار الإجراءات */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">المستأجرين </h1>
+        <h1 className="text-2xl font-bold text-gray-900">المستأجرين</h1>
         <Link href="/dashboard/reservations/create">
           <Button
             variant="primary"
@@ -117,8 +154,6 @@ export default function ReservationsPage() {
           </div>
         </Card>
 
-
-
         <Card className="bg-gray-50 border-gray-200">
           <div className="p-4">
             <div className="flex items-center">
@@ -150,6 +185,22 @@ export default function ReservationsPage() {
             </div>
           </div>
         </Card>
+
+        <Card className="bg-blue-50 border-blue-200">
+          <div className="p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h1a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div className="mr-4">
+                <h3 className="font-medium text-blue-800">المجموع</h3>
+                <p className="text-2xl font-bold text-blue-900">{filteredReservations.length}</p>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* المرشحات */}
@@ -166,10 +217,26 @@ export default function ReservationsPage() {
               fullWidth
             />
           </div>
+
+          <div className="w-full sm:w-64">
+            <Select
+              label="المبنى"
+              id="buildingFilter"
+              name="buildingFilter"
+              value={buildingFilter}
+              onChange={handleBuildingFilterChange}
+              options={getBuildingOptions()}
+              fullWidth
+            />
+          </div>
+
+
         </div>
+
+
       </div>
 
-      {/* قائمة المستأجرين  */}
+      {/* قائمة المستأجرين */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <ReservationList
           reservations={filteredReservations}

@@ -66,7 +66,6 @@ export interface CreateReservationFormData {
   tenantContactPosition?: string;
   tenantNotes?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   commercialRegisterImage?: File;
 
   // Common fields

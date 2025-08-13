@@ -42,7 +42,6 @@ const DEPOSIT_PAYMENT_METHOD_OPTIONS = [
 const DEPOSIT_STATUS_OPTIONS = [
   { value: 'unpaid', label: 'غير مدفوع' },
   { value: 'paid', label: 'مدفوع' },
-  { value: 'returned', label: 'مسترجع' },
 ];
 
 const getInitialData = (isEdit: boolean, initialData?: Reservation, preSelectedUnitId?: number, preSelectedUserId?: number): Partial<ReservationFormData> => {
@@ -53,6 +52,7 @@ const getInitialData = (isEdit: boolean, initialData?: Reservation, preSelectedU
       contractType: initialData.contractType,
       startDate: initialData.startDate.split('T')[0] as any,
       endDate: initialData.endDate.split('T')[0] as any,
+      status: initialData.status,
       paymentMethod: initialData.paymentMethod,
       paymentSchedule: initialData.paymentSchedule,
       includesDeposit: initialData.includesDeposit,
@@ -85,6 +85,7 @@ const getInitialData = (isEdit: boolean, initialData?: Reservation, preSelectedU
     endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] as any,
     paymentMethod: 'cash',
     paymentSchedule: 'monthly',
+    status: initialData?.status,
     includesDeposit: false,
     depositAmount: undefined,
     depositPaymentMethod: 'cash',
@@ -151,7 +152,6 @@ export default function ReservationForm({
   const watchedContractImage = watch('contractImage');
   const watchedContractPdf = watch('contractPdf');
   const watchedIdentityImageFront = watch('identityImageFront');
-  const watchedIdentityImageBack = watch('identityImageBack');
   const watchedCommercialRegisterImage = watch('commercialRegisterImage');
   const watchedDepositCheckImage = watch('depositCheckImage');
 
@@ -690,7 +690,7 @@ export default function ReservationForm({
                     helpText="صورة واضحة للعقد (JPEG, PNG)"
                     currentFile={isEdit ? initialData?.contractImageUrl : undefined}
                     selectedFile={watchedContractImage}
-                    required={!isEdit}
+                    required={false}
                   />
                 )}
               />
@@ -722,34 +722,19 @@ export default function ReservationForm({
                   control={control}
                   render={({ field, fieldState }) => (
                     <FormFileInput
-                      label="صورة الهوية (الوجه الأمامي)"
+                      label="صورة الهوية"
                       name="identityImageFront"
-                      accept="image/jpeg,image/png,image/jpg"
+                      accept="application/pdf"
                       onChange={handleFileChange('identityImageFront')}
                       error={fieldState.error}
-                      helpText="صورة واضحة للوجه الأمامي للهوية"
+                      helpText="ملف PDF يحوي الوجهين الأمامي و الخلفي"
                       required={true}
                       selectedFile={watchedIdentityImageFront}
                     />
                   )}
                 />
 
-                <Controller
-                  name="identityImageBack"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <FormFileInput
-                      label="صورة الهوية (الوجه الخلفي)"
-                      name="identityImageBack"
-                      accept="image/jpeg,image/png,image/jpg"
-                      onChange={handleFileChange('identityImageBack')}
-                      error={fieldState.error}
-                      helpText="صورة واضحة للوجه الخلفي للهوية"
-                      required={true}
-                      selectedFile={watchedIdentityImageBack}
-                    />
-                  )}
-                />
+
 
                 {watchedTenantType &&
                   ['commercial_register', 'partnership', 'foreign_company'].includes(watchedTenantType) && (

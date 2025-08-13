@@ -85,17 +85,11 @@ export const companyValidation = {
     ...createFileValidationRule(
       FILE_TYPES.IMAGES,
       FILE_SIZE_LIMITS.IMAGE,
-      'يرجى تحميل صورة واضحة للوجه الأمامي للهوية (JPEG, PNG فقط)'
+      'يرجى تحميل ملف PDF يحوي الوجهين الأمامي و الخلفي (JPEG, PNG فقط)'
     ),
   },
 
-  identityImageBack: {
-    ...createFileValidationRule(
-      FILE_TYPES.IMAGES,
-      FILE_SIZE_LIMITS.IMAGE,
-      'يرجى تحميل صورة واضحة للوجه الخلفي للهوية (JPEG, PNG فقط)'
-    ),
-  },
+
 };
 
 // Helper function to validate complete company form

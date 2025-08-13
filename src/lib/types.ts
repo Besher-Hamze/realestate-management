@@ -11,7 +11,6 @@ export interface User {
   whatsappNumber?: string;
   idNumber?: string;
   identityImageFrontUrl?: string;
-  identityImageBackUrl?: string;
   commercialRegisterImageUrl?: string;
   role: Role;
   tenantInfo?: TenantInfo;
@@ -125,8 +124,6 @@ export interface Company {
   secondaryPhone?: string;
   identityImageFront?: string;
   identityImageFrontUrl?: string;
-  identityImageBack?: string;
-  identityImageBackUrl?: string;
   registrationNumber?: string;
   delegateName?: string;
   address: string;
@@ -151,7 +148,6 @@ export interface CompanyFormData {
   whatsappNumber?: string;
   secondaryPhone?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   registrationNumber?: string;
   delegateName?: string;
   address: string;
@@ -199,7 +195,6 @@ export interface TenantFormData {
   contactPosition?: string;
   notes?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   commercialRegisterImage?: File;
 }
 
@@ -223,8 +218,18 @@ export interface Reservation {
   contractPdfUrl?: string;
   paymentMethod: PaymentMethod;
   paymentSchedule: PaymentSchedule;
+
+  // Enhanced deposit fields
   includesDeposit: boolean;
   depositAmount?: number;
+  depositPaymentMethod?: DepositPaymentMethod;
+  depositCheckImage?: string;
+  depositCheckImageUrl?: string;
+  depositStatus?: DepositStatus;
+  depositPaidDate?: string;
+  depositReturnedDate?: string;
+  depositNotes?: string;
+
   status: ReservationStatus;
   notes?: string;
   createdAt: string;
@@ -301,7 +306,6 @@ export interface ReservationFormData {
   tenantContactPosition?: string;
   tenantNotes?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   commercialRegisterImage?: File;
 
   // Common reservation fields
@@ -342,6 +346,11 @@ export interface ServiceOrder {
   attachmentFile?: string;
   attachmentFileUrl?: string;
   serviceHistory: { status: ServiceStatus, date: Date }[],
+  // New fields for completion/rejection
+  servicePrice?: number;
+  completionAttachment?: string;
+  completionAttachmentUrl?: string;
+  completionDescription?: string;
   createdAt: string;
   updatedAt: string;
   user?: User;
@@ -354,7 +363,11 @@ export interface ServiceOrderFormData {
   serviceSubtype: string;
   description: string;
   attachmentFile?: File;
-  status: any
+  status: any;
+  // New fields for completion/rejection
+  servicePrice?: number;
+  completionAttachment?: File;
+  completionDescription?: string;
 }
 
 // Payment Types
@@ -438,22 +451,32 @@ export type ExpenseType =
 
 export interface Expense {
   id: number;
-  unitId: number;
+  buildingId: number;
+  unitId?: number;
+  responsibleParty: 'owner' | 'tenant';
   expenseType: ExpenseType;
   amount: number;
   expenseDate: string;
   notes?: string;
+  attachmentFile?: string;
+  attachmentFileUrl?: string;
+  attachmentDescription?: string;
   createdAt: string;
   updatedAt: string;
   unit?: RealEstateUnit;
+  building?: Building;
 }
 
 export interface ExpenseFormData {
-  unitId: number;
+  buildingId: number;
+  unitId?: number;
+  responsibleParty: 'owner' | 'tenant';
   expenseType: ExpenseType;
   amount: number;
   expenseDate: string;
   notes?: string;
+  attachmentFile?: File;
+  attachmentDescription?: string;
 }
 
 export interface ExpenseStatistics {

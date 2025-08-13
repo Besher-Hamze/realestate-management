@@ -10,7 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   canEdit: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<boolean>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<{ status: boolean, message: string }>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
 }
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true, // Start with true to prevent premature redirects
   canEdit: false,
   isAuthenticated: false,
-  login: async () => false,
+  login: async () => ({ status: false, message: '' }),
   logout: () => { },
   checkAuth: async () => false,
 });
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Login function with remember me support
-  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
+  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<{ status: boolean, message: string }> => {
     try {
       console.log('AuthProvider: Attempting login...'); // Debug log
       setIsLoading(true);
@@ -89,13 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData as any);
         console.log('AuthProvider: Login successful, user set:', userData); // Debug log
 
-        return true;
+        return { status: true, message: "Login successful" };
       }
 
-      return false;
+      return { status: false, message: response.message };
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return { status: false, message: "" };
     } finally {
       setIsLoading(false);
     }
@@ -121,16 +121,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = Cookies.get('token');
 
       if (!token) {
-        console.log('AuthProvider: No token in checkAuth'); // Debug log
         setUser(null);
         return false;
       }
 
-      console.log('AuthProvider: Checking auth with token...'); // Debug log
       const response = await authApi.getMe();
 
       if (response.success && response.data) {
-        console.log('AuthProvider: Auth check successful, user:', response.data); // Debug log
         setUser(response.data);
         return true;
       }
@@ -150,7 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Calculate isAuthenticated based on user presence
   const isAuthenticated = !!user;
 
-  console.log('AuthProvider render:', { isLoading, isAuthenticated, user: user?.role }); // Debug log
 
   return (
     <AuthContext.Provider

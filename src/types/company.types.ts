@@ -8,7 +8,6 @@ export interface CreateCompanyFormData {
   whatsappNumber?: string;
   secondaryPhone?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   registrationNumber?: string;
   delegateName?: string;
   address: string;
@@ -26,7 +25,6 @@ export interface UpdateCompanyFormData {
   whatsappNumber?: string;
   secondaryPhone?: string;
   identityImageFront?: File;
-  identityImageBack?: File;
   registrationNumber?: string;
   delegateName?: string;
   address?: string;

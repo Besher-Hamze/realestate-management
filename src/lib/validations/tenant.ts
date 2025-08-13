@@ -106,18 +106,10 @@ export const tenantValidation = {
     ...createFileValidationRule(
       FILE_TYPES.IMAGES,
       FILE_SIZE_LIMITS.IMAGE,
-      'يرجى تحميل صورة واضحة للوجه الأمامي للهوية (JPEG, PNG فقط)'
+      'يرجى تحميل ملف PDF يحوي الوجهين الأمامي و الخلفي (JPEG, PNG فقط)'
     ),
   },
 
-  identityImageBack: {
-    ...createRequiredRule('صورة الوجه الخلفي للهوية مطلوبة'),
-    ...createFileValidationRule(
-      FILE_TYPES.IMAGES,
-      FILE_SIZE_LIMITS.IMAGE,
-      'يرجى تحميل صورة واضحة للوجه الخلفي للهوية (JPEG, PNG فقط)'
-    ),
-  },
 
   commercialRegisterImage: {
     ...createFileValidationRule(
@@ -168,10 +160,6 @@ export const validateTenantForm = (data: any): Record<string, string> => {
   // File validation
   if (!data.identityImageFront) {
     errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
-  }
-
-  if (!data.identityImageBack) {
-    errors.identityImageBack = 'صورة الوجه الخلفي للهوية مطلوبة';
   }
 
   // Conditional validation for commercial register

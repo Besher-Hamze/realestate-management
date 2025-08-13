@@ -61,7 +61,7 @@ export default function ReservationList({
       if (response.success) {
         toast.success('تم حذف الحجز بنجاح');
         setDeleteModalOpen(false);
-        
+
         // استدعاء دالة الحذف أو إعادة جلب البيانات
         if (onDelete) {
           onDelete(selectedReservation.id);
@@ -108,7 +108,6 @@ export default function ReservationList({
   // الحصول على تسمية الحالة بالعربية
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'active': return 'نشط';
       case 'pending': return 'قيد الانتظار';
       case 'expired': return 'منتهي';
       case 'cancelled': return 'ملغي';
@@ -177,7 +176,7 @@ export default function ReservationList({
       cell: (reservation) => {
         let statusText = '';
         let statusClass = '';
-        
+
         switch (reservation.status) {
           case 'active':
             statusText = 'نشط';
@@ -196,7 +195,7 @@ export default function ReservationList({
             statusClass = 'bg-red-100 text-red-800';
             break;
         }
-        
+
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}
@@ -214,14 +213,12 @@ export default function ReservationList({
           <Link href={`/dashboard/reservations/${reservation.id}`} onClick={(e) => e.stopPropagation()}>
             <Button size="xs" variant="outline">عرض</Button>
           </Link>
-          
+
           {/* أزرار تحديث الحالة */}
           <div className="flex flex-wrap gap-1">
-            <StatusButton reservation={reservation} status="active" label="تنشيط" color="green" />
-            <StatusButton reservation={reservation} status="expired" label="إنهاء" color="gray" />
             <StatusButton reservation={reservation} status="cancelled" label="إلغاء" color="red" />
           </div>
-          
+
           {/* زر الحذف */}
           <Button
             size="xs"
@@ -245,7 +242,7 @@ export default function ReservationList({
         emptyMessage="لم يتم العثور على حجوزات"
         onRowClick={handleRowClick}
       />
-      
+
       {/* نافذة تأكيد الحذف */}
       <Modal
         isOpen={deleteModalOpen}
@@ -279,7 +276,7 @@ export default function ReservationList({
           <p className="text-sm">حذف هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة وأي طلبات خدمة مرتبطة بها.</p>
         </div>
       </Modal>
-      
+
       {/* نافذة تأكيد تحديث الحالة */}
       <Modal
         isOpen={statusUpdateModalOpen}
@@ -315,12 +312,7 @@ export default function ReservationList({
             <p className="text-sm">إلغاء هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة.</p>
           </div>
         )}
-        {newStatus === 'expired' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-700">
-            <p className="text-sm font-medium">ملاحظة</p>
-            <p className="text-sm">تحديد هذا الحجز كمنتهي سيغير حالة الوحدة إلى متاحة.</p>
-          </div>
-        )}
+
       </Modal>
     </>
   );

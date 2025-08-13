@@ -36,6 +36,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { canEdit } = useAuth();
+
   // جلب تفاصيل الوحدة عند تحميل المكون
   useEffect(() => {
     fetchUnit();
@@ -48,7 +49,6 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
       const response = await unitsApi.getById(id);
 
       if (response.success) {
-
         setUnit(response.data);
         fetchReservations();
       } else {
@@ -62,7 +62,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     }
   };
 
-  // جلب المستأجرين  لهذه الوحدة
+  // جلب المستأجرين لهذه الوحدة
   const fetchReservations = async () => {
     try {
       setIsReservationsLoading(true);
@@ -74,7 +74,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         toast.error(response.message || 'فشل في جلب حجوزات الوحدة');
       }
     } catch (error) {
-      console.error('خطأ في جلب المستأجرين :', error);
+      console.error('خطأ في جلب المستأجرين:', error);
       toast.error('حدث خطأ أثناء جلب حجوزات الوحدة');
     } finally {
       setIsReservationsLoading(false);
@@ -103,9 +103,27 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     }
   };
 
-  // تغيير حالة الوحدة
+  // تغيير حالة الوحدة مع التحقق من القيود
   const handleStatusChange = async (newStatus: string) => {
     if (!unit) return;
+
+    // التحقق من القيود قبل التغيير
+    const hasActiveReservation = reservations.some(reservation => reservation.status === 'active');
+
+    if (newStatus === 'maintenance' && unit.status === 'rented') {
+      toast.error('لا يمكن تحديد الوحدة تحت الصيانة أثناء كونها مؤجرة. يجب تحديدها كمتاحة أولاً.');
+      return;
+    }
+
+    if (newStatus === 'rented' && unit.status === 'maintenance') {
+      toast.error('لا يمكن تأجير الوحدة أثناء كونها تحت الصيانة. يجب تحديدها كمتاحة أولاً.');
+      return;
+    }
+
+    if (newStatus === 'rented' && hasActiveReservation) {
+      toast.error('الوحدة مؤجرة بالفعل، يوجد مستأجر نشط.');
+      return;
+    }
 
     try {
       const response = await unitsApi.update(id, { status: newStatus });
@@ -122,7 +140,39 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
     }
   };
 
-  // تحديد الأعمدة لجدول المستأجرين 
+  // التحقق من وجود مستأجر نشط
+  const hasActiveReservation = reservations.some(reservation => reservation.status === 'active');
+
+  // التحقق من إمكانية إضافة مستأجر جديد
+  const canAddTenant = unit?.status === 'available' && !hasActiveReservation;
+
+  // رسائل القيود للأزرار
+  const getStatusChangeMessage = (targetStatus: string) => {
+    if (!unit) return '';
+
+    if (targetStatus === 'maintenance' && unit.status === 'rented') {
+      return 'لا يمكن تحديد الوحدة تحت الصيانة أثناء كونها مؤجرة';
+    }
+
+    if (targetStatus === 'rented' && unit.status === 'maintenance') {
+      return 'لا يمكن تأجير الوحدة أثناء كونها تحت الصيانة';
+    }
+
+    return '';
+  };
+
+  // رسالة عدم إمكانية إضافة مستأجر
+  const getAddTenantMessage = () => {
+    if (hasActiveReservation) {
+      return 'يوجد مستأجر نشط بالفعل في هذه الوحدة';
+    }
+    if (unit?.status !== 'available') {
+      return 'يمكن إضافة مستأجر فقط عندما تكون الوحدة متاحة';
+    }
+    return '';
+  };
+
+  // تحديد الأعمدة لجدول المستأجرين
   const reservationColumns: TableColumn<Reservation>[] = [
     {
       key: 'tenant',
@@ -268,24 +318,35 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">الوحدة {unit.unitNumber}</h1>
-          {canEdit && <div className="flex space-x-3">
-            <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
-              <Button
-                variant="primary"
-                leftIcon={
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                }
-              >
-                اضافة مستأجر
-              </Button>
-            </Link>
-            <Link href={`/dashboard/units/${unit.id}/edit`}>
-              <Button variant="outline">تعديل الوحدة</Button>
-            </Link>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
-          </div>}
+          {canEdit && (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative">
+                <Link href={canAddTenant ? `/dashboard/reservations/create?unitId=${unit.id}` : '#'}>
+                  <Button
+                    variant="primary"
+                    disabled={!canAddTenant}
+                    title={!canAddTenant ? getAddTenantMessage() : ''}
+                    leftIcon={
+                      <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    }
+                  >
+                    اضافة مستأجر
+                  </Button>
+                </Link>
+                {!canAddTenant && (
+                  <div className="absolute top-full left-0 mt-1 text-xs text-red-600 whitespace-nowrap">
+                    {getAddTenantMessage()}
+                  </div>
+                )}
+              </div>
+              <Link href={`/dashboard/units/${unit.id}/edit`}>
+                <Button variant="outline">تعديل الوحدة</Button>
+              </Link>
+              <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -347,8 +408,6 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 </p>
               </div>
 
-
-
               <div>
                 <h3 className="text-sm font-medium text-gray-500">الحمامات</h3>
                 <p className="mt-1 text-base text-gray-900">
@@ -363,7 +422,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                 </p>
               </div>
               <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-gray-500">اسم المالك </h3>
+                <h3 className="text-sm font-medium text-gray-500">اسم المالك</h3>
                 <p className="mt-1 text-base text-gray-900">
                   {unit.ownerName || 'لا يوجد اسم متاح'}
                 </p>
@@ -373,80 +432,103 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
         </Card>
 
         {/* إجراءات تغيير الحالة */}
-        {canEdit && <Card>
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">تغيير الحالة</h2>
+        {canEdit && (
+          <Card>
+            <div className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">تغيير الحالة</h2>
 
-            <div className="space-y-4">
-              <Button
-                variant="success"
-                fullWidth
-                disabled={unit.status === 'available'}
-                onClick={() => handleStatusChange('available')}
-              >
-                تعيين كمتاحة
-              </Button>
-
-              {/* <Button
-                variant="info"
-                fullWidth
-                disabled={unit.status === 'rented'}
-                onClick={() => handleStatusChange('rented')}
-              >
-                تعيين كمؤجرة
-              </Button> */}
-
-              <Button
-                variant="warning"
-                fullWidth
-                disabled={unit.status === 'maintenance'}
-                onClick={() => handleStatusChange('maintenance')}
-              >
-                تعيين تحت الصيانة
-              </Button>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-md font-medium text-gray-900 mb-3">روابط سريعة</h3>
-              <div className="space-y-3">
-                <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
-                  <Button variant="primary" fullWidth>
-                    اضافة مستأجر  جديد
+              <div className="space-y-4">
+                <div className="relative">
+                  <Button
+                    variant="success"
+                    fullWidth
+                    disabled={unit.status === 'available'}
+                    onClick={() => handleStatusChange('available')}
+                  >
+                    تعيين كمتاحة
                   </Button>
-                </Link>
-                {unit.building && (
-                  <Link href={`/dashboard/buildings/${unit.building.id}`}>
-                    <Button variant="outline" fullWidth>
-                      عرض المبنى
-                    </Button>
-                  </Link>
-                )}
+                </div>
+
+                <div className="relative">
+                  <Button
+                    variant="warning"
+                    fullWidth
+                    disabled={unit.status === 'maintenance' || (unit.status === 'rented')}
+                    title={getStatusChangeMessage('maintenance')}
+                    onClick={() => handleStatusChange('maintenance')}
+                  >
+                    تعيين تحت الصيانة
+                  </Button>
+                  {unit.status === 'rented' && (
+                    <div className="mt-1 text-xs text-red-600">
+                      {getStatusChangeMessage('maintenance')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-md font-medium text-gray-900 mb-3">روابط سريعة</h3>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Link href={canAddTenant ? `/dashboard/reservations/create?unitId=${unit.id}` : '#'}>
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        disabled={!canAddTenant}
+                        title={!canAddTenant ? getAddTenantMessage() : ''}
+                      >
+                        اضافة مستأجر جديد
+                      </Button>
+                    </Link>
+                    {!canAddTenant && (
+                      <div className="mt-1 text-xs text-red-600">
+                        {getAddTenantMessage()}
+                      </div>
+                    )}
+                  </div>
+                  {unit.building && (
+                    <Link href={`/dashboard/buildings/${unit.building.id}`}>
+                      <Button variant="outline" fullWidth>
+                        عرض المبنى
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </Card>}
+          </Card>
+        )}
       </div>
 
-      {/* سجل المستأجرين  */}
+      {/* سجل المستأجرين */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">سجل المستأجرين </h2>
-          {
-            canEdit &&
-            <Link href={`/dashboard/reservations/create?unitId=${unit.id}`}>
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                }
-              >
-                اضافة مستأجر
-              </Button>
-            </Link>
-          }
+          <h2 className="text-xl font-semibold text-gray-900">سجل المستأجرين</h2>
+          {canEdit && (
+            <div className="relative">
+              <Link href={canAddTenant ? `/dashboard/reservations/create?unitId=${unit.id}` : '#'}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!canAddTenant}
+                  title={!canAddTenant ? getAddTenantMessage() : ''}
+                  leftIcon={
+                    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  }
+                >
+                  اضافة مستأجر
+                </Button>
+              </Link>
+              {!canAddTenant && (
+                <div className="absolute top-full left-0 mt-1 text-xs text-red-600 whitespace-nowrap z-10">
+                  {getAddTenantMessage()}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <Card>
@@ -498,7 +580,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
               <span className="text-yellow-700 font-medium">تحذير</span>
             </div>
             <p className="text-yellow-600 mt-1 text-sm">
-              هذه الوحدة لديها {reservations.length} حجز. حذف الوحدة قد يؤثر على هذه المستأجرين .
+              هذه الوحدة لديها {reservations.length} حجز. حذف الوحدة قد يؤثر على هذه المستأجرين.
             </p>
           </div>
         )}

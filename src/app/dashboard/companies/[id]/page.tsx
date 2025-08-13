@@ -371,18 +371,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               </div>
             )}
 
-            {company.identityImageBackUrl && (
-              <div className="border rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-500 mb-2">بطاقة الهوية (الوجه الخلفي)</p>
-                <div className="flex justify-center">
-                  <img
-                    src={company.identityImageBackUrl}
-                    alt="صورة الهوية الخلفية"
-                    className="h-32 w-auto object-contain"
-                  />
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       </Card>

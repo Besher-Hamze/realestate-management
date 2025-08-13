@@ -426,7 +426,7 @@ export default function UnitForm({
           {selectedBuildingId && (
             <div className="space-y-4">
               <div>
-                <Select
+                {/* <Select
                   label="المواقف الداخلية المتاحة"
                   id="parkingNumber"
                   name="parkingNumber"
@@ -435,27 +435,19 @@ export default function UnitForm({
                   options={parkingOptions}
                   disabled={isLoadingParkingSpaces || !parkingData}
                   fullWidth
+                /> */}
+
+                <FormInput
+                  label="عدد المواقف الداخلية المتاحة"
+                  register={register}
+                  name="parkingNumber"
+                  type="number"
+                  min="0"
+                  max="50"
+                  error={errors.parkingNumber}
+                  required
+                  helpText="عدد المواقف الداخلية المتاحة"
                 />
-
-                {isLoadingParkingSpaces && (
-                  <p className="text-sm text-gray-500 mt-1">جاري تحميل المواقف المتاحة...</p>
-                )}
-
-                {!isLoadingParkingSpaces && parkingData && (
-                  <div className="text-sm text-gray-600 mt-2">
-                    <p>إجمالي المواقف: {parkingData.totalParkingSpaces}</p>
-                    <p>المواقف المتاحة: {parkingData.availableParkingSpaces}</p>
-                    <p>المواقف المستخدمة: {parkingData.usedParkingSpaces}</p>
-                  </div>
-                )}
-
-                {!isLoadingParkingSpaces && !parkingData && selectedBuildingId && (
-                  <p className="text-sm text-red-500 mt-1">لا توجد معلومات عن المواقف لهذا المبنى</p>
-                )}
-
-                {!selectedBuildingId && (
-                  <p className="text-sm text-gray-500 mt-1">يرجى اختيار المبنى أولاً لعرض المواقف المتاحة</p>
-                )}
               </div>
             </div>
           )}

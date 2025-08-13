@@ -8,7 +8,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // File validation
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const SUPPORTED_IMAGE_FORMATS = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const SUPPORTED_IMAGE_FORMATS = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', "application/pdf"];
 const SUPPORTED_DOCUMENT_FORMATS = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
 // Custom validation methods
@@ -126,11 +126,6 @@ export const companySchema = yup.object({
     .fileSize(MAX_FILE_SIZE, 'حجم صورة الهوية كبير جداً')
     .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون صورة الهوية بصيغة صورة صحيحة'),
 
-  identityImageBack: yup
-    .mixed()
-    .required('صورة الهوية الخلفية مطلوبة')
-    .fileSize(MAX_FILE_SIZE, 'حجم صورة الهوية كبير جداً')
-    .fileFormat(SUPPORTED_IMAGE_FORMATS, 'يجب أن تكون صورة الهوية بصيغة صورة صحيحة'),
 
   // Manager fields (conditional)
   managerFullName: yup
@@ -384,11 +379,22 @@ export const userSchema = yup.object({
 
 // ===== EXPENSE VALIDATION SCHEMA =====
 export const expenseSchema = yup.object({
+  buildingId: yup
+    .number()
+    .required('المبنى مطلوب')
+    .positive('يرجى اختيار مبنى صالح')
+    .integer('معرف المبنى غير صالح'),
+
   unitId: yup
     .number()
-    .required('الوحدة مطلوبة')
-    .positive('يرجى اختيار وحدة صالحة')
+    .nullable()
+    .optional()
     .integer('معرف الوحدة غير صالح'),
+
+  responsibleParty: yup
+    .string()
+    .required('الطرف المسؤول مطلوب')
+    .oneOf(['owner', 'tenant'], 'الطرف المسؤول غير صالح'),
 
   expenseType: yup
     .string()
@@ -432,6 +438,17 @@ export const expenseSchema = yup.object({
     .string()
     .nullable()
     .max(1000, 'الملاحظات طويلة جداً (الحد الأقصى 1000 حرف)'),
+
+  attachmentFile: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الملف كبير جداً (الحد الأقصى 10 ميجابايت)')
+    .fileFormat(SUPPORTED_DOCUMENT_FORMATS, 'نوع الملف غير مدعوم (PDF, DOC, DOCX فقط)'),
+
+  attachmentDescription: yup
+    .string()
+    .nullable()
+    .max(200, 'وصف المرفق طويل جداً (الحد الأقصى 200 حرف)'),
 });
 
 export type ExpenseFormData = yup.InferType<typeof expenseSchema>;
@@ -473,6 +490,11 @@ export const reservationSchema = yup.object({
     .string()
     .nullable()
     .oneOf(['cash', 'checks'], 'طريقة الدفع غير صالحة'),
+
+  status: yup
+    .string()
+    .nullable()
+    .optional(),
 
   paymentSchedule: yup
     .string()
@@ -561,9 +583,11 @@ export const reservationSchema = yup.object({
   contractImage: yup
     .mixed<File>()
     .nullable()
+    .optional()
     .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
       return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
     }),
+
 
   contractPdf: yup
     .mixed<File>()
@@ -637,12 +661,6 @@ export const reservationSchema = yup.object({
       return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
     }),
 
-  identityImageBack: yup
-    .mixed<File>()
-    .nullable()
-    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
-    }),
 
   commercialRegisterImage: yup
     .mixed<File>()
@@ -697,10 +715,13 @@ export const createReservationSchema = yup.object({
   // Contract documents - required for create mode
   contractImage: yup
     .mixed<File>()
-    .required('صورة العقد مطلوبة')
+    .nullable()
+    .optional()
     .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+      return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
     }),
+
+
 
   contractPdf: yup
     .mixed<File>()
@@ -858,16 +879,9 @@ export const createReservationSchema = yup.object({
   // Identity documents (required for new tenants)
   identityImageFront: yup
     .mixed<File>()
-    .required('صورة الهوية (الوجه الأمامي) مطلوبة')
-    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
-    }),
-
-  identityImageBack: yup
-    .mixed<File>()
-    .required('صورة الهوية (الوجه الخلفي) مطلوبة')
-    .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
-      return value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : false;
+    .required('صورة الهوية  مطلوبة')
+    .test('fileType', 'يجب أن تكون صورة PDF', (value) => {
+      return value ? ['application/pdf'].includes(value.type) : false;
     }),
 
   commercialRegisterImage: yup
@@ -931,6 +945,11 @@ export const editReservationSchema = yup.object({
     .string()
     .nullable()
     .oneOf(['cash', 'checks', ''], 'طريقة الدفع غير صالحة')
+    .optional(),
+
+  status: yup
+    .string()
+    .nullable()
     .optional(),
 
   paymentSchedule: yup
@@ -1033,10 +1052,11 @@ export const editReservationSchema = yup.object({
   contractImage: yup
     .mixed<File>()
     .nullable()
+    .optional()
     .test('fileType', 'يجب أن تكون صورة (JPEG, PNG, JPG)', (value) => {
       return !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
-    })
-    .optional(),
+    }),
+
 
   contractPdf: yup
     .mixed<File>()
@@ -1188,3 +1208,76 @@ export const paymentSchema = yup.object({
       otherwise: (schema) => schema.nullable()
     }),
 });
+
+// ===== SERVICE ORDER VALIDATION SCHEMA =====
+export const serviceOrderSchema = yup.object({
+  reservationId: yup
+    .number()
+    .required('الحجز مطلوب')
+    .positive('يرجى اختيار حجز صالح')
+    .integer('معرف الحجز غير صالح'),
+
+  serviceType: yup
+    .string()
+    .required('نوع الخدمة مطلوب')
+    .oneOf(['financial', 'maintenance', 'administrative'], 'نوع الخدمة غير صالح'),
+
+  serviceSubtype: yup
+    .string()
+    .required('النوع الفرعي للخدمة مطلوب')
+    .min(2, 'النوع الفرعي للخدمة قصير جداً')
+    .max(50, 'النوع الفرعي للخدمة طويل جداً'),
+
+  description: yup
+    .string()
+    .required('وصف الخدمة مطلوب')
+    .min(10, 'وصف الخدمة قصير جداً (الحد الأدنى 10 أحرف)')
+    .max(1000, 'وصف الخدمة طويل جداً (الحد الأقصى 1000 حرف)'),
+
+  status: yup
+    .string()
+    .required('حالة الخدمة مطلوبة')
+    .oneOf(['pending', 'in-progress', 'completed', 'rejected'], 'حالة الخدمة غير صالحة'),
+
+  attachmentFile: yup
+    .mixed()
+    .nullable()
+    .fileSize(MAX_FILE_SIZE, 'حجم الملف كبير جداً (الحد الأقصى 10 ميجابايت)')
+    .fileFormat([...SUPPORTED_IMAGE_FORMATS, ...SUPPORTED_DOCUMENT_FORMATS], 'نوع الملف غير مدعوم'),
+
+  // New fields for completion/rejection
+  servicePrice: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (originalValue === '') return undefined;
+      return Number(originalValue);
+    })
+    .when('status', {
+      is: (status: string) => ['completed', 'rejected'].includes(status),
+      then: (schema) => schema
+        .required('سعر الخدمة مطلوب عند إكمال أو إلغاء الطلب')
+        .positive('سعر الخدمة يجب أن يكون أكبر من صفر')
+        .max(100000, 'سعر الخدمة كبير جداً (الحد الأقصى 100,000)')
+        .typeError('يرجى إدخال سعر صالح بالأرقام فقط'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+  completionAttachment: yup
+    .mixed()
+    .nullable()
+    .when('status', {
+      is: (status: string) => ['completed', 'rejected'].includes(status),
+      then: (schema) => schema
+        .required('المرفق مطلوب عند إكمال أو إلغاء الطلب')
+        .fileSize(MAX_FILE_SIZE, 'حجم المرفق كبير جداً (الحد الأقصى 10 ميجابايت)')
+        .fileFormat([...SUPPORTED_IMAGE_FORMATS, ...SUPPORTED_DOCUMENT_FORMATS], 'نوع المرفق غير مدعوم'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+  completionDescription: yup
+    .string()
+    .nullable()
+    .max(500, 'وصف الإكمال طويل جداً (الحد الأقصى 500 حرف)'),
+});
+
+export type ServiceOrderFormData = yup.InferType<typeof serviceOrderSchema>;

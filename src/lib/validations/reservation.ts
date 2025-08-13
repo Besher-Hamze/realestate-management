@@ -210,13 +210,7 @@ export const reservationValidation = {
     ),
   },
 
-  identityImageBack: {
-    ...createFileValidationRule(
-      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
-      FILE_SIZE_LIMITS.IMAGE,
-      'يرجى تحميل صورة الوجه الخلفي للهوية (JPEG, PNG فقط)'
-    ),
-  },
+
 
   commercialRegisterImage: {
     ...createFileValidationRule(
@@ -265,9 +259,6 @@ export const validateReservationForm = (data: any): Record<string, string> => {
       errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
     }
 
-    if (!data.identityImageBack) {
-      errors.identityImageBack = 'صورة الوجه الخلفي للهوية مطلوبة';
-    }
 
     // Commercial register for business types
     const businessTypes = ['partnership', 'commercial_register', 'foreign_company'];

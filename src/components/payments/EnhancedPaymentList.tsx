@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { paymentsApi } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { PaymentMethod } from '@/types';
 
 interface EnhancedPaymentListProps {
   payments: Payment[];
@@ -54,6 +55,14 @@ export default function EnhancedPaymentList({
   // Open status update modal (manager only)
   const openStatusUpdateModal = (payment: Payment, status: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // منع تحديث الحالة إلى "مدفوعة" بدون صورة إيصال/شيك
+    if (status === 'paid' && !payment.checkImageUrl) {
+      const imageType = payment.paymentMethod === 'checks' ? 'الشيك' : 'الإيصال';
+      toast.error(`يجب رفع صورة ${imageType} قبل تحديث الحالة إلى "مدفوعة"`);
+      return;
+    }
+
     setSelectedPayment(payment);
     setNewStatus(status);
     setStatusUpdateModalOpen(true);
@@ -93,6 +102,14 @@ export default function EnhancedPaymentList({
   const handleStatusUpdate = async () => {
     if (!selectedPayment || !newStatus) return;
 
+    // تحقق إضافي من وجود صورة الإيصال/الشيك
+    if (newStatus === 'paid' && !selectedPayment.checkImageUrl) {
+      const imageType = selectedPayment.paymentMethod === 'checks' ? 'الشيك' : 'الإيصال';
+      toast.error(`يجب رفع صورة ${imageType} قبل تحديث الحالة إلى "مدفوعة"`);
+      setStatusUpdateModalOpen(false);
+      return;
+    }
+
     try {
       setIsUpdatingStatus(true);
       const response = await paymentsApi.update(selectedPayment.id, {
@@ -123,15 +140,16 @@ export default function EnhancedPaymentList({
       const response = await paymentsApi.update(selectedPayment.id, {}, { checkImage });
 
       if (response.success) {
-        toast.success('تم تحديث صورة الشيك بنجاح');
+        const imageType = selectedPayment.paymentMethod === 'checks' ? 'الشيك' : 'الإيصال';
+        toast.success(`تم تحديث صورة ${imageType} بنجاح`);
         setUploadModalOpen(false);
         onRefresh();
       } else {
-        toast.error(response.message || 'فشل في تحديث صورة الشيك');
+        toast.error(response.message || 'فشل في تحديث الصورة');
       }
     } catch (error) {
-      console.error('خطأ في تحديث صورة الشيك:', error);
-      toast.error('حدث خطأ أثناء تحديث صورة الشيك');
+      console.error('خطأ في تحديث الصورة:', error);
+      toast.error('حدث خطأ أثناء تحديث الصورة');
     } finally {
       setIsUploading(false);
       setCheckImage(null);
@@ -161,23 +179,59 @@ export default function EnhancedPaymentList({
     }
   };
 
+  // Get image type text based on payment method
+  const getImageTypeText = (paymentMethod: string) => {
+    return paymentMethod === 'checks' ? 'الشيك' : 'الإيصال';
+  };
+
+  // Get button text based on payment method
+  const getAddImageButtonText = (paymentMethod: string) => {
+    return paymentMethod === 'checks' ? 'إضافة صورة الشيك' : 'إضافة صورة الإيصال';
+  };
+
+  // Get view link text based on payment method
+  const getViewImageText = (paymentMethod: string) => {
+    return paymentMethod === 'checks' ? 'عرض صورة الشيك' : 'عرض صورة الإيصال';
+  };
+
+  // Get required image text based on payment method
+  const getRequiredImageText = (paymentMethod: string) => {
+    return paymentMethod === 'checks' ? 'صورة الشيك مطلوبة' : 'صورة الإيصال مطلوبة';
+  };
+
   // Status action button component (manager only)
   const StatusButton = ({ payment, status, label, color }: {
     payment: Payment;
     status: string;
     label: string;
     color: string;
-  }) => (
-    <Button
-      size="xs"
-      variant="outline"
-      className={`border-${color}-500 text-${color}-700 hover:bg-${color}-50`}
-      onClick={(e) => openStatusUpdateModal(payment, status, e)}
-      disabled={payment.status === status}
-    >
-      {label}
-    </Button>
-  );
+  }) => {
+    // تحقق من وجود صورة الإيصال/الشيك والحالة المطلوبة "مدفوعة"
+    const isPaymentWithoutImage = !payment.checkImageUrl && status === 'paid';
+    const isDisabled = payment.status === status || isPaymentWithoutImage;
+
+    return (
+      <div className="relative">
+        <Button
+          size="xs"
+          variant="outline"
+          className={`border-${color}-500 text-${color}-700 hover:bg-${color}-50 ${isPaymentWithoutImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={(e) => openStatusUpdateModal(payment, status, e)}
+          disabled={isDisabled}
+          title={isPaymentWithoutImage ? `يجب رفع صورة ${getImageTypeText(payment.paymentMethod)} أولاً` : undefined}
+        >
+          {label}
+        </Button>
+        {isPaymentWithoutImage && (
+          <div className="absolute -top-1 -right-1">
+            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Table columns definition
   const columns: TableColumn<Payment>[] = [
@@ -210,7 +264,7 @@ export default function EnhancedPaymentList({
         return (
           <div className="flex flex-col">
             <span className="text-gray-700">{method}</span>
-            {payment.paymentMethod === 'checks' && payment.checkImageUrl && (
+            {payment.checkImageUrl && (
               <div className="mt-1">
                 <a
                   href={payment.checkImageUrl}
@@ -219,8 +273,15 @@ export default function EnhancedPaymentList({
                   className="text-primary-600 hover:text-primary-500 text-xs font-medium"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  عرض صورة الشيك
+                  {getViewImageText(payment.paymentMethod)}
                 </a>
+              </div>
+            )}
+            {!payment.checkImageUrl && (
+              <div className="mt-1">
+                <span className="text-red-600 text-xs font-medium">
+                  {getRequiredImageText(payment.paymentMethod)}
+                </span>
               </div>
             )}
           </div>
@@ -266,14 +327,14 @@ export default function EnhancedPaymentList({
               <StatusButton payment={payment} status="pending" label="قيد الانتظار" color="yellow" />
               <StatusButton payment={payment} status="delayed" label="متأخر" color="purple" />
               <StatusButton payment={payment} status="cancelled" label="إلغاء" color="red" />
-              {payment.paymentMethod === 'checks' && !payment.checkImageUrl && (
+              {!payment.checkImageUrl && (
                 <Button
                   size="xs"
                   variant="outline"
                   className="border-blue-500 text-blue-700 hover:bg-blue-50"
                   onClick={(e) => openUploadModal(payment, e)}
                 >
-                  إضافة صورة الشيك
+                  {getAddImageButtonText(payment.paymentMethod)}
                 </Button>
               )}
               <Button
@@ -348,21 +409,33 @@ export default function EnhancedPaymentList({
                 هل أنت متأكد أنك تريد تغيير حالة المدفوعة إلى{' '}
                 <span className="font-medium">{getStatusName(newStatus)}</span>؟
               </p>
-              {newStatus === 'paid' && (
-                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm mb-4">
-                  <strong>ملاحظة:</strong> سيتم تحديث حالة هذه المدفوعة إلى "مدفوعة" مما يعني أنه تم استلام المبلغ بالكامل.
+
+              {/* تحذير خاص للمدفوعات بدون صورة */}
+              {!selectedPayment?.checkImageUrl && newStatus === 'paid' && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
+                  <strong>تحذير:</strong> لا يمكن تحديث الحالة إلى "مدفوعة" بدون رفع صورة {getImageTypeText(selectedPayment?.paymentMethod || '')} أولاً.
+                  يرجى إضافة صورة {getImageTypeText(selectedPayment?.paymentMethod || '')} قبل تحديث الحالة.
                 </div>
               )}
+
+              {newStatus === 'paid' && selectedPayment?.checkImageUrl && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm mb-4">
+                  <strong>ملاحظة:</strong> سيتم تحديث حالة هذه المدفوعة إلى "مدفوعة". تم رفع صورة {getImageTypeText(selectedPayment?.paymentMethod || '')} مسبقاً.
+                </div>
+              )}
+
               {newStatus === 'delayed' && (
                 <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-md text-purple-700 text-sm mb-4">
                   <strong>ملاحظة:</strong> تحديد هذه المدفوعة كمتأخرة قد يؤثر على سجل المستأجر.
                 </div>
               )}
+
               {newStatus === 'cancelled' && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
                   <strong>تحذير:</strong> إلغاء هذه المدفوعة سيؤدي إلى إزالتها من السجلات المالية النشطة.
                 </div>
               )}
+
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
@@ -375,7 +448,7 @@ export default function EnhancedPaymentList({
                   variant="primary"
                   onClick={handleStatusUpdate}
                   isLoading={isUpdatingStatus}
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || (newStatus === 'paid' && !selectedPayment?.checkImageUrl)}
                 >
                   تحديث الحالة
                 </Button>
@@ -383,19 +456,22 @@ export default function EnhancedPaymentList({
             </div>
           </Modal>
 
-          {/* Upload check image modal */}
+          {/* Upload image modal */}
           <Modal
             isOpen={uploadModalOpen}
             onClose={() => setUploadModalOpen(false)}
-            title="إضافة صورة الشيك"
+            title={`إضافة صورة ${getImageTypeText(selectedPayment?.paymentMethod || '')}`}
           >
             <div className="p-6">
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm">
+                <strong>مهم:</strong> يجب رفع صورة {getImageTypeText(selectedPayment?.paymentMethod || '')} قبل تحديث حالة المدفوعة إلى "مدفوعة".
+              </div>
               <p className="text-gray-600 mb-4">
-                يرجى تحميل صورة واضحة للشيك المستخدم في هذه المدفوعة.
+                يرجى تحميل صورة واضحة لـ{getImageTypeText(selectedPayment?.paymentMethod || '')} المستخدم في هذه المدفوعة.
               </p>
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  صورة الشيك
+                  صورة {getImageTypeText(selectedPayment?.paymentMethod || '')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="file"
@@ -405,7 +481,7 @@ export default function EnhancedPaymentList({
                   required
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  يرجى التأكد من أن الصورة واضحة وتظهر جميع تفاصيل الشيك بما في ذلك المبلغ والتاريخ والتوقيع.
+                  يرجى التأكد من أن الصورة واضحة وتظهر جميع التفاصيل المطلوبة.
                 </p>
               </div>
               <div className="flex justify-end space-x-3 mt-6">

@@ -95,7 +95,6 @@ export default function CompanyForm({
   // Watch file fields for preview
   const watchedLogoImage = watch('logoImage');
   const watchedIdentityImageFront = watch('identityImageFront');
-  const watchedIdentityImageBack = watch('identityImageBack');
 
   // Watch companyType to conditionally show/hide registration number field
   const watchedCompanyType = watch('companyType');
@@ -326,10 +325,10 @@ export default function CompanyForm({
                   <FormFileInput
                     label="صورة الهوية (الوجه الأمامي)"
                     name="identityImageFront"
-                    accept="image/jpeg,image/png,image/jpg"
+                    accept="image/jpeg,image/png,image/jpg,application/pdf"
                     onChange={handleFileChange('identityImageFront')}
                     error={fieldState.error}
-                    helpText="صورة واضحة للوجه الأمامي للهوية (JPEG, PNG)"
+                    helpText="ملف PDF يحوي الوجهين الأمامي و الخلفي (JPEG, PNG)"
                     required={!isEdit}
                     currentFile={isEdit ? initialData?.identityImageFrontUrl : undefined}
                     selectedFile={watchedIdentityImageFront}
@@ -337,23 +336,6 @@ export default function CompanyForm({
                 )}
               />
 
-              <Controller
-                name="identityImageBack"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <FormFileInput
-                    label="صورة الهوية (الوجه الخلفي)"
-                    name="identityImageBack"
-                    accept="image/jpeg,image/png,image/jpg"
-                    onChange={handleFileChange('identityImageBack')}
-                    error={fieldState.error}
-                    helpText="صورة واضحة للوجه الخلفي للهوية (JPEG, PNG)"
-                    required={!isEdit}
-                    currentFile={isEdit ? initialData?.identityImageBackUrl : undefined}
-                    selectedFile={watchedIdentityImageBack}
-                  />
-                )}
-              />
 
               <Controller
                 name="logoImage"

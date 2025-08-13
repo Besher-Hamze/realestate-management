@@ -158,15 +158,7 @@ export function ServiceListFilter({ services, onFilterChange }: ServiceListFilte
       <h3 className="text-sm font-medium text-gray-700 mb-3">فلترة وترتيب النتائج</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Status Filter */}
-        <Select
-          id="statusFilter"
-          name="statusFilter"
-          label="الحالة"
-          value={statusFilter}
-          onChange={handleStatusChange}
-          options={statusOptions}
-        />
+
 
         {/* Type Filter */}
         <Select

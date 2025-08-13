@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Expense, RealEstateUnit } from '@/lib/types';
-import { expensesApi, unitsApi } from '@/lib/api';
+import { Expense, RealEstateUnit, Building } from '@/lib/types';
+import { expensesApi, unitsApi, buildingsApi } from '@/lib/api';
 import { expenseSchema, ExpenseFormData } from '@/lib/validations/schemas';
 import { useAsyncForm } from '@/hooks/useYupForm';
 import {
@@ -19,27 +19,29 @@ import { EXPENSE_TYPE_OPTIONS } from '@/constants';
 interface ExpenseFormProps {
     isEdit?: boolean;
     initialData?: Expense;
+    preSelectedBuildingId?: number;
     preSelectedUnitId?: number;
     onSuccess?: (expense: Expense) => void;
 }
 
-const initialExpenseData: Partial<ExpenseFormData> = {
-    unitId: 0,
-    expenseType: 'maintenance',
-    amount: 0,
-    expenseDate: new Date().toISOString().split('T')[0] as any,
-    notes: '',
-};
+const RESPONSIBLE_PARTY_OPTIONS = [
+    { value: 'owner', label: 'المالك' },
+    { value: 'tenant', label: 'المستأجر' },
+];
 
 export default function ExpenseForm({
     isEdit = false,
     initialData,
+    preSelectedBuildingId,
     preSelectedUnitId,
     onSuccess,
 }: ExpenseFormProps) {
     const router = useRouter();
+    const [buildings, setBuildings] = useState<Building[]>([]);
     const [units, setUnits] = useState<RealEstateUnit[]>([]);
-    const [loadingUnits, setLoadingUnits] = useState(true);
+    const [loadingBuildings, setLoadingBuildings] = useState(true);
+    const [loadingUnits, setLoadingUnits] = useState(false);
+    const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
     // Initialize form with validation schema
     const {
@@ -48,67 +50,106 @@ export default function ExpenseForm({
         formState: { errors, isSubmitting },
         reset,
         setValue,
-    } = useAsyncForm<ExpenseFormData>(
-        expenseSchema,
-        isEdit && initialData ? {
-            unitId: initialData.unitId,
-            expenseType: initialData.expenseType,
-            amount: initialData.amount,
-            expenseDate: initialData.expenseDate.split('T')[0] as any,
-            notes: initialData.notes || '',
-        } : preSelectedUnitId ? {
-            ...initialExpenseData,
-            unitId: preSelectedUnitId,
-        } : initialExpenseData
-    );
+        watch,
+        getValues,
+    } = useAsyncForm<ExpenseFormData>(expenseSchema, {
+        buildingId: preSelectedBuildingId || (initialData?.buildingId || ''),
+        unitId: preSelectedUnitId || (initialData?.unitId || ''),
+        responsibleParty: initialData?.responsibleParty || 'owner',
+        expenseType: initialData?.expenseType || 'maintenance',
+        amount: initialData?.amount || '',
+        expenseDate: initialData?.expenseDate ? initialData.expenseDate.split('T')[0] : new Date().toISOString().split('T')[0],
+        notes: initialData?.notes || '',
+        attachmentDescription: initialData?.attachmentDescription || '',
+    });
 
-    // Load units on component mount
+    // Watch buildingId for dynamic unit loading
+    const watchedBuildingId = watch('buildingId');
+
+    // Handle file upload change
+    const handleAttachmentFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        const file = files?.[0] || null;
+        setAttachmentFile(file);
+        setValue('attachmentFile', file);
+    };
+
+    // Set initial values when initialData changes (for edit mode)
     useEffect(() => {
-        const loadUnits = async () => {
+        if (isEdit && initialData) {
+            setValue('buildingId', initialData.buildingId.toString());
+            setValue('unitId', initialData.unitId ? initialData.unitId.toString() : '');
+            setValue('responsibleParty', initialData.responsibleParty);
+            setValue('expenseType', initialData.expenseType);
+            setValue('amount', initialData.amount.toString());
+            setValue('expenseDate', initialData.expenseDate.split('T')[0]);
+            setValue('notes', initialData.notes || '');
+            setValue('attachmentDescription', initialData.attachmentDescription || '');
+        }
+    }, [isEdit, initialData, setValue]);
+
+    // Load buildings on component mount
+    useEffect(() => {
+        const loadBuildings = async () => {
             try {
-                const response = await unitsApi.getAll();
+                const response = await buildingsApi.getAll();
                 if (response.success) {
-                    setUnits(response.data);
+                    setBuildings(response.data);
                 } else {
-                    toast.error('فشل في تحميل قائمة الوحدات');
+                    toast.error('فشل في تحميل قائمة المباني');
                 }
             } catch (error) {
-                console.error('Error loading units:', error);
-                toast.error('حدث خطأ في تحميل الوحدات');
+                console.error('Error loading buildings:', error);
+                toast.error('حدث خطأ في تحميل المباني');
             } finally {
-                setLoadingUnits(false);
+                setLoadingBuildings(false);
             }
         };
 
-        loadUnits();
+        loadBuildings();
     }, []);
 
-    // Reset form when editing data changes
+    // Load units when building changes
     useEffect(() => {
-        if (isEdit && initialData) {
-            reset({
-                unitId: initialData.unitId,
-                expenseType: initialData.expenseType,
-                amount: initialData.amount,
-                expenseDate: initialData.expenseDate.split('T')[0] as any,
-                notes: initialData.notes || '',
-            });
-        } else if (preSelectedUnitId) {
-            reset({
-                ...initialExpenseData,
-                unitId: preSelectedUnitId,
-            });
+        if (watchedBuildingId > 0) {
+            setLoadingUnits(true);
+            const loadUnits = async () => {
+                try {
+                    const response = await unitsApi.getByBuildingId(watchedBuildingId);
+                    if (response.success) {
+                        setUnits(response.data);
+                    } else {
+                        setUnits([]);
+                        toast.error('فشل في تحميل قائمة الوحدات');
+                    }
+                } catch (error) {
+                    console.error('Error loading units:', error);
+                    setUnits([]);
+                    toast.error('حدث خطأ في تحميل الوحدات');
+                } finally {
+                    setLoadingUnits(false);
+                }
+            };
+
+            loadUnits();
+        } else {
+            setUnits([]);
+            setLoadingUnits(false);
         }
-    }, [isEdit, initialData, preSelectedUnitId, reset]);
+    }, [watchedBuildingId]);
 
     // Form submission handler
     const onSubmit = async (data: ExpenseFormData) => {
         try {
             let response;
+            if (data.unitId == 0) {
+                data.unitId = undefined;
+            }
 
             if (isEdit && initialData) {
                 response = await expensesApi.update(initialData.id, data);
             } else {
+
                 response = await expensesApi.create(data);
             }
 
@@ -133,11 +174,20 @@ export default function ExpenseForm({
         }
     };
 
-    // Prepare unit options
-    const unitOptions = units.map(unit => ({
-        value: unit.id.toString(),
-        label: `وحدة ${unit.unitNumber} - ${unit.building?.name || 'غير محدد'} (${unit.building?.buildingNumber || ''})`,
+    // Prepare building options
+    const buildingOptions = buildings.map(building => ({
+        value: building.id.toString(),
+        label: `${building.name} - ${building.buildingNumber}`,
     }));
+
+    // Prepare unit options
+    const unitOptions = [
+        { value: "0", label: 'بدون تحديد وحدة' },
+        ...units.map(unit => ({
+            value: unit.id.toString(),
+            label: `وحدة ${unit.unitNumber} - ${unit.unitType}`,
+        }))
+    ];
 
     // Format current date for input
     const getCurrentDate = () => {
@@ -155,18 +205,40 @@ export default function ExpenseForm({
                     </div>
 
                     <FormSelect
-                        label="الوحدة"
+                        label="المبنى"
+                        register={register}
+                        name="buildingId"
+                        error={errors.buildingId}
+                        options={buildingOptions}
+                        required
+                        placeholder={loadingBuildings ? "جاري التحميل..." : "اختر المبنى"}
+                        disabled={loadingBuildings}
+                        helpText={loadingBuildings ? 'جاري تحميل المباني...' : 'اختر المبنى المراد تسجيل المصروف له'}
+                    />
+
+                    <FormSelect
+                        label="الوحدة (اختياري)"
                         register={register}
                         name="unitId"
                         error={errors.unitId}
                         options={unitOptions}
-                        required
-                        placeholder={loadingUnits ? "جاري التحميل..." : "اختر الوحدة"}
-                        disabled={loadingUnits || isEdit}
-                        helpText={loadingUnits ? 'جاري تحميل الوحدات...' : 'اختر الوحدة المراد تسجيل المصروف لها'}
+                        placeholder={loadingUnits ? "جاري التحميل..." : "اختر الوحدة (اختياري)"}
+                        disabled={loadingUnits || !watchedBuildingId || Number(watchedBuildingId) === 0}
+                        helpText={!watchedBuildingId || Number(watchedBuildingId) === 0 ? 'يرجى اختيار المبنى أولاً' : 'اختر الوحدة المحددة إذا كان المصروف خاص بوحدة معينة'}
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormSelect
+                            label="الطرف المسؤول"
+                            register={register}
+                            name="responsibleParty"
+                            error={errors.responsibleParty}
+                            options={RESPONSIBLE_PARTY_OPTIONS}
+                            required
+                            placeholder="اختر الطرف المسؤول"
+                            helpText="حدد من سيتحمل مسؤولية هذا المصروف"
+                        />
+
                         <FormSelect
                             label="نوع المصروف"
                             register={register}
@@ -177,7 +249,9 @@ export default function ExpenseForm({
                             placeholder="اختر نوع المصروف"
                             helpText="حدد نوع المصروف المناسب"
                         />
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormInput
                             label="المبلغ"
                             register={register}
@@ -190,17 +264,90 @@ export default function ExpenseForm({
                             helpText="المبلغ المدفوع بالريال العماني"
                             startIcon={<span className="text-gray-500">OMR</span>}
                         />
+
+                        <FormInput
+                            label="تاريخ المصروف"
+                            register={register}
+                            name="expenseDate"
+                            type="date"
+                            max={getCurrentDate()}
+                            error={errors.expenseDate}
+                            required
+                            helpText="تاريخ تنفيذ المصروف"
+                        />
+                    </div>
+                </div>
+
+                {/* Attachment Section */}
+                <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-4">
+                        <h3 className="text-lg font-medium text-gray-900">المرفقات</h3>
+                        <p className="text-sm text-gray-500 mt-1">إرفاق المستندات والملفات ذات الصلة</p>
+                    </div>
+
+                    {/* Custom File Input */}
+                    <div>
+                        <label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-700 mb-2">
+                            ملف مرفق (اختياري)
+                        </label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                <svg
+                                    className="mx-auto h-12 w-12 text-gray-400"
+                                    stroke="currentColor"
+                                    fill="none"
+                                    viewBox="0 0 48 48"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                        strokeWidth={2}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                                <div className="flex text-sm text-gray-600">
+                                    <label
+                                        htmlFor="attachmentFile"
+                                        className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                                    >
+                                        <span>رفع ملف</span>
+                                        <input
+                                            id="attachmentFile"
+                                            name="attachmentFile"
+                                            type="file"
+                                            className="sr-only"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={handleAttachmentFileChange}
+                                        />
+                                    </label>
+                                    <p className="pl-1">أو سحب وإفلات</p>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    PDF, DOC, DOCX حتى 10MB
+                                </p>
+                                {attachmentFile && (
+                                    <p className="text-sm text-green-600 mt-2">
+                                        تم اختيار: {attachmentFile.name}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        {errors.attachmentFile && (
+                            <p className="mt-2 text-sm text-red-600">{errors.attachmentFile.message}</p>
+                        )}
+                        <p className="mt-2 text-sm text-gray-500">
+                            يمكن إرفاق ملف PDF أو Word (الحد الأقصى 10 ميجابايت)
+                        </p>
                     </div>
 
                     <FormInput
-                        label="تاريخ المصروف"
+                        label="وصف المرفق (اختياري)"
                         register={register}
-                        name="expenseDate"
-                        type="date"
-                        max={getCurrentDate()}
-                        error={errors.expenseDate}
-                        required
-                        helpText="تاريخ تنفيذ المصروف"
+                        name="attachmentDescription"
+                        error={errors.attachmentDescription}
+                        helpText="وصف مختصر للملف المرفق"
+                        placeholder="مثل: فاتورة الصيانة، عقد المقاول، إلخ..."
                     />
                 </div>
 
@@ -250,7 +397,7 @@ export default function ExpenseForm({
                     <Button
                         type="submit"
                         isLoading={isSubmitting}
-                        disabled={isSubmitting || loadingUnits}
+                        disabled={isSubmitting || loadingBuildings}
                     >
                         {isEdit ? 'تحديث المصروف' : 'إنشاء المصروف'}
                     </Button>

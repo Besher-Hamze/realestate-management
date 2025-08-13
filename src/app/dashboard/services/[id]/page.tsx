@@ -31,8 +31,15 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [statusUpdateModalOpen, setStatusUpdateModalOpen] = useState(false);
+  const [completionModalOpen, setCompletionModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [completionData, setCompletionData] = useState({
+    servicePrice: '',
+    completionDescription: '',
+    completionAttachment: null as File | null,
+  });
+  const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
 
   // جلب تفاصيل الخدمة عند تحميل المكون
   useEffect(() => {
@@ -117,12 +124,64 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
     setStatusUpdateModalOpen(true);
   };
 
+  // معالجة إكمال الخدمة مع البيانات الإضافية
+  const handleCompletionSubmit = async () => {
+    if (!service || !newStatus) return;
+
+    try {
+      setIsSubmittingCompletion(true);
+      const response = await servicesApi.update(service.id, {
+        serviceType: service.serviceType,
+        serviceSubtype: service.serviceSubtype,
+        description: service.description,
+        status: newStatus,
+        servicePrice: parseFloat(completionData.servicePrice),
+        completionDescription: completionData.completionDescription,
+        completionAttachment: completionData.completionAttachment || undefined,
+      });
+
+      if (response.success) {
+        let statusText = '';
+        switch (newStatus) {
+          case 'completed': statusText = 'مكتمل'; break;
+          case 'rejected': statusText = 'ملغي'; break;
+          default: statusText = newStatus.replace('-', ' ');
+        }
+        toast.success(`تم تحديث حالة طلب الخدمة إلى ${statusText}`);
+        setCompletionModalOpen(false);
+        setCompletionData({
+          servicePrice: '',
+          completionDescription: '',
+          completionAttachment: null,
+        });
+        // Refresh the service data to show updated status
+        await fetchService();
+      } else {
+        toast.error(response.message || 'فشل في تحديث حالة طلب الخدمة');
+      }
+    } catch (error) {
+      console.error('خطأ في تحديث حالة الخدمة:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة طلب الخدمة');
+    } finally {
+      setIsSubmittingCompletion(false);
+    }
+  };
+
   // تحديث حالة الخدمة
   const handleStatusUpdate = async () => {
     if (!service || !newStatus) return;
 
     try {
       setIsUpdatingStatus(true);
+
+      // إذا كانت الحالة مكتملة أو ملغية، نحتاج إلى بيانات إضافية
+      if ((newStatus === 'completed' || newStatus === 'rejected') && (service.serviceType == "maintenance")) {
+        // سنفتح نافذة إضافية لجمع البيانات المطلوبة
+        setStatusUpdateModalOpen(false);
+        setCompletionModalOpen(true);
+        return;
+      }
+
       const response = await servicesApi.update(service.id, {
         serviceType: service.serviceType,
         serviceSubtype: service.serviceSubtype,
@@ -393,7 +452,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
 
             {service.attachmentFileUrl && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">المرفق</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">المرفق الأصلي</h3>
                 <a
                   href={service.attachmentFileUrl}
                   target="_blank"
@@ -405,6 +464,48 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
                   </svg>
                   عرض المرفق
                 </a>
+              </div>
+            )}
+
+            {/* معلومات الإكمال */}
+            {(service.status === 'completed' || service.status === 'rejected') && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">معلومات الإكمال</h3>
+
+                {service.servicePrice && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">سعر الخدمة</h4>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {service.servicePrice} OMR
+                    </p>
+                  </div>
+                )}
+
+                {service.completionDescription && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">وصف الإكمال</h4>
+                    <div className="p-4 bg-gray-50 rounded-md text-gray-900">
+                      {service.completionDescription}
+                    </div>
+                  </div>
+                )}
+
+                {service.completionAttachmentUrl && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">مرفق الإكمال</h4>
+                    <a
+                      href={service.completionAttachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      <svg className="ml-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      عرض مرفق الإكمال
+                    </a>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -652,6 +753,132 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
           )
         }
       </Modal >
+
+      {/* نافذة إكمال الخدمة */}
+      <Modal
+        isOpen={completionModalOpen}
+        onClose={() => setCompletionModalOpen(false)}
+        title={`إكمال الخدمة - ${translateStatus(newStatus)}`}
+        footer={
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setCompletionModalOpen(false)}
+              disabled={isSubmittingCompletion}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCompletionSubmit}
+              isLoading={isSubmittingCompletion}
+              disabled={isSubmittingCompletion}
+            >
+              إكمال الخدمة
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            يرجى إدخال المعلومات المطلوبة لإكمال طلب الخدمة:
+          </p>
+
+          {/* سعر الخدمة */}
+          <div>
+            <label htmlFor="servicePrice" className="block text-sm font-medium text-gray-700 mb-1">
+              سعر الخدمة (OMR) *
+            </label>
+            <input
+              type="number"
+              id="servicePrice"
+              value={completionData.servicePrice}
+              onChange={(e) => setCompletionData(prev => ({ ...prev, servicePrice: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
+          {/* وصف الإكمال */}
+          <div>
+            <label htmlFor="completionDescription" className="block text-sm font-medium text-gray-700 mb-1">
+              وصف الإكمال (اختياري)
+            </label>
+            <textarea
+              id="completionDescription"
+              value={completionData.completionDescription}
+              onChange={(e) => setCompletionData(prev => ({ ...prev, completionDescription: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              rows={3}
+              placeholder="وصف تفصيلي للعمل المنجز أو سبب الإلغاء..."
+            />
+          </div>
+
+          {/* مرفق الإكمال */}
+          <div>
+            <label htmlFor="completionAttachment" className="block text-sm font-medium text-gray-700 mb-1">
+              مرفق الإكمال *
+            </label>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  stroke="currentColor"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div className="flex text-sm text-gray-600">
+                  <label
+                    htmlFor="completionAttachment"
+                    className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                  >
+                    <span>رفع ملف</span>
+                    <input
+                      id="completionAttachment"
+                      name="completionAttachment"
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setCompletionData(prev => ({ ...prev, completionAttachment: file }));
+                      }}
+                      required
+                    />
+                  </label>
+                  <p className="pl-1">أو سحب وإفلات</p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  PDF, DOC, DOCX, JPG, PNG حتى 10MB
+                </p>
+                {completionData.completionAttachment && (
+                  <p className="text-sm text-green-600 mt-2">
+                    تم اختيار: {completionData.completionAttachment.name}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ملاحظات إضافية */}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-sm text-blue-700">
+              <strong>ملاحظة:</strong> عند إكمال أو إلغاء طلب الخدمة، يجب إرفاق مستند يوضح العمل المنجز أو سبب الإلغاء.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div >
   );
 }

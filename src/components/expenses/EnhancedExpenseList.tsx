@@ -180,12 +180,25 @@ export default function EnhancedExpenseList({
             ),
         },
         {
+            key: 'building',
+            header: 'المبنى ',
+            cell: (expense: Expense) => (
+                <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">
+                        {expense.building ? `مبنى ${expense.building.name}` : "لا يوجد"}
+                    </span>
+
+
+                </div>
+            ),
+        },
+        {
             key: 'unit',
             header: 'الوحدة',
             cell: (expense: Expense) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-gray-900">
-                        {expense.unit ? `وحدة ${expense.unit.unitNumber}` : `وحدة #${expense.unitId}`}
+                        {expense.unit ? `وحدة ${expense.unit.unitNumber}` : "لا يوجد"}
                     </span>
                     {expense.unit?.building && (
                         <span className="text-sm text-gray-500">
@@ -200,6 +213,7 @@ export default function EnhancedExpenseList({
                 </div>
             ),
         },
+
         {
             key: 'amount',
             header: 'المبلغ',

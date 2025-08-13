@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useForm, Controller } from 'react-hook-form';
 import { Reservation, ServiceOrder, Payment } from '@/lib/types';
-import { reservationsApi, servicesApi, paymentsApi } from '@/lib/api';
+import { reservationsApi, servicesApi, paymentsApi, unitsApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -41,7 +41,6 @@ const DEPOSIT_PAYMENT_METHOD_OPTIONS = [
 const DEPOSIT_STATUS_OPTIONS = [
   { value: 'unpaid', label: 'غير مدفوع' },
   { value: 'paid', label: 'مدفوع' },
-  { value: 'returned', label: 'مسترجع' },
 ];
 
 export default function ReservationDetailPage({ params }: ReservationDetailPageProps) {
@@ -270,6 +269,48 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
     }
   };
 
+  // فتح نافذة تحديث حالة الوحدة
+  const openUnitStatusModal = () => {
+    setStatusUpdateModalOpen(true);
+  };
+
+  // تحديث حالة الوحدة
+  const handleUnitStatusUpdate = async () => {
+    if (!reservation || !newStatus) return;
+
+    try {
+      setIsUpdatingStatus(true);
+
+      // تحديث حالة الحجز إلى ملغي
+      const reservationResponse = await reservationsApi.update(reservation.id, {
+        ...reservation,
+        status: 'cancelled',
+      });
+
+      if (reservationResponse.success) {
+        // تحديث حالة الوحدة
+        const unitResponse = await unitsApi.update(reservation.unitId, {
+          status: 'maintenance',
+        });
+
+        if (unitResponse.success) {
+          toast.success(`تم إلغاء الحجز وتحديث حالة الوحدة إلى ${newStatus === 'available' ? 'متاحة' : 'تحت الصيانة'}`);
+          setStatusUpdateModalOpen(false);
+          setReservation(reservationResponse.data as any);
+        } else {
+          toast.error('تم إلغاء الحجز ولكن فشل في تحديث حالة الوحدة');
+        }
+      } else {
+        toast.error(reservationResponse.message || 'فشل في إلغاء الحجز');
+      }
+    } catch (error) {
+      console.error('خطأ في تحديث حالة الوحدة:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة الوحدة');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   // الحصول على اسم الحالة بالعربية
   const getStatusName = (status: string) => {
     switch (status) {
@@ -396,11 +437,18 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         <nav className="text-sm text-gray-500 mb-2">
           <ol className="flex space-x-2">
             <li>
-              <Link href="/dashboard" className="hover:text-primary-600">لوحة التحكم</Link>
+              <Link href="/dashboard" className="hover:text-primary-600">
+                لوحة التحكم
+              </Link>
             </li>
             <li>
               <span className="mx-1">/</span>
-              <Link href="/dashboard/reservations" className="hover:text-primary-600">المستأجرين </Link>
+              <Link
+                href="/dashboard/reservations"
+                className="hover:text-primary-600"
+              >
+                المستأجرين{" "}
+              </Link>
             </li>
             <li>
               <span className="mx-1">/</span>
@@ -414,11 +462,29 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             الحجز #{reservation.id}
           </h1>
           <div className="flex space-x-3 ">
-            {user && user.role == "manager" && <>
-              <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
-                <Button variant="outline" className='mx-4'>تعديل</Button>
-              </Link>
-              <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>حذف</Button></>}
+            {user && user.role == "manager" && (
+              <>
+                <Link
+                  href={`/dashboard/reservations/${reservation.id}/edit?status=active`}
+                >
+                  <Button variant="outline" className="mx-4">
+                    تجديد
+                  </Button>
+                </Link>
+                <Link href={`/dashboard/reservations/${reservation.id}/edit`}>
+                  <Button variant="outline" className="mx-4">
+                    تعديل
+                  </Button>
+                </Link>
+
+                <Button
+                  variant="danger"
+                  onClick={() => setDeleteModalOpen(true)}
+                >
+                  حذف
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -429,12 +495,17 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         <Card className="lg:col-span-2">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">تفاصيل الحجز</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                تفاصيل الحجز
+              </h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === 'active' ? 'bg-green-100 text-green-800' :
-                  reservation.status === 'cancelled' ? 'bg-yellow-100 text-yellow-800' :
-                    reservation.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                      'bg-red-100 text-red-800'
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reservation.status === "active"
+                  ? "bg-green-100 text-green-800"
+                  : reservation.status === "cancelled"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : reservation.status === "expired"
+                      ? "bg-gray-100 text-gray-800"
+                      : "bg-red-100 text-red-800"
                   }`}
               >
                 {getStatusName(reservation.status)}
@@ -443,14 +514,18 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">تاريخ البدء</h3>
+                <h3 className="text-sm font-medium text-gray-500">
+                  تاريخ البدء
+                </h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.startDate)}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">تاريخ الانتهاء</h3>
+                <h3 className="text-sm font-medium text-gray-500">
+                  تاريخ الانتهاء
+                </h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.endDate)}
                 </p>
@@ -464,7 +539,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">تاريخ الإنشاء</h3>
+                <h3 className="text-sm font-medium text-gray-500">
+                  تاريخ الإنشاء
+                </h3>
                 <p className="mt-1 text-base text-gray-900">
                   {formatDate(reservation.createdAt)}
                 </p>
@@ -475,7 +552,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             {reservation.includesDeposit && (
               <div className="mt-6">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-sm font-medium text-gray-500">معلومات التأمين</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    معلومات التأمين
+                  </h3>
                   {user && user.role === "manager" && (
                     <Button
                       size="xs"
@@ -483,8 +562,19 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                       onClick={openDepositEditModal}
                       className="text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg
+                        className="w-3 h-3 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                       تعديل سريع
                     </Button>
@@ -493,7 +583,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6 p-4 bg-gray-50 rounded-md border border-gray-200">
                   {reservation.depositAmount && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">مبلغ التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        مبلغ التأمين
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {formatCurrency(reservation.depositAmount)}
                       </p>
@@ -502,23 +594,36 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
                   {reservation.depositPaymentMethod && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">طريقة دفع التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        طريقة دفع التأمين
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
-                        {reservation.depositPaymentMethod === 'cash' ? 'نقدًا' : 'شيك'}
+                        {reservation.depositPaymentMethod === "cash"
+                          ? "نقدًا"
+                          : "شيك"}
                       </p>
                     </div>
                   )}
 
                   {reservation.depositStatus && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">حالة التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        حالة التأمين
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${reservation.depositStatus === 'paid' ? 'bg-green-100 text-green-800' :
-                          reservation.depositStatus === 'returned' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {reservation.depositStatus === 'unpaid' ? 'غير مدفوع' :
-                            reservation.depositStatus === 'paid' ? 'مدفوع' : 'مسترجع'}
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${reservation.depositStatus === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : reservation.depositStatus === "returned"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                            }`}
+                        >
+                          {reservation.depositStatus === "unpaid"
+                            ? "غير مدفوع"
+                            : reservation.depositStatus === "paid"
+                              ? "مدفوع"
+                              : "مسترجع"}
                         </span>
                       </p>
                     </div>
@@ -526,7 +631,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
                   {reservation.depositPaidDate && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">تاريخ دفع التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        تاريخ دفع التأمين
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {formatDate(reservation.depositPaidDate)}
                       </p>
@@ -535,7 +642,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
                   {reservation.depositReturnedDate && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">تاريخ استرجاع التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        تاريخ استرجاع التأمين
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {formatDate(reservation.depositReturnedDate)}
                       </p>
@@ -544,15 +653,28 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
                   {reservation.depositCheckImageUrl && (
                     <div className="md:col-span-2">
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">صورة شيك التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">
+                        صورة شيك التأمين
+                      </h3>
                       <a
                         href={reservation.depositCheckImageUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                       >
-                        <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg
+                          className="ml-2 -mr-1 h-5 w-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
                         </svg>
                         عرض صورة الشيك
                       </a>
@@ -561,7 +683,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
                   {reservation.depositNotes && (
                     <div className="md:col-span-2">
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">ملاحظات التأمين</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">
+                        ملاحظات التأمين
+                      </h3>
                       <p className="text-gray-700 whitespace-pre-line">
                         {reservation.depositNotes}
                       </p>
@@ -573,10 +697,12 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
             {/* الملاحظات */}
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">ملاحظات</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">
+                ملاحظات
+              </h3>
               <div className="bg-gray-50 p-3 rounded border border-gray-200">
                 <p className="text-gray-700 whitespace-pre-line">
-                  {reservation.notes || 'لا توجد ملاحظات مقدمة'}
+                  {reservation.notes || "لا توجد ملاحظات مقدمة"}
                 </p>
               </div>
             </div>
@@ -584,15 +710,28 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             {/* العقد والوثائق */}
             {reservation.contractImageUrl && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">وثيقة العقد</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                  وثيقة العقد
+                </h3>
                 <a
                   href={reservation.contractImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="ml-2 -mr-1 h-5 w-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   عرض العقد
                 </a>
@@ -601,15 +740,29 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
             {reservation.contractPdfUrl && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2"> PDF وثيقة العقد</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                  {" "}
+                  PDF وثيقة العقد
+                </h3>
                 <a
                   href={reservation.contractPdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="ml-2 -mr-1 h-5 w-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   عرض
                 </a>
@@ -619,32 +772,29 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             {/* Identity Documents */}
             {reservation.user && reservation.user.identityImageFrontUrl && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2"> الوجه الأمامي للهوية</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                  {" "}
+                  الوجه الأمامي للهوية
+                </h3>
                 <a
                   href={reservation.user.identityImageFrontUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  عرض
-                </a>
-              </div>
-            )}
-
-            {reservation.user && reservation.user.identityImageBackUrl && (
-              <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2"> الوجه الخلفي للهوية</h3>
-                <a
-                  href={reservation.user.identityImageBackUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="ml-2 -mr-1 h-5 w-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   عرض
                 </a>
@@ -653,15 +803,29 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
             {reservation.commercialRegisterImageUrl && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2"> صورة السجل التجاري</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                  {" "}
+                  صورة السجل التجاري
+                </h3>
                 <a
                   href={reservation.commercialRegisterImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  <svg className="ml-2 -mr-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="ml-2 -mr-1 h-5 w-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   عرض
                 </a>
@@ -671,34 +835,18 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             {/* أزرار تحديث الحالة */}
             {user && user.role === "manager" && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">إجراءات الحجز</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                  إجراءات الحجز
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => openStatusUpdateModal('active')}
-                    disabled={reservation.status === 'active'}
-                    className="border-green-500 text-green-700 hover:bg-green-50 disabled:opacity-50"
-                  >
-                    تحديد كنشط
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openStatusUpdateModal('expired')}
-                    disabled={reservation.status === 'expired'}
-                    className="border-gray-500 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    تحديد كمنتهي
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openStatusUpdateModal('cancelled')}
-                    disabled={reservation.status === 'cancelled'}
+                    onClick={openUnitStatusModal}
+                    disabled={reservation.status === "cancelled"}
                     className="border-red-500 text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
-                    تحديد كملغي
+                    إلغاء الحجز
                   </Button>
                 </div>
               </div>
@@ -709,7 +857,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         {/* معلومات المستأجر */}
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">معلومات المستأجر</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              معلومات المستأجر
+            </h2>
 
             {reservation.user ? (
               <div className="space-y-4">
@@ -721,7 +871,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    البريد الإلكتروني
+                  </h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.email}
                   </p>
@@ -735,54 +887,71 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">اسم المستخدم</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    اسم المستخدم
+                  </h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.username}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500"> كلمة المرور </h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    {" "}
+                    كلمة المرور{" "}
+                  </h3>
                   <p className="mt-1 text-base text-gray-900">
                     {reservation.user.copassword}
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">تاريخ الانضمام</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    تاريخ الانضمام
+                  </h3>
                   <p className="mt-1 text-base text-gray-900">
                     {formatDate(reservation.user.createdAt)}
                   </p>
                 </div>
-                {reservation.user.tenantInfo &&
+                {reservation.user.tenantInfo && (
                   <>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500"> نوع المستأجر </h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        {" "}
+                        نوع المستأجر{" "}
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {reservation.user.tenantInfo.tenantType}
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500"> المنصب </h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        {" "}
+                        المنصب{" "}
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {reservation.user.tenantInfo.contactPosition}
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500"> نشاطات تجارية </h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        {" "}
+                        نشاطات تجارية{" "}
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {reservation.user.tenantInfo.businessActivities}
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500"> رقم التواصل </h3>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        {" "}
+                        رقم التواصل{" "}
+                      </h3>
                       <p className="mt-1 text-base text-gray-900">
                         {reservation.user.tenantInfo.contactPerson}
                       </p>
                     </div>
-
                   </>
-                }
-
+                )}
               </div>
             ) : (
               <p className="text-gray-500">معلومات المستأجر غير متاحة</p>
@@ -808,24 +977,32 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       </div>
 
       {/* طلبات الخدمة */}
-      {user && (user.role == "manager" || user.role == "tenant" || user.role == "maintenance" || user.role == "admin") &&
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">طلبات الخدمة</h2>
-          </div>
+      {user &&
+        (user.role == "manager" ||
+          user.role == "tenant" ||
+          user.role == "maintenance" ||
+          user.role == "admin") && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                طلبات الخدمة
+              </h2>
+            </div>
 
-          <Card>
-            <Table
-              data={serviceOrders}
-              columns={serviceOrderColumns}
-              keyExtractor={(service) => service.id}
-              isLoading={isServicesLoading}
-              emptyMessage="لم يتم العثور على طلبات خدمة لهذا الحجز"
-              onRowClick={(service) => router.push(`/dashboard/services/${service.id}`)}
-            />
-          </Card>
-        </div>
-      }
+            <Card>
+              <Table
+                data={serviceOrders}
+                columns={serviceOrderColumns}
+                keyExtractor={(service) => service.id}
+                isLoading={isServicesLoading}
+                emptyMessage="لم يتم العثور على طلبات خدمة لهذا الحجز"
+                onRowClick={(service) =>
+                  router.push(`/dashboard/services/${service.id}`)
+                }
+              />
+            </Card>
+          </div>
+        )}
 
       {/* Quick Edit Deposit Modal */}
       <Modal
@@ -835,15 +1012,20 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
         size="lg"
       >
         <div className="p-6">
-          <form onSubmit={handleSubmitDeposit(handleDepositUpdate)} className="space-y-6">
+          <form
+            onSubmit={handleSubmitDeposit(handleDepositUpdate)}
+            className="space-y-6"
+          >
             {/* Include Deposit Checkbox */}
             <div className="flex items-center">
               <input
                 type="checkbox"
-                {...registerDeposit('includesDeposit')}
+                {...registerDeposit("includesDeposit")}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
-              <label className="mr-2 block text-sm text-gray-700">يتضمن مبلغ تأمين</label>
+              <label className="mr-2 block text-sm text-gray-700">
+                يتضمن مبلغ تأمين
+              </label>
             </div>
 
             {/* Deposit Fields */}
@@ -880,7 +1062,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                     placeholder="اختر حالة التأمين"
                   />
 
-                  {watchedDepositStatus === 'paid' && (
+                  {watchedDepositStatus === "paid" && (
                     <FormInput
                       label="تاريخ دفع التأمين"
                       register={registerDeposit}
@@ -890,7 +1072,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                     />
                   )}
 
-                  {watchedDepositStatus === 'returned' && (
+                  {watchedDepositStatus === "returned" && (
                     <FormInput
                       label="تاريخ استرجاع التأمين"
                       register={registerDeposit}
@@ -901,7 +1083,7 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
                   )}
                 </div>
 
-                {watchedDepositPaymentMethod === 'check' && (
+                {watchedDepositPaymentMethod === "check" && (
                   <Controller
                     name="depositCheckImage"
                     control={controlDeposit}
@@ -964,7 +1146,10 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
             <p className="text-sm font-medium">تحذير</p>
-            <p className="text-sm">حذف هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة وأي طلبات خدمة مرتبطة بها.</p>
+            <p className="text-sm">
+              حذف هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة وأي
+              طلبات خدمة مرتبطة بها.
+            </p>
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <Button
@@ -989,25 +1174,46 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
       <Modal
         isOpen={statusUpdateModalOpen}
         onClose={() => setStatusUpdateModalOpen(false)}
-        title="تحديث حالة الحجز"
+        title="إلغاء الحجز وتحديث حالة الوحدة"
       >
         <div className="p-6">
           <p className="text-gray-600 mb-4">
-            هل أنت متأكد أنك تريد تغيير الحالة إلى{" "}
-            <span className="font-medium">{getStatusName(newStatus)}</span>؟
+            هل أنت متأكد أنك تريد إلغاء هذا الحجز؟ سيتم إلغاء الحجز وتحديث حالة الوحدة.
           </p>
-          {newStatus === 'cancelled' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700">
-              <p className="text-sm font-medium">تحذير</p>
-              <p className="text-sm">إلغاء هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة.</p>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-700 mb-4">
+            <p className="text-sm font-medium">تحذير</p>
+            <p className="text-sm">
+              إلغاء هذا الحجز سيؤدي إلى إزالة وصول المستأجر إلى هذه الوحدة.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">اختر حالة الوحدة بعد الإلغاء:</h4>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="unitStatus"
+                  value="available"
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                />
+                <span className="mr-2 text-sm text-gray-700">متاحة</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="unitStatus"
+                  value="maintenance"
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                />
+                <span className="mr-2 text-sm text-gray-700">تحت الصيانة</span>
+              </label>
             </div>
-          )}
-          {newStatus === 'expired' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-700">
-              <p className="text-sm font-medium">ملاحظة</p>
-              <p className="text-sm">تحديد هذا الحجز كمنتهي سيغير حالة الوحدة إلى متاحة.</p>
-            </div>
-          )}
+          </div>
+
           <div className="flex justify-end space-x-3 mt-6">
             <Button
               variant="outline"
@@ -1018,11 +1224,11 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
             </Button>
             <Button
               variant="primary"
-              onClick={handleStatusUpdate}
+              onClick={handleUnitStatusUpdate}
               isLoading={isUpdatingStatus}
-              disabled={isUpdatingStatus}
+              disabled={isUpdatingStatus || !newStatus}
             >
-              تحديث الحالة
+              إلغاء الحجز وتحديث الوحدة
             </Button>
           </div>
         </div>
