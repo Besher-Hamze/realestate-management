@@ -108,6 +108,7 @@ export default function LoginPage() {
       console.error('Login error:', error);
       toast.error(error.message || 'حدث خطأ في تسجيل الدخول');
     } finally {
+
       setIsSubmitting(false);
     }
   };

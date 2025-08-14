@@ -157,7 +157,17 @@ export default function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       ),
-      roles: ['manager', 'accountant'],
+      roles: ['manager', 'accountant', 'tenant'],
+    },
+    {
+      label: 'إنشاء مصروفات من طلبات الخدمة',
+      href: '/dashboard/accountant/service-expenses',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      roles: ['accountant'],
     },
     {
       label: 'توليد تقرير',
@@ -213,6 +223,17 @@ export default function Sidebar() {
       ),
       roles: ['tenant'],
     },
+    {
+      label: 'المصاريف',
+      href: '/tenant/expenses',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      ),
+      roles: ['tenant'],
+
+    }
   ];
 
   // Determine which nav items to show based on user role

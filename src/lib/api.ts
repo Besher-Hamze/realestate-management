@@ -838,5 +838,23 @@ export const expensesApi = {
       url: `/expenses/${id}`,
       method: 'DELETE',
     }),
+
+  // New method for creating expenses from service orders
+  createFromServiceOrder: (serviceOrderId: number | string, data: {
+    responsibleParty: 'owner' | 'tenant';
+    notes?: string;
+  }) =>
+    apiRequest<Expense>({
+      url: `/expenses/create-from-service-order/${serviceOrderId}`,
+      method: 'POST',
+      data,
+    }),
+
+  // Get completed service orders for expense creation
+  getCompletedServiceOrdersForExpense: () =>
+    apiRequest<{ data: ServiceOrder[]; results: number }>({
+      url: '/expenses/service-orders/completed-for-expense',
+      method: 'GET',
+    }),
 };
 

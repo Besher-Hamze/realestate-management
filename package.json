@@ -13,12 +13,15 @@
     "axios": "^1.8.4",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "next": "15.1.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.0.2",
+    "xlsx": "^0.18.5",
     "yup": "^1.6.1"
   },
   "devDependencies": {
@@ -27,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/xlsx": "^0.0.36",
     "eslint": "^9",
     "eslint-config-next": "15.1.2",
     "postcss": "^8",

@@ -128,9 +128,9 @@ export default function ExpenseForm({
             let response;
 
             if (isEdit && initialData) {
-                response = await expensesApi.update(initialData.id, formattedData);
+                response = await expensesApi.update(initialData.id, formattedData as any);
             } else {
-                response = await expensesApi.create(formattedData);
+                response = await expensesApi.create(formattedData as any);
             }
 
             if (response.success) {
