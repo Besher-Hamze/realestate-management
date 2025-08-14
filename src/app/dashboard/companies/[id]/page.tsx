@@ -360,13 +360,19 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
 
             {company.identityImageFrontUrl && (
               <div className="border rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-500 mb-2">بطاقة الهوية (الوجه الأمامي)</p>
+                <p className="text-sm font-medium text-gray-500 mb-2">بطاقة الهوية</p>
                 <div className="flex justify-center">
-                  <img
-                    src={company.identityImageFrontUrl}
-                    alt="صورة الهوية الأمامية"
-                    className="h-32 w-auto object-contain"
-                  />
+                  <a
+                    href={company.identityImageFrontUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition"
+                  >
+                    <svg className="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19V6m0 0l-7 7m7-7l7 7" />
+                    </svg>
+                    عرض ملف PDF
+                  </a>
                 </div>
               </div>
             )}

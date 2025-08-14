@@ -256,7 +256,7 @@ export const validateReservationForm = (data: any): Record<string, string> => {
 
     // File validation for new tenant
     if (!data.identityImageFront) {
-      errors.identityImageFront = 'صورة الوجه الأمامي للهوية مطلوبة';
+      errors.identityImageFront = 'صورة  للهوية مطلوبة';
     }
 
 

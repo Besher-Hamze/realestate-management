@@ -323,7 +323,7 @@ export default function CompanyForm({
                 control={control}
                 render={({ field, fieldState }) => (
                   <FormFileInput
-                    label="صورة الهوية (الوجه الأمامي)"
+                    label="صورة الهوية "
                     name="identityImageFront"
                     accept="image/jpeg,image/png,image/jpg,application/pdf"
                     onChange={handleFileChange('identityImageFront')}

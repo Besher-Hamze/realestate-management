@@ -281,13 +281,13 @@ export default function TenantForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                صورة الهوية (الوجه الأمامي)
+                صورة الهوية
               </label>
               <input
                 id="identityImageFront"
                 name="identityImageFront"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/jpg,application/pdf"
                 onChange={handleFileChange}
                 className="block w-full text-sm text-gray-500
                   file:mr-4 file:py-2 file:px-4
