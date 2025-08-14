@@ -361,44 +361,7 @@ export default function ServicesPage() {
           </div>
         )}
 
-        {/* عرض الفلاتر النشطة */}
-        {hasActiveFilters() && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-gray-600">الفلاتر النشطة:</span>
 
-              {statusFilter !== 'all' && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  الحالة: {statusOptions.find(opt => opt.value === statusFilter)?.label}
-                </span>
-              )}
-
-              {typeFilter !== 'all' && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  النوع: {typeOptions.find(opt => opt.value === typeFilter)?.label}
-                </span>
-              )}
-
-              {buildingFilter !== 'all' && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  المبنى: {getBuildingOptions().find(opt => opt.value === buildingFilter)?.label}
-                </span>
-              )}
-
-              {dateFromFilter && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  من: {new Date(dateFromFilter).toLocaleDateString('ar-SA')}
-                </span>
-              )}
-
-              {dateToFilter && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  إلى: {new Date(dateToFilter).toLocaleDateString('ar-SA')}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* قائمة الخدمات */}
