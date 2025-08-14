@@ -30,7 +30,7 @@ export default function EnhancedExpenseList({
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const { user } = useAuth();
-    const isTenant = user?.role === 'tenant';
+    const isTenant = user?.role === 'tenant' || user?.role === 'owner';
     // Handle row click to view details
     const handleRowClick = (expense: Expense) => {
         router.push(`/dashboard/expenses/${expense.id}`);
@@ -320,7 +320,7 @@ export default function EnhancedExpenseList({
                 keyExtractor={(expense) => expense.id}
                 isLoading={isLoading}
                 emptyMessage="لم يتم العثور على مصاريف"
-                onRowClick={handleRowClick}
+                onRowClick={!isTenant ? handleRowClick : undefined}
             />
 
             {/* Delete confirmation modal */}

@@ -11,6 +11,7 @@ import Select from '@/components/ui/Select';
 import { formatCurrency } from '@/lib/utils';
 import EnhancedExpenseList from '@/components/expenses/EnhancedExpenseList';
 import { EXPENSE_TYPE_OPTIONS } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -20,7 +21,8 @@ export default function ExpensesPage() {
     const [filteredUnits, setFilteredUnits] = useState<RealEstateUnit[]>([]);
     const [statistics, setStatistics] = useState<ExpenseStatistics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
+    const { user } = useAuth();
+    const isOwner = user?.role === 'owner';
     // Filters
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [buildingFilter, setBuildingFilter] = useState<string>('all');
@@ -166,7 +168,7 @@ export default function ExpensesPage() {
         // Unit filter
         if (unitFilter !== 'all') {
             filtered = filtered.filter(expense =>
-                expense.unitId.toString() === unitFilter
+                expense.unit?.id.toString() === unitFilter
             );
         }
 
@@ -228,7 +230,7 @@ export default function ExpensesPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+            {!isOwner && <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
                 <h1 className="text-2xl font-bold text-gray-900">المصاريف</h1>
                 <Link href="/dashboard/expenses/create">
                     <Button
@@ -242,7 +244,7 @@ export default function ExpensesPage() {
                         إضافة مصروف
                     </Button>
                 </Link>
-            </div>
+            </div>}
 
             {/* Statistics Cards */}
             {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
