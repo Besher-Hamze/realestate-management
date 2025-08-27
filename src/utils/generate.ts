@@ -899,163 +899,163 @@ class HTMLTemplateGenerator {
 // PUPPETEER PDF SERVICE
 // ===================================
 
-class PuppeteerPDFService {
-    private static browser: Browser | null = null;
+// class PuppeteerPDFService {
+//     private static browser: Browser | null = null;
 
-    /**
-     * Initialize browser instance
-     */
-    private static async initBrowser(): Promise<Browser> {
-        if (!this.browser || !this.browser.isConnected()) {
-            this.browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                    '--disable-gpu'
-                ]
-            });
-        }
-        return this.browser;
-    }
+//     /**
+//      * Initialize browser instance
+//      */
+//     private static async initBrowser(): Promise<Browser> {
+//         if (!this.browser || !this.browser.isConnected()) {
+//             this.browser = await puppeteer.launch({
+//                 headless: true,
+//                 args: [
+//                     '--no-sandbox',
+//                     '--disable-setuid-sandbox',
+//                     '--disable-dev-shm-usage',
+//                     '--disable-accelerated-2d-canvas',
+//                     '--no-first-run',
+//                     '--no-zygote',
+//                     '--single-process',
+//                     '--disable-gpu'
+//                 ]
+//             });
+//         }
+//         return this.browser;
+//     }
 
-    /**
-     * Generate PDF from HTML content
-     */
-    public static async generatePDF(options: PDFGenerationOptions): Promise<Buffer> {
-        const browser = await this.initBrowser();
-        let page: Page | null = null;
+//     /**
+//      * Generate PDF from HTML content
+//      */
+//     // public static async generatePDF(options: PDFGenerationOptions): Promise<Buffer> {
+//     //     const browser = await this.initBrowser();
+//     //     let page: Page | null = null;
 
-        try {
-            page = await browser.newPage();
+//     //     try {
+//     //         page = await browser.newPage();
 
-            // Set viewport and user agent
-            await page.setViewport({ width: 1200, height: 800 });
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+//     //         // Set viewport and user agent
+//     //         await page.setViewport({ width: 1200, height: 800 });
+//     //         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
 
-            // Set content and wait for fonts
-            await page.setContent(options.html, {
-                waitUntil: ['networkidle0', 'domcontentloaded'],
-                timeout: 30000
-            });
+//     //         // Set content and wait for fonts
+//     //         await page.setContent(options.html, {
+//     //             waitUntil: ['networkidle0', 'domcontentloaded'],
+//     //             timeout: 30000
+//     //         });
 
-            // Wait for fonts to load
-            await page.evaluateHandle('document.fonts.ready');
+//     //         // Wait for fonts to load
+//     //         await page.evaluateHandle('document.fonts.ready');
 
-            // Small delay to ensure rendering
-            await new Promise(resolve => setTimeout(resolve, 2000));
+//     //         // Small delay to ensure rendering
+//     //         await new Promise(resolve => setTimeout(resolve, 2000));
 
-            const pdfConfig = {
-                format: options.config.pageFormat || 'A4' as const,
-                landscape: options.config.landscape || false,
-                printBackground: true,
-                preferCSSPageSize: false,
-                margin: {
-                    top: options.config.margin?.top || '20mm',
-                    right: options.config.margin?.right || '15mm',
-                    bottom: options.config.margin?.bottom || '20mm',
-                    left: options.config.margin?.left || '15mm'
-                },
-                displayHeaderFooter: true,
-                headerTemplate: `
-                    <div style="width: 100%; font-size: 10px; text-align: center; color: #666; font-family: 'Cairo', sans-serif;">
-                        <span style="margin-right: 20px;">${normalizeArabicText(options.config.title || 'تقرير')}</span>
-                    </div>
-                `,
-                footerTemplate: `
-                    <div style="width: 100%; font-size: 10px; text-align: center; color: #666; font-family: 'Cairo', sans-serif; direction: rtl;">
-                        <span class="pageNumber"></span> ${TranslationService.translateCommon('page')} ${TranslationService.translateCommon('of')} <span class="totalPages"></span>
-                    </div>
-                `
-            };
+//     //         const pdfConfig = {
+//     //             format: options.config.pageFormat || 'A4' as const,
+//     //             landscape: options.config.landscape || false,
+//     //             printBackground: true,
+//     //             preferCSSPageSize: false,
+//     //             margin: {
+//     //                 top: options.config.margin?.top || '20mm',
+//     //                 right: options.config.margin?.right || '15mm',
+//     //                 bottom: options.config.margin?.bottom || '20mm',
+//     //                 left: options.config.margin?.left || '15mm'
+//     //             },
+//     //             displayHeaderFooter: true,
+//     //             headerTemplate: `
+//     //                 <div style="width: 100%; font-size: 10px; text-align: center; color: #666; font-family: 'Cairo', sans-serif;">
+//     //                     <span style="margin-right: 20px;">${normalizeArabicText(options.config.title || 'تقرير')}</span>
+//     //                 </div>
+//     //             `,
+//     //             footerTemplate: `
+//     //                 <div style="width: 100%; font-size: 10px; text-align: center; color: #666; font-family: 'Cairo', sans-serif; direction: rtl;">
+//     //                     <span class="pageNumber"></span> ${TranslationService.translateCommon('page')} ${TranslationService.translateCommon('of')} <span class="totalPages"></span>
+//     //                 </div>
+//     //             `
+//     //         };
 
-            const pdfBuffer = await page.pdf(pdfConfig);
-            return Buffer.from(pdfBuffer);
+//     //         const pdfBuffer = await page.pdf(pdfConfig);
+//     //         return Buffer.from(pdfBuffer);
 
-        } catch (error: any) {
-            console.error('PDF generation failed:', error);
-            throw new Error(`PDF generation failed: ${error.message}`);
-        } finally {
-            if (page) {
-                await page.close();
-            }
-        }
-    }
+//     //     } catch (error: any) {
+//     //         console.error('PDF generation failed:', error);
+//     //         throw new Error(`PDF generation failed: ${error.message}`);
+//     //     } finally {
+//     //         if (page) {
+//     //             await page.close();
+//     //         }
+//     //     }
+//     // }
 
-    /**
-     * Save PDF buffer to file or return for download
-     */
-    private static async savePDF(pdfBuffer: Buffer, filename: string): Promise<void> {
-        if (typeof window !== 'undefined') {
-            // Browser environment - trigger download
-            const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } else {
-            // Node.js environment - save to file
-            const fs = await import('fs');
-            fs.writeFileSync(filename, pdfBuffer);
-        }
-    }
+//     /**
+//      * Save PDF buffer to file or return for download
+//      */
+//     private static async savePDF(pdfBuffer: Buffer, filename: string): Promise<void> {
+//         if (typeof window !== 'undefined') {
+//             // Browser environment - trigger download
+//             const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+//             const url = URL.createObjectURL(blob);
+//             const link = document.createElement('a');
+//             link.href = url;
+//             link.download = filename;
+//             document.body.appendChild(link);
+//             link.click();
+//             document.body.removeChild(link);
+//             URL.revokeObjectURL(url);
+//         } else {
+//             // Node.js environment - save to file
+//             const fs = await import('fs');
+//             fs.writeFileSync(filename, pdfBuffer);
+//         }
+//     }
 
-    /**
-     * Close browser instance
-     */
-    static async closeBrowser(): Promise<void> {
-        if (this.browser) {
-            await this.browser.close();
-            this.browser = null;
-        }
-    }
+//     /**
+//      * Close browser instance
+//      */
+//     static async closeBrowser(): Promise<void> {
+//         if (this.browser) {
+//             await this.browser.close();
+//             this.browser = null;
+//         }
+//     }
 
-    /**
-     * Main export method
-     */
-    static async exportToPDF(
-        title: string,
-        headers: string[],
-        rows: (string | number)[][],
-        summaryInfo?: SummaryInfo[],
-        additionalStats?: StatGroup[],
-        config: ExportConfig = {}
-    ): Promise<void> {
-        try {
-            const html = HTMLTemplateGenerator.generateCompleteHTML(
-                title,
-                headers,
-                rows,
-                summaryInfo,
-                additionalStats,
-                config
-            );
+//     /**
+//      * Main export method
+//      */
+//     // static async exportToPDF(
+//     //     title: string,
+//     //     headers: string[],
+//     //     rows: (string | number)[][],
+//     //     summaryInfo?: SummaryInfo[],
+//     //     additionalStats?: StatGroup[],
+//     //     config: ExportConfig = {}
+//     // ): Promise<void> {
+//     //     try {
+//     //         const html = HTMLTemplateGenerator.generateCompleteHTML(
+//     //             title,
+//     //             headers,
+//     //             rows,
+//     //             summaryInfo,
+//     //             additionalStats,
+//     //             config
+//     //         );
 
-            const filename = config.filename || generateFilename(title.toLowerCase().replace(/\s+/g, '_'), 'pdf');
+//     //         const filename = config.filename || generateFilename(title.toLowerCase().replace(/\s+/g, '_'), 'pdf');
 
-            const pdfBuffer = await this.generatePDF({
-                html,
-                filename,
-                config: { ...config, title }
-            });
+//     //         const pdfBuffer = await this.generatePDF({
+//     //             html,
+//     //             filename,
+//     //             config: { ...config, title }
+//     //         });
 
-            await this.savePDF(pdfBuffer, filename);
+//     //         await this.savePDF(pdfBuffer, filename);
 
-        } catch (error) {
-            console.error('Export to PDF failed:', error);
-            throw error;
-        }
-    }
-}
+//     //     } catch (error) {
+//     //         console.error('Export to PDF failed:', error);
+//     //         throw error;
+//     //     }
+//     // }
+// }
 
 // ===================================
 // EXCEL EXPORT SERVICE (UNCHANGED)
@@ -1401,14 +1401,14 @@ class EnhancedPDFExportService {
             formatArabicDate(user.createdAt)
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير المستخدمين',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#3498db' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير المستخدمين',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#3498db' }
+        // );
     }
 
     static async exportBuildings(buildings: Building[], config: ExportConfig = {}): Promise<void> {
@@ -1464,14 +1464,14 @@ class EnhancedPDFExportService {
             building.company?.name || TranslationService.translateCommon('notSpecified')
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير المباني',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#2ecc71' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير المباني',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#2ecc71' }
+        // );
     }
 
     static async exportUnits(units: RealEstateUnit[], config: ExportConfig = {}): Promise<void> {
@@ -1528,14 +1528,14 @@ class EnhancedPDFExportService {
             TranslationService.translateUnitStatus(unit.status)
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير الوحدات',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#9b59b6' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير الوحدات',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#9b59b6' }
+        // );
     }
 
     static async exportCompanies(companies: Company[], config: ExportConfig = {}): Promise<void> {
@@ -1591,14 +1591,14 @@ class EnhancedPDFExportService {
             (company.buildings?.reduce((sum, b) => sum + b.totalUnits, 0) || 0).toString()
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير الشركات',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#e74c3c' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير الشركات',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#e74c3c' }
+        // );
     }
 
     static async exportReservations(reservations: Reservation[], config: ExportConfig = {}): Promise<void> {
@@ -1666,14 +1666,14 @@ class EnhancedPDFExportService {
             TranslationService.translateReservationStatus(reservation.status)
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير الحجوزات',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#f39c12' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير الحجوزات',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#f39c12' }
+        // );
     }
 
     static async exportServiceOrders(serviceOrders: ServiceOrder[], config: ExportConfig = {}): Promise<void> {
@@ -1743,14 +1743,14 @@ class EnhancedPDFExportService {
             formatArabicDate(order.createdAt)
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير طلبات الخدمة',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#1abc9c' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير طلبات الخدمة',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#1abc9c' }
+        // );
     }
 
     static async exportPayments(payments: Payment[], config: ExportConfig = {}): Promise<void> {
@@ -1811,14 +1811,14 @@ class EnhancedPDFExportService {
             payment.paymentMethod || TranslationService.translateCommon('notSpecified')
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير المدفوعات',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#27ae60' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير المدفوعات',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#27ae60' }
+        // );
     }
 
     static async exportExpenses(expenses: Expense[], config: ExportConfig = {}): Promise<void> {
@@ -1889,14 +1889,14 @@ class EnhancedPDFExportService {
             expense.unit?.unitNumber || TranslationService.translateCommon('notSpecified')
         ]);
 
-        await PuppeteerPDFService.exportToPDF(
-            config.title || 'تقرير المصاريف',
-            headers,
-            rows,
-            summaryInfo,
-            additionalStats,
-            { ...config, headerColor: '#e67e22' }
-        );
+        // await PuppeteerPDFService.exportToPDF(
+        //     config.title || 'تقرير المصاريف',
+        //     headers,
+        //     rows,
+        //     summaryInfo,
+        //     additionalStats,
+        //     { ...config, headerColor: '#e67e22' }
+        // );
     }
 }
 
@@ -1995,7 +1995,7 @@ export class ExportManager {
      * Cleanup resources
      */
     static async cleanup(): Promise<void> {
-        await PuppeteerPDFService.closeBrowser();
+        //await PuppeteerPDFService.closeBrowser();
     }
 }
 
@@ -2070,6 +2070,6 @@ export {
     formatArabicDate as formatDate,
     formatArabicCurrency as formatCurrency,
     TranslationService,
-    PuppeteerPDFService,
+    // PuppeteerPDFService,
     HTMLTemplateGenerator
 };
