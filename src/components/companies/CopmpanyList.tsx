@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { companiesApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { exportToExcel } from '@/utils/generate';
 
 interface CompanyListProps {
   companies: Company[];
@@ -146,6 +147,8 @@ export default function CompanyList({
       <Table
         data={companies}
         columns={columns}
+        showExportButtons={true}
+        onExportExcel={() => exportToExcel(companies, 'companies', 'companies.xlsx')}
         keyExtractor={(company) => company.id}
         isLoading={isLoading}
         emptyMessage="لم يتم العثور على شركات"

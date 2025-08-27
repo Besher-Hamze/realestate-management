@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { reservationsApi } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { exportToExcel } from '@/utils/generate';
 
 interface ReservationListProps {
   reservations: Reservation[];
@@ -182,10 +183,7 @@ export default function ReservationList({
             statusText = 'نشط';
             statusClass = 'bg-green-100 text-green-800';
             break;
-          case 'pending':
-            statusText = 'قيد الانتظار';
-            statusClass = 'bg-yellow-100 text-yellow-800';
-            break;
+
           case 'expired':
             statusText = 'منتهي';
             statusClass = 'bg-gray-100 text-gray-800';
@@ -239,6 +237,8 @@ export default function ReservationList({
         columns={columns}
         keyExtractor={(reservation) => reservation.id}
         isLoading={isLoading}
+        showExportButtons={true}
+        onExportExcel={() => exportToExcel(reservations, 'reservations', 'reservations.xlsx')}
         emptyMessage="لم يتم العثور على حجوزات"
         onRowClick={handleRowClick}
       />

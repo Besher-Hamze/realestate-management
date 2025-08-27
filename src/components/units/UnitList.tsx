@@ -14,6 +14,7 @@ import {
   getUnitLayoutLabel,
   getUnitStatusLabel
 } from '@/constants/options';
+import { exportToExcel } from '@/utils/generate';
 
 interface UnitListProps {
   units: RealEstateUnit[];
@@ -273,6 +274,8 @@ export default function UnitList({
         keyExtractor={(unit) => unit.id}
         isLoading={isLoading}
         emptyMessage="لا توجد وحدات"
+        showExportButtons={true}
+        onExportExcel={() => exportToExcel(units, 'units', 'units.xlsx')}
         onRowClick={handleRowClick}
       />
 

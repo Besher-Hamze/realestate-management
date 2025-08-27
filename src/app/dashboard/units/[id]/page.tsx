@@ -130,7 +130,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
 
       if (response.success) {
         toast.success(`تم تحديث حالة الوحدة إلى ${getUnitStatusLabel(newStatus)}`);
-        setUnit(response.data);
+        fetchUnit();
       } else {
         toast.error(response.message || 'فشل في تحديث حالة الوحدة');
       }
@@ -165,6 +165,9 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
   const getAddTenantMessage = () => {
     if (hasActiveReservation) {
       return 'يوجد مستأجر نشط بالفعل في هذه الوحدة';
+    }
+    if (unit?.status === 'rented') {
+      return 'يمكن إضافة مستأجر فقط عندما تكون الوحدة متاحة';
     }
     if (unit?.status !== 'available') {
       return 'يمكن إضافة مستأجر فقط عندما تكون الوحدة متاحة';
@@ -442,7 +445,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                   <Button
                     variant="success"
                     fullWidth
-                    disabled={unit.status === 'available'}
+                    disabled={unit.status === 'available' || hasActiveReservation || unit.status === 'rented'}
                     onClick={() => handleStatusChange('available')}
                   >
                     تعيين كمتاحة
@@ -453,7 +456,7 @@ export default function UnitDetailPage({ params }: UnitDetailPageProps) {
                   <Button
                     variant="warning"
                     fullWidth
-                    disabled={unit.status === 'maintenance' || (unit.status === 'rented')}
+                    disabled={unit.status === 'maintenance' || (unit.status === 'rented') || hasActiveReservation}
                     title={getStatusChangeMessage('maintenance')}
                     onClick={() => handleStatusChange('maintenance')}
                   >

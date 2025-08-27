@@ -11,6 +11,7 @@ import Modal from '@/components/ui/Modal';
 import { paymentsApi } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { PaymentMethod } from '@/types';
+import { exportToExcel } from '@/utils/generate';
 
 interface EnhancedPaymentListProps {
   payments: Payment[];
@@ -360,6 +361,8 @@ export default function EnhancedPaymentList({
         isLoading={isLoading}
         emptyMessage="لم يتم العثور على مدفوعات لهذا الحجز"
         onRowClick={tenant ? undefined : handleRowClick} // Disable row click for tenants
+        showExportButtons={true}
+        onExportExcel={() => exportToExcel(payments, 'payments', 'payments.xlsx')}
       />
 
       {/* Modals (manager only) */}

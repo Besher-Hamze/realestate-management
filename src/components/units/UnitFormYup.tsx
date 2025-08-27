@@ -300,7 +300,6 @@ export default function UnitForm({
       const submitData = {
         ...data,
         ownerId: selectedOwnerId,
-        parkingNumber: selectedInternalParkingSpaces ? selectedInternalParkingSpaces : undefined,
       };
 
       let response;
@@ -316,11 +315,11 @@ export default function UnitForm({
           ? 'تم تحديث الوحدة بنجاح'
           : 'تم إنشاء الوحدة بنجاح';
         toast.success(successMessage);
-
+        
         if (onSuccess) {
-          onSuccess(response.data);
+          onSuccess(response.data.unit);
         } else {
-          router.push(`/dashboard/units/${response.data.id}`);
+          router.push(`/dashboard/units/${response.data.unit.id}`);
         }
       } else {
         toast.error(response.message || 'حدث خطأ ما');

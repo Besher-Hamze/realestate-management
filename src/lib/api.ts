@@ -293,14 +293,14 @@ export const unitsApi = {
     }),
 
   create: (data: UnitFormData) =>
-    apiRequest<RealEstateUnit>({
+    apiRequest<{ unit: RealEstateUnit }>({
       url: '/units',
       method: 'POST',
       data,
     }),
 
   update: (id: number | string, data: Partial<UnitFormData>) =>
-    apiRequest<RealEstateUnit>({
+    apiRequest<{ unit: RealEstateUnit }>({
       url: `/units/${id}`,
       method: 'PUT',
       data,

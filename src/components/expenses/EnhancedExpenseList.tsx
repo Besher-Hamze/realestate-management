@@ -11,7 +11,7 @@ import { expensesApi } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { EXPENSE_TYPE_OPTIONS } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { exportExpensesToExcel, exportExpensesToPDF, exportToExcel } from '@/utils/generate';
 interface EnhancedExpenseListProps {
     expenses: Expense[];
     isLoading: boolean;
@@ -312,6 +312,40 @@ export default function EnhancedExpenseList({
         }
     ];
 
+    const handleExportToPDF = async () => {
+        // setLoading(true);
+        // setError(null);
+
+        try {
+            const response = await fetch('/api/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: expenses,
+                    type: 'expenses',
+                    config: {
+                        filename: 'expenses_report.pdf',
+                        title: 'تقرير المصاريف',
+                        includeStatistics: true,
+                    },
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate PDF');
+            }
+
+            const result = await response.json();
+            alert(result.message); // Notify user of success
+        } catch (err: any) {
+            //   setError(err.message);
+            console.error('Export error:', err);
+        } finally {
+            //   setLoading(false);
+        }
+    };
     return (
         <>
             <Table
@@ -321,6 +355,8 @@ export default function EnhancedExpenseList({
                 isLoading={isLoading}
                 emptyMessage="لم يتم العثور على مصاريف"
                 onRowClick={!isTenant ? handleRowClick : undefined}
+                showExportButtons={true}
+                onExportExcel={() => exportToExcel(expenses, 'expenses', 'expenses.xlsx')}
             />
 
             {/* Delete confirmation modal */}

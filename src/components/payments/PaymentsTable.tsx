@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { Payment } from '@/lib/types';
-import Table, { TableColumn } from '@/components/ui/Table';
+import Table, { TableColumn, ExportOptions } from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { paymentsApi } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { exportToExcel } from '@/utils/generate';
 
 interface PaymentsTableProps {
   payments: Payment[];
@@ -211,6 +215,44 @@ export default function PaymentsTable({
     }
   };
 
+  // Get tenant type name
+  const getTenantTypeName = (type: string): string => {
+    switch (type) {
+      case 'partnership': return 'شراكة';
+      case 'commercial_register': return 'سجل تجاري';
+      case 'person': return 'شخص';
+      case 'embassy': return 'سفارة';
+      case 'foreign_company': return 'شركة أجنبية';
+      case 'government': return 'حكومي';
+      case 'inheritance': return 'وراثة';
+      case 'civil_registry': return 'سجل مدني';
+      default: return type;
+    }
+  };
+
+  // Get unit type name
+  const getUnitTypeName = (type: string): string => {
+    switch (type) {
+      case 'studio': return 'استوديو';
+      case 'apartment': return 'شقة';
+      case 'shop': return 'محل تجاري';
+      case 'office': return 'مكتب';
+      case 'villa': return 'فيلا';
+      case 'room': return 'غرفة';
+      default: return type;
+    }
+  };
+
+  // Get building type name
+  const getBuildingTypeName = (type: string): string => {
+    switch (type) {
+      case 'residential': return 'سكني';
+      case 'commercial': return 'تجاري';
+      case 'mixed': return 'مختلط';
+      default: return type;
+    }
+  };
+
   // Calculate days overdue for delayed payments
   const getDaysOverdue = (paymentDate: string): number => {
     const today = new Date();
@@ -219,6 +261,7 @@ export default function PaymentsTable({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
+
 
   // Status action button component
   const StatusButton = ({ payment, status, label, color }: {
@@ -285,6 +328,8 @@ export default function PaymentsTable({
             )}
           </div>
         ),
+        excludeFromExport: true, // Complex data handled separately in exports
+        sortable: false,
       }
     ]),
     {
@@ -305,6 +350,8 @@ export default function PaymentsTable({
           )}
         </div>
       ),
+      sortable: true,
+      sortValue: (payment) => new Date(payment.paymentDate),
     },
     {
       key: 'amount',
@@ -320,6 +367,8 @@ export default function PaymentsTable({
           )}
         </div>
       ),
+      sortable: true,
+      sortValue: (payment) => payment.amount,
     },
     {
       key: 'method',
@@ -354,6 +403,15 @@ export default function PaymentsTable({
           )}
         </div>
       ),
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: 'cash', label: 'نقدًا' },
+        { value: 'credit_card', label: 'بطاقة ائتمان' },
+        { value: 'bank_transfer', label: 'تحويل بنكي' },
+        { value: 'checks', label: 'شيك' },
+        { value: 'other', label: 'أخرى' },
+      ],
     },
     {
       key: 'status',
@@ -382,6 +440,15 @@ export default function PaymentsTable({
           </div>
         );
       },
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: 'paid', label: 'مدفوعة' },
+        { value: 'pending', label: 'قيد الانتظار' },
+        { value: 'delayed', label: 'متأخرة' },
+        { value: 'cancelled', label: 'ملغية' },
+      ],
+      sortable: true,
     },
     {
       key: 'notes',
@@ -417,6 +484,8 @@ export default function PaymentsTable({
           )}
         </div>
       ),
+      sortable: true,
+      sortValue: (payment) => new Date(payment.createdAt),
     },
     {
       key: 'actions',
@@ -461,6 +530,7 @@ export default function PaymentsTable({
           </Button>
         </div>
       ),
+      excludeFromExport: true,
     },
   ];
 
@@ -476,6 +546,27 @@ export default function PaymentsTable({
         isLoading={isLoading}
         emptyMessage="لم يتم العثور على مدفوعات"
         onRowClick={singlePayment ? undefined : handleRowClick}
+        searchable={true}
+        searchPlaceholder="البحث في المدفوعات (رقم الحجز، اسم المستأجر، رقم الوحدة...)"
+        showFilters={true}
+        showPagination={true}
+        pageSize={20}
+        onExportExcel={() => exportToExcel(payments, 'payments', 'payments.xlsx')}
+        onExportPDF={() => { }}
+        exportOptions={{
+          filename: `payments${reservationId ? `_reservation_${reservationId}` : ''}${singlePayment ? '_single' : ''}_${new Date().toISOString().split('T')[0]}`,
+          sheetName: 'المدفوعات الشاملة',
+          title: reservationId
+            ? `تقرير مدفوعات الحجز رقم ${reservationId}`
+            : singlePayment
+              ? 'تفاصيل المدفوعة'
+              : 'تقرير المدفوعات الشامل',
+          includeFilters: true,
+        }}
+        showExportButtons={true}
+        striped={true}
+        bordered={false}
+        initialSort={{ column: 'paymentDate', direction: 'desc' }}
       />
 
       {/* Delete confirmation modal */}

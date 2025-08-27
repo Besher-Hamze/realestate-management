@@ -17,6 +17,7 @@ export interface TableColumn<T> {
   sortValue?: (item: T) => string | number | Date;
   filterValue?: (item: T) => string;
   width?: string;
+  excludeFromExport?: boolean; // New: exclude column from exports
 }
 
 interface FilterState {
@@ -26,6 +27,13 @@ interface FilterState {
 interface SortState {
   column: string | null;
   direction: 'asc' | 'desc';
+}
+
+export interface ExportOptions {
+  filename?: string;
+  sheetName?: string; // For Excel
+  title?: string; // For PDF
+  includeFilters?: boolean; // Include current filter state in export
 }
 
 interface TableProps<T> {
@@ -48,6 +56,11 @@ interface TableProps<T> {
   initialSort?: { column: string; direction: 'asc' | 'desc' };
   pageSize?: number;
   showPagination?: boolean;
+  // New export props
+  onExportExcel?: (data: T[], columns: TableColumn<T>[], options?: ExportOptions) => Promise<void> | void;
+  onExportPDF?: (data: T[], columns: TableColumn<T>[], options?: ExportOptions) => Promise<void> | void;
+  exportOptions?: ExportOptions;
+  showExportButtons?: boolean;
 }
 
 // Helper function to safely get nested values
@@ -243,6 +256,109 @@ function SortIcon({ direction }: { direction: 'asc' | 'desc' | null }) {
   );
 }
 
+// Export buttons component
+function ExportButtons<T>({
+  onExportExcel,
+  onExportPDF,
+  data,
+  columns,
+  exportOptions,
+  isExporting,
+  setIsExporting
+}: {
+  onExportExcel?: (data: T[], columns: TableColumn<T>[], options?: ExportOptions) => Promise<void> | void;
+  onExportPDF?: (data: T[], columns: TableColumn<T>[], options?: ExportOptions) => Promise<void> | void;
+  data: T[];
+  columns: TableColumn<T>[];
+  exportOptions?: ExportOptions;
+  isExporting: { excel: boolean; pdf: boolean };
+  setIsExporting: (state: { excel: boolean; pdf: boolean }) => void;
+}) {
+  const handleExcelExport = async () => {
+    if (!onExportExcel) return;
+
+    setIsExporting({ ...isExporting, excel: true });
+    try {
+      await onExportExcel(data, columns, exportOptions);
+    } catch (error) {
+      console.error('Excel export failed:', error);
+    } finally {
+      setIsExporting({ ...isExporting, excel: false });
+    }
+  };
+
+  const handlePDFExport = async () => {
+    if (!onExportPDF) return;
+
+    setIsExporting({ ...isExporting, pdf: true });
+    try {
+      await onExportPDF(data, columns, exportOptions);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+    } finally {
+      setIsExporting({ ...isExporting, pdf: false });
+    }
+  };
+
+  if (!onExportExcel && !onExportPDF) return null;
+
+  return (
+    <div className="flex items-center space-x-2 mb-4">
+      <span className="text-sm text-gray-600 mr-2">تصدير:</span>
+
+      {onExportExcel && (
+        <button
+          onClick={handleExcelExport}
+          disabled={isExporting.excel}
+          className={cn(
+            'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border',
+            'text-green-700 bg-green-50 border-green-200 hover:bg-green-100',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+          )}
+        >
+          {isExporting.excel ? (
+            <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            </svg>
+          )}
+          Excel
+        </button>
+      )}
+
+      {onExportPDF && (
+        <button
+          onClick={handlePDFExport}
+          disabled={isExporting.pdf}
+          className={cn(
+            'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border',
+            'text-red-700 bg-red-50 border-red-200 hover:bg-red-100',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
+          )}
+        >
+          {isExporting.pdf ? (
+            <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            </svg>
+          )}
+          PDF
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Search input component
 function SearchInput({
   value,
@@ -409,7 +525,11 @@ export default function Table<T>({
   showFilters = false,
   initialSort,
   pageSize,
-  showPagination = false
+  showPagination = false,
+  onExportExcel,
+  onExportPDF,
+  exportOptions,
+  showExportButtons = true
 }: TableProps<T>) {
   const [sortState, setSortState] = useState<SortState>({
     column: initialSort?.column || null,
@@ -419,6 +539,7 @@ export default function Table<T>({
   const [filters, setFilters] = useState<FilterState>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExporting, setIsExporting] = useState({ excel: false, pdf: false });
 
   // Handle sorting with error protection
   const handleSort = useCallback((columnKey: string) => {
@@ -565,14 +686,30 @@ export default function Table<T>({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Search */}
-      {searchable && (
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder={searchPlaceholder}
-        />
-      )}
+      {/* Controls Section */}
+      <div className="mb-4 space-y-4">
+        {/* Export Buttons */}
+        {showExportButtons && (onExportExcel || onExportPDF) && (
+          <ExportButtons
+            onExportExcel={onExportExcel}
+            onExportPDF={onExportPDF}
+            data={processedData}
+            columns={columns.filter(col => !col.excludeFromExport)}
+            exportOptions={exportOptions}
+            isExporting={isExporting}
+            setIsExporting={setIsExporting}
+          />
+        )}
+
+        {/* Search */}
+        {searchable && (
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={searchPlaceholder}
+          />
+        )}
+      </div>
 
       {/* Table */}
       <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">

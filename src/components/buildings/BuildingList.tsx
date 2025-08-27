@@ -10,6 +10,7 @@ import { buildingsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { BUILDING_TYPE_OPTIONS } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import { exportToExcel } from '@/utils/generate';
 
 interface BuildingListProps {
   buildings: Building[];
@@ -181,6 +182,8 @@ export default function BuildingList({
         columns={columns}
         keyExtractor={(building) => building.id}
         isLoading={isLoading}
+        showExportButtons={true}
+        onExportExcel={() => exportToExcel(buildings, 'buildings', 'buildings.xlsx')}
         emptyMessage="لم يتم العثور على مباني"
         onRowClick={handleRowClick}
       />

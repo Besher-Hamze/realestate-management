@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
@@ -23,7 +23,7 @@ export default function ServiceList({
   const [filteredServices, setFilteredServices] = useState<ServiceOrder[]>(services);
 
   // Update filtered services when services prop changes
-  useState(() => {
+  useEffect(() => {
     setFilteredServices(services);
   }, [services]);
 
@@ -240,7 +240,7 @@ export default function ServiceList({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link href={forTenant ? `/tenant/services/${service.id}` : `/dashboard/services/${service.id}`}>
-                      <Button size="sm" variant="text">عرض</Button>
+                      <Button size="sm" variant="outline">عرض</Button>
                     </Link>
                   </td>
                 </tr>
