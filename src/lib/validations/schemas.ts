@@ -223,11 +223,6 @@ export const buildingSchema = yup.object({
     .max(200, 'عدد الطوابق كبير جداً (الحد الأقصى 200)')
     .typeError('يرجى إدخال رقم صالح فقط'),
 
-  parkingNumber: yup
-    .string()
-    .required('رقم الموقف الداخلي مطلوب')
-    .min(1, 'رقم الموقف الداخلي قصير جداً')
-    .max(20, 'رقم الموقف الداخلي طويل جداً'),
   internalParkingSpaces: yup
     .number()
     .transform((value, originalValue) => {
