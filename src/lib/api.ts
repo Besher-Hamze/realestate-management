@@ -293,7 +293,7 @@ export const unitsApi = {
     }),
 
   create: (data: UnitFormData) =>
-    apiRequest<{ unit: RealEstateUnit }>({
+    apiRequest<{ data: RealEstateUnit, status: string }>({
       url: '/units',
       method: 'POST',
       data,

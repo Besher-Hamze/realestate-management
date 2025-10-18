@@ -315,11 +315,11 @@ export default function UnitForm({
           ? 'تم تحديث الوحدة بنجاح'
           : 'تم إنشاء الوحدة بنجاح';
         toast.success(successMessage);
-        
+
         if (onSuccess) {
-          onSuccess(response.data.unit);
+          onSuccess(response.data);
         } else {
-          router.push(`/dashboard/units/${response.data.unit.id}`);
+          router.push(`/dashboard/units/${response.data.id}`);
         }
       } else {
         toast.error(response.message || 'حدث خطأ ما');
